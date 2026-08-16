@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260816-24
+// コード管理番号: VER-20260816-30
 import 'package:flutter/material.dart';
 
 import 'db/app_database.dart';
@@ -40,14 +40,13 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
-  bool _isQuizActive = false; // クイズが開始中かどうかを管理
+  bool _isQuizActive = false;
 
   @override
   Widget build(BuildContext context) {
     final screens = [
       GameScreen(
         database: widget.database,
-        // クイズの状態が変化したときにタブの表示/非表示を切り替える
         onGameStateChanged: (isStarted) {
           setState(() {
             _isQuizActive = isStarted;
@@ -59,7 +58,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: screens),
-      // クイズ実行中は下部ナビゲーションバーを非表示（null）にする
       bottomNavigationBar: _isQuizActive
           ? null
           : BottomNavigationBar(
