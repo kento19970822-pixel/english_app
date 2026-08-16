@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260816-25
+// コード管理番号: VER-20260816-92
 import 'dart:async';
 import 'dart:math';
 
@@ -10,10 +10,10 @@ import 'package:audioplayers/audioplayers.dart';
 import '../db/app_database.dart';
 
 class WordModel {
-  final String id;
+  final int id; // int型へ統一
   final String english;
   final String japanese;
-  final int level;
+  final int level; // 1: 初級, 2: 中級, 3: 上級
   bool isFavorite;
 
   WordModel({
@@ -25,11 +25,24 @@ class WordModel {
   });
 
   factory WordModel.fromDrift(Word driftWord) {
+    int parsedLevel = 1;
+    final cefr = driftWord.cefr.toUpperCase().trim();
+
+    if (cefr.contains('A1') || cefr.contains('A2') || cefr == '1') {
+      parsedLevel = 1;
+    } else if (cefr.contains('B1') || cefr.contains('B2') || cefr == '2') {
+      parsedLevel = 2;
+    } else if (cefr.contains('C1') || cefr.contains('C2') || cefr == '3') {
+      parsedLevel = 3;
+    } else {
+      parsedLevel = 1;
+    }
+
     return WordModel(
       id: driftWord.id,
       english: driftWord.english,
       japanese: driftWord.japanese,
-      level: driftWord.level,
+      level: parsedLevel,
       isFavorite: driftWord.isFavorite,
     );
   }
@@ -37,7 +50,7 @@ class WordModel {
 
 class GameScreen extends StatefulWidget {
   final AppDatabase database;
-  final Function(bool isStarted)? onGameStateChanged; // 親に状態を伝えるコールバック
+  final Function(bool isStarted)? onGameStateChanged;
 
   const GameScreen({
     super.key,
@@ -73,7 +86,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   List<WordModel> questionQueue = [];
 
   List<WordModel> mistakenWords = [];
-  Set<String> favoriteWordIds = {};
+  Set<int> favoriteWordIds = {}; // int型へ変更
 
   WordModel? leftWord;
   List<String> leftChoices = [];
@@ -201,7 +214,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     List<WordModel> levelWords = allWords
         .where((w) => w.level == selectedLevel)
         .toList();
-    if (levelWords.isEmpty) {
+
+    if (levelWords.length < 5) {
       levelWords = List.from(allWords);
     }
 
@@ -226,7 +240,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       rightFeedback = null;
     });
 
-    // ゲーム開始を親（Nav）に通知（タブ非表示へ）
     widget.onGameStateChanged?.call(true);
 
     gameTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
@@ -256,18 +269,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   List<String> _generateChoices(WordModel correctWord) {
-    List<WordModel> sameLevelWords = allWords
-        .where((w) => w.level == selectedLevel && w.id != correctWord.id)
+    List<WordModel> candidateWords = allWords
+        .where(
+          (w) => w.id != correctWord.id && w.japanese != correctWord.japanese,
+        )
         .toList();
-    if (sameLevelWords.length < 3) {
-      sameLevelWords = allWords.where((w) => w.id != correctWord.id).toList();
-    }
-    sameLevelWords.shuffle();
+    candidateWords.shuffle();
 
-    List<String> choices = sameLevelWords
+    List<String> choices = candidateWords
         .take(3)
         .map((w) => w.japanese)
         .toList();
+
     choices.add(correctWord.japanese);
     choices.shuffle();
     return choices;
@@ -464,7 +477,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       leftWord = null;
       rightWord = null;
     });
-    // スタート画面に戻ったのでタブを表示へ
     widget.onGameStateChanged?.call(false);
   }
 
@@ -781,7 +793,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 setState(() {
                   isGameStarted = false;
                 });
-                // スタート画面に戻ったのでタブを表示へ
                 widget.onGameStateChanged?.call(false);
               },
               child: const Text(

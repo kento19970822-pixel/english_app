@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260816-30
+// コード管理番号: VER-20260816-87
 import 'package:flutter/material.dart';
 
 import 'db/app_database.dart';
@@ -7,74 +7,79 @@ import 'screens/words_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final database = AppDatabase();
-  runApp(MyApp(database: database));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final AppDatabase database;
-
-  const MyApp({super.key, required this.database});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '英単語アプリ',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
-      ),
-      home: MainNavigationScreen(database: database),
+      title: '英単語ゲーム',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.indigo, useMaterial3: true),
+      home: const MainHomeScreen(),
     );
   }
 }
 
-class MainNavigationScreen extends StatefulWidget {
-  final AppDatabase database;
-
-  const MainNavigationScreen({super.key, required this.database});
+class MainHomeScreen extends StatefulWidget {
+  const MainHomeScreen({super.key});
 
   @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+  State<MainHomeScreen> createState() => _MainHomeScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0;
-  bool _isQuizActive = false;
+class _MainHomeScreenState extends State<MainHomeScreen> {
+  late final AppDatabase _database;
+  int _selectedIndex = 0;
+  bool _isGameStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _database = AppDatabase();
+  }
+
+  @override
+  void dispose() {
+    _database.close();
+    super.dispose();
+  }
+
+  void _onGameStateChanged(bool isStarted) {
+    setState(() {
+      _isGameStarted = isStarted;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final screens = [
-      GameScreen(
-        database: widget.database,
-        onGameStateChanged: (isStarted) {
-          setState(() {
-            _isQuizActive = isStarted;
-          });
-        },
-      ),
-      WordsScreen(database: widget.database),
+    final List<Widget> screens = [
+      GameScreen(database: _database, onGameStateChanged: _onGameStateChanged),
+      WordsScreen(database: _database),
     ];
 
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: screens),
-      bottomNavigationBar: _isQuizActive
+      body: IndexedStack(index: _selectedIndex, children: screens),
+      bottomNavigationBar: _isGameStarted
           ? null
-          : BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) {
+          : NavigationBar(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (int index) {
                 setState(() {
-                  _currentIndex = index;
+                  _selectedIndex = index;
                 });
               },
-              items: const [
-                BottomNavigationBarItem(
+              destinations: const [
+                NavigationDestination(
                   icon: Icon(Icons.sports_esports),
-                  label: 'クイズ',
+                  label: 'ゲーム',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.menu_book),
-                  label: '単語帳',
+                NavigationDestination(
+                  icon: Icon(Icons.list_alt),
+                  label: '単語一覧',
                 ),
               ],
             ),
