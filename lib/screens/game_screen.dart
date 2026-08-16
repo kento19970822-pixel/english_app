@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260816-17
+// コード管理番号: VER-20260816-18
 import 'dart:async';
 import 'dart:math';
 
@@ -115,7 +115,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     });
   }
 
-  /// DBから単語一覧を読み込む
   Future<void> _loadWordsFromDb() async {
     final dbWords = await widget.database.getAllWords();
 
@@ -468,7 +467,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     });
   }
 
-  /// お気に入り登録の変更を DB に反映
   Future<void> _toggleFavorite(WordModel word) async {
     final isFav = favoriteWordIds.contains(word.id);
     final nextFav = !isFav;
@@ -896,11 +894,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     height: 40,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
+                        disabledBackgroundColor: Colors.red.shade100,
+                        disabledForegroundColor: Colors.red.shade700,
                         backgroundColor: isDisabled
                             ? Colors.red.shade100
                             : Colors.grey[100],
                         foregroundColor: isDisabled
-                            ? Colors.red.shade400
+                            ? Colors.red.shade700
                             : Colors.black87,
                         elevation: isDisabled ? 0 : 1,
                         padding: EdgeInsets.zero,
