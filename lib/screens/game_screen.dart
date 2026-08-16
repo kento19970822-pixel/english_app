@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260816-18
+// コード管理番号: VER-20260816-25
 import 'dart:async';
 import 'dart:math';
 
@@ -9,7 +9,6 @@ import 'package:audioplayers/audioplayers.dart';
 
 import '../db/app_database.dart';
 
-/// アプリ内で扱う単語モデル
 class WordModel {
   final String id;
   final String english;
@@ -38,8 +37,13 @@ class WordModel {
 
 class GameScreen extends StatefulWidget {
   final AppDatabase database;
+  final Function(bool isStarted)? onGameStateChanged; // 親に状態を伝えるコールバック
 
-  const GameScreen({super.key, required this.database});
+  const GameScreen({
+    super.key,
+    required this.database,
+    this.onGameStateChanged,
+  });
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -221,6 +225,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       leftFeedback = null;
       rightFeedback = null;
     });
+
+    // ゲーム開始を親（Nav）に通知（タブ非表示へ）
+    widget.onGameStateChanged?.call(true);
 
     gameTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (isPaused) return;
@@ -457,6 +464,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       leftWord = null;
       rightWord = null;
     });
+    // スタート画面に戻ったのでタブを表示へ
+    widget.onGameStateChanged?.call(false);
   }
 
   void _endGame() {
@@ -772,6 +781,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 setState(() {
                   isGameStarted = false;
                 });
+                // スタート画面に戻ったのでタブを表示へ
+                widget.onGameStateChanged?.call(false);
               },
               child: const Text(
                 'スタート画面へ戻る',
