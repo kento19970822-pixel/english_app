@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260816-92
+// コード管理番号: VER-20260817-119
 import 'dart:async';
 import 'dart:math';
 
@@ -10,7 +10,7 @@ import 'package:audioplayers/audioplayers.dart';
 import '../db/app_database.dart';
 
 class WordModel {
-  final int id; // int型へ統一
+  final int id;
   final String english;
   final String japanese;
   final int level; // 1: 初級, 2: 中級, 3: 上級
@@ -28,11 +28,20 @@ class WordModel {
     int parsedLevel = 1;
     final cefr = driftWord.cefr.toUpperCase().trim();
 
-    if (cefr.contains('A1') || cefr.contains('A2') || cefr == '1') {
+    if (cefr.contains('A1') ||
+        cefr.contains('A2') ||
+        cefr == '1' ||
+        cefr.contains('初級')) {
       parsedLevel = 1;
-    } else if (cefr.contains('B1') || cefr.contains('B2') || cefr == '2') {
+    } else if (cefr.contains('B1') ||
+        cefr.contains('B2') ||
+        cefr == '2' ||
+        cefr.contains('中級')) {
       parsedLevel = 2;
-    } else if (cefr.contains('C1') || cefr.contains('C2') || cefr == '3') {
+    } else if (cefr.contains('C1') ||
+        cefr.contains('C2') ||
+        cefr == '3' ||
+        cefr.contains('上級')) {
       parsedLevel = 3;
     } else {
       parsedLevel = 1;
@@ -86,7 +95,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   List<WordModel> questionQueue = [];
 
   List<WordModel> mistakenWords = [];
-  Set<int> favoriteWordIds = {}; // int型へ変更
+  Set<int> favoriteWordIds = {};
 
   WordModel? leftWord;
   List<String> leftChoices = [];
@@ -111,6 +120,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _loadWordsFromDb();
     _initTts();
 
+    // 1. 左レーンのコントローラー初期化
     _leftDropController = AnimationController(
       vsync: this,
       duration: Duration(seconds: dropDurationSeconds),
@@ -121,6 +131,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       }
     });
 
+    // 2. 右レーンのコントローラー初期化
     _rightDropController = AnimationController(
       vsync: this,
       duration: Duration(seconds: dropDurationSeconds),
@@ -208,8 +219,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _rightDropController.reset();
   }
 
-  void _startGame() {
+  void _startGame() async {
     _resetAndStopAll();
+
+    await _loadWordsFromDb();
 
     List<WordModel> levelWords = allWords
         .where((w) => w.level == selectedLevel)
@@ -217,6 +230,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     if (levelWords.length < 5) {
       levelWords = List.from(allWords);
+    }
+
+    if (levelWords.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('単語データが取得できませんでした。「単語一覧」タブをご確認ください。')),
+        );
+      }
+      return;
     }
 
     setState(() {
@@ -482,6 +504,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   void _endGame() {
     _resetAndStopAll();
+
+    if (score > 0) {
+      widget.database.addGameHistory(score, selectedLevel);
+    }
+
     setState(() {
       isGameOver = true;
       isPaused = false;

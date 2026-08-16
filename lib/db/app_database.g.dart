@@ -355,15 +355,306 @@ class WordsCompanion extends UpdateCompanion<Word> {
   }
 }
 
+class $GameHistoriesTable extends GameHistories
+    with TableInfo<$GameHistoriesTable, GameHistory> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GameHistoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _scoreMeta = const VerificationMeta('score');
+  @override
+  late final GeneratedColumn<int> score = GeneratedColumn<int>(
+    'score',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<int> level = GeneratedColumn<int>(
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _playedAtMeta = const VerificationMeta(
+    'playedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> playedAt = GeneratedColumn<DateTime>(
+    'played_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, score, level, playedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'game_histories';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GameHistory> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('score')) {
+      context.handle(
+        _scoreMeta,
+        score.isAcceptableOrUnknown(data['score']!, _scoreMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_scoreMeta);
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_levelMeta);
+    }
+    if (data.containsKey('played_at')) {
+      context.handle(
+        _playedAtMeta,
+        playedAt.isAcceptableOrUnknown(data['played_at']!, _playedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GameHistory map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GameHistory(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      score: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}score'],
+      )!,
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}level'],
+      )!,
+      playedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}played_at'],
+      )!,
+    );
+  }
+
+  @override
+  $GameHistoriesTable createAlias(String alias) {
+    return $GameHistoriesTable(attachedDatabase, alias);
+  }
+}
+
+class GameHistory extends DataClass implements Insertable<GameHistory> {
+  final int id;
+  final int score;
+  final int level;
+  final DateTime playedAt;
+  const GameHistory({
+    required this.id,
+    required this.score,
+    required this.level,
+    required this.playedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['score'] = Variable<int>(score);
+    map['level'] = Variable<int>(level);
+    map['played_at'] = Variable<DateTime>(playedAt);
+    return map;
+  }
+
+  GameHistoriesCompanion toCompanion(bool nullToAbsent) {
+    return GameHistoriesCompanion(
+      id: Value(id),
+      score: Value(score),
+      level: Value(level),
+      playedAt: Value(playedAt),
+    );
+  }
+
+  factory GameHistory.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GameHistory(
+      id: serializer.fromJson<int>(json['id']),
+      score: serializer.fromJson<int>(json['score']),
+      level: serializer.fromJson<int>(json['level']),
+      playedAt: serializer.fromJson<DateTime>(json['playedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'score': serializer.toJson<int>(score),
+      'level': serializer.toJson<int>(level),
+      'playedAt': serializer.toJson<DateTime>(playedAt),
+    };
+  }
+
+  GameHistory copyWith({int? id, int? score, int? level, DateTime? playedAt}) =>
+      GameHistory(
+        id: id ?? this.id,
+        score: score ?? this.score,
+        level: level ?? this.level,
+        playedAt: playedAt ?? this.playedAt,
+      );
+  GameHistory copyWithCompanion(GameHistoriesCompanion data) {
+    return GameHistory(
+      id: data.id.present ? data.id.value : this.id,
+      score: data.score.present ? data.score.value : this.score,
+      level: data.level.present ? data.level.value : this.level,
+      playedAt: data.playedAt.present ? data.playedAt.value : this.playedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GameHistory(')
+          ..write('id: $id, ')
+          ..write('score: $score, ')
+          ..write('level: $level, ')
+          ..write('playedAt: $playedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, score, level, playedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GameHistory &&
+          other.id == this.id &&
+          other.score == this.score &&
+          other.level == this.level &&
+          other.playedAt == this.playedAt);
+}
+
+class GameHistoriesCompanion extends UpdateCompanion<GameHistory> {
+  final Value<int> id;
+  final Value<int> score;
+  final Value<int> level;
+  final Value<DateTime> playedAt;
+  const GameHistoriesCompanion({
+    this.id = const Value.absent(),
+    this.score = const Value.absent(),
+    this.level = const Value.absent(),
+    this.playedAt = const Value.absent(),
+  });
+  GameHistoriesCompanion.insert({
+    this.id = const Value.absent(),
+    required int score,
+    required int level,
+    this.playedAt = const Value.absent(),
+  }) : score = Value(score),
+       level = Value(level);
+  static Insertable<GameHistory> custom({
+    Expression<int>? id,
+    Expression<int>? score,
+    Expression<int>? level,
+    Expression<DateTime>? playedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (score != null) 'score': score,
+      if (level != null) 'level': level,
+      if (playedAt != null) 'played_at': playedAt,
+    });
+  }
+
+  GameHistoriesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? score,
+    Value<int>? level,
+    Value<DateTime>? playedAt,
+  }) {
+    return GameHistoriesCompanion(
+      id: id ?? this.id,
+      score: score ?? this.score,
+      level: level ?? this.level,
+      playedAt: playedAt ?? this.playedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (score.present) {
+      map['score'] = Variable<int>(score.value);
+    }
+    if (level.present) {
+      map['level'] = Variable<int>(level.value);
+    }
+    if (playedAt.present) {
+      map['played_at'] = Variable<DateTime>(playedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GameHistoriesCompanion(')
+          ..write('id: $id, ')
+          ..write('score: $score, ')
+          ..write('level: $level, ')
+          ..write('playedAt: $playedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $WordsTable words = $WordsTable(this);
+  late final $GameHistoriesTable gameHistories = $GameHistoriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [words];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [words, gameHistories];
 }
 
 typedef $$WordsTableCreateCompanionBuilder = WordsCompanion Function({
@@ -553,10 +844,187 @@ typedef $$WordsTableProcessedTableManager =
       Word,
       PrefetchHooks Function()
     >;
+typedef $$GameHistoriesTableCreateCompanionBuilder =
+    GameHistoriesCompanion Function({
+      Value<int> id,
+      required int score,
+      required int level,
+      Value<DateTime> playedAt,
+    });
+typedef $$GameHistoriesTableUpdateCompanionBuilder =
+    GameHistoriesCompanion Function({
+      Value<int> id,
+      Value<int> score,
+      Value<int> level,
+      Value<DateTime> playedAt,
+    });
+
+class $$GameHistoriesTableFilterComposer
+    extends Composer<_$AppDatabase, $GameHistoriesTable> {
+  $$GameHistoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get playedAt => $composableBuilder(
+    column: $table.playedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GameHistoriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $GameHistoriesTable> {
+  $$GameHistoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get playedAt => $composableBuilder(
+    column: $table.playedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GameHistoriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GameHistoriesTable> {
+  $$GameHistoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get score =>
+      $composableBuilder(column: $table.score, builder: (column) => column);
+
+  GeneratedColumn<int> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get playedAt =>
+      $composableBuilder(column: $table.playedAt, builder: (column) => column);
+}
+
+class $$GameHistoriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GameHistoriesTable,
+          GameHistory,
+          $$GameHistoriesTableFilterComposer,
+          $$GameHistoriesTableOrderingComposer,
+          $$GameHistoriesTableAnnotationComposer,
+          $$GameHistoriesTableCreateCompanionBuilder,
+          $$GameHistoriesTableUpdateCompanionBuilder,
+          (
+            GameHistory,
+            BaseReferences<_$AppDatabase, $GameHistoriesTable, GameHistory>,
+          ),
+          GameHistory,
+          PrefetchHooks Function()
+        > {
+  $$GameHistoriesTableTableManager(_$AppDatabase db, $GameHistoriesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GameHistoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GameHistoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GameHistoriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> score = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<DateTime> playedAt = const Value.absent(),
+              }) => GameHistoriesCompanion(
+                id: id,
+                score: score,
+                level: level,
+                playedAt: playedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int score,
+                required int level,
+                Value<DateTime> playedAt = const Value.absent(),
+              }) => GameHistoriesCompanion.insert(
+                id: id,
+                score: score,
+                level: level,
+                playedAt: playedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GameHistoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GameHistoriesTable,
+      GameHistory,
+      $$GameHistoriesTableFilterComposer,
+      $$GameHistoriesTableOrderingComposer,
+      $$GameHistoriesTableAnnotationComposer,
+      $$GameHistoriesTableCreateCompanionBuilder,
+      $$GameHistoriesTableUpdateCompanionBuilder,
+      (
+        GameHistory,
+        BaseReferences<_$AppDatabase, $GameHistoriesTable, GameHistory>,
+      ),
+      GameHistory,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$WordsTableTableManager get words =>
       $$WordsTableTableManager(_db, _db.words);
+  $$GameHistoriesTableTableManager get gameHistories =>
+      $$GameHistoriesTableTableManager(_db, _db.gameHistories);
 }
