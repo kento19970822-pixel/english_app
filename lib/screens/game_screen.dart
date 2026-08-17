@@ -1,19 +1,19 @@
-// コード管理番号: VER-20260817-120
+// コード管理番号: VER-20260817-126
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 import '../db/app_database.dart';
+import '../services/retention_service.dart';
 
 class WordModel {
   final int id;
   final String english;
   final String japanese;
-  final int level; // 1: 初級, 2: 中級, 3: 上級
+  final int level;
   bool isFavorite;
 
   WordModel({
@@ -73,7 +73,7 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   final double totalGameDuration = 60.0;
-  final int dropDurationSeconds = 8; // デフォルト 8秒落下
+  final int dropDurationSeconds = 8;
 
   double remainingTime = 60.0;
   int score = 0;
@@ -87,13 +87,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   Timer? gameTimer;
   final FlutterTts flutterTts = FlutterTts();
-  final AudioPlayer _seAudioPlayer = AudioPlayer();
+  late AudioPlayer _seAudioPlayer;
 
   bool _isTtsInitialized = false;
 
   List<WordModel> allWords = [];
   List<WordModel> questionQueue = [];
-
   List<WordModel> mistakenWords = [];
   Set<int> favoriteWordIds = {};
 
@@ -117,6 +116,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _seAudioPlayer = AudioPlayer();
     _loadWordsFromDb();
     _initTts();
 
@@ -143,7 +143,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   Future<void> _loadWordsFromDb() async {
     final dbWords = await widget.database.getAllWords();
-
     setState(() {
       allWords = dbWords.map((w) => WordModel.fromDrift(w)).toList();
       favoriteWordIds = dbWords
@@ -176,23 +175,22 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
   }
 
+  /// 効果音（SE）再生メソッド
   void _playSE(String type) async {
     try {
-      String soundUrl = "";
-      if (type == 'correct') {
-        soundUrl = "assets/sounds/correct.mp3";
+      String fileName = "";
+      if (type == 'correct' || type.startsWith('correct_')) {
+        fileName = "sounds/correct.mp3";
       } else if (type == 'wrong' || type == 'timeout') {
-        soundUrl = "assets/sounds/wrong.mp3";
+        fileName = "sounds/wrong.mp3";
       }
 
-      if (soundUrl.isNotEmpty && !kIsWeb) {
+      if (fileName.isNotEmpty) {
         await _seAudioPlayer.stop();
-        await _seAudioPlayer.play(
-          AssetSource(soundUrl.replaceFirst('assets/', '')),
-        );
+        await _seAudioPlayer.play(AssetSource(fileName));
       }
     } catch (e) {
-      debugPrint("SE Error: $e");
+      debugPrint("SE Play Error: $e");
     }
   }
 
@@ -216,13 +214,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   void _startGame() async {
     _resetAndStopAll();
-
     await _loadWordsFromDb();
 
     List<WordModel> levelWords = allWords
         .where((w) => w.level == selectedLevel)
         .toList();
-
     if (levelWords.length < 5) {
       levelWords = List.from(allWords);
     }
@@ -269,10 +265,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       }
     });
 
-    // 右レーンが第1問目として即時スタート
     _nextQuestion(isLeft: false);
 
-    // 2秒後に左レーンが追随スタート
     _leftStartTimer = Timer(const Duration(seconds: 2), () {
       _triggerLeftStart();
     });
@@ -298,7 +292,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         .take(3)
         .map((w) => w.japanese)
         .toList();
-
     choices.add(correctWord.japanese);
     choices.shuffle();
     return choices;
@@ -349,23 +342,28 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     if (targetWord == null || isPaused || !isGameStarted) return;
 
     if (selectedChoice == targetWord.japanese) {
-      controller.stop();
-      _playSE('correct');
+      final double progress = controller.value;
+      final result = RetentionService.calculateScoreAndRetention(
+        dropProgress: progress,
+        isCorrect: true,
+      );
 
-      // スコア計算: 基本 10pt + (コンボ * 2pt)
+      controller.stop();
+      _playSE(result['soundType'] as String);
+
       final addScore = 10 + (combo * 2);
 
       setState(() {
         score += addScore;
         combo += 1;
+        final fb = "${result['feedbackText']} (Combo $combo)";
         if (isLeft) {
-          leftFeedback = "GREAT! (Combo $combo)";
+          leftFeedback = fb;
         } else {
-          rightFeedback = "GREAT! (Combo $combo)";
+          rightFeedback = fb;
         }
       });
 
-      // 右レーン即答時に左レーンが2秒を待たずに即時発進
       if (!isLeft && !isLeftStarted) {
         _triggerLeftStart();
       }
@@ -387,7 +385,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         _nextQuestion(isLeft: isLeft);
       });
     } else {
-      _playSE('wrong');
+      final result = RetentionService.calculateScoreAndRetention(
+        dropProgress: controller.value,
+        isCorrect: false,
+      );
+
+      _playSE(result['soundType'] as String);
       _recordMistake(targetWord);
 
       setState(() {
@@ -644,7 +647,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// 起動（スタート）画面
   Widget _buildStartScreen() {
     return Center(
       child: Padding(
@@ -845,7 +847,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 final maxY = constraints.maxHeight - 60;
                 return Stack(
                   children: [
-                    // 極薄（Opacity 0.2）の3分割判定線（Fast / Normal / Slow）を表示
                     Column(
                       children: [
                         Expanded(
@@ -853,7 +854,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             decoration: BoxDecoration(
                               border: Border(
                                 bottom: BorderSide(
-                                  color: Colors.green.withValues(alpha: 0.2),
+                                  color: Colors.green.withAlpha(50),
                                   width: 1,
                                 ),
                               ),
@@ -865,7 +866,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             decoration: BoxDecoration(
                               border: Border(
                                 bottom: BorderSide(
-                                  color: Colors.blue.withValues(alpha: 0.2),
+                                  color: Colors.blue.withAlpha(50),
                                   width: 1,
                                 ),
                               ),
@@ -932,7 +933,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.72),
+                            color: Colors.black.withAlpha(180),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
