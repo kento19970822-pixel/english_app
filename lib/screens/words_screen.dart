@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260817-31
+// コード管理番号: VER-20260817-74
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -17,9 +17,9 @@ class _WordsScreenState extends State<WordsScreen> {
   List<Word> _allWords = [];
   List<Word> _filteredWords = [];
 
-  int _selectedLevel = 0; // 0: 全て, 1: Level 1 ... 6: Level 6
-  int _selectedChapter = 0; // 0: 全て
-  bool _onlyFavorite = false; // ★ お気に入りフィルターフラグ
+  int _selectedLevel = 0;
+  int _selectedChapter = 0;
+  bool _onlyFavorite = false;
   String _searchQuery = '';
 
   bool _isLoading = true;
@@ -30,7 +30,6 @@ class _WordsScreenState extends State<WordsScreen> {
     _loadWords();
   }
 
-  /// DBからの単語全件取得と初期化
   Future<void> _loadWords() async {
     setState(() => _isLoading = true);
     final words = await widget.database.getAllWords();
@@ -41,18 +40,18 @@ class _WordsScreenState extends State<WordsScreen> {
     _applyFilter();
   }
 
-  /// フィルター条件の適用
   void _applyFilter() {
     setState(() {
       _filteredWords = _allWords.where((word) {
-        // お気に入りフィルター
-        if (_onlyFavorite && !word.isFavorite) return false;
-        // レベルフィルター
-        if (_selectedLevel != 0 && word.level != _selectedLevel) return false;
-        // チャプターフィルター
-        if (_selectedChapter != 0 && word.chapter != _selectedChapter)
+        if (_onlyFavorite && !word.isFavorite) {
           return false;
-        // 検索キーワードフィルター
+        }
+        if (_selectedLevel != 0 && word.level != _selectedLevel) {
+          return false;
+        }
+        if (_selectedChapter != 0 && word.chapter != _selectedChapter) {
+          return false;
+        }
         if (_searchQuery.isNotEmpty) {
           final query = _searchQuery.toLowerCase();
           final matchesEnglish = word.english.toLowerCase().contains(query);
@@ -64,11 +63,14 @@ class _WordsScreenState extends State<WordsScreen> {
     });
   }
 
-  /// 選択されている条件に存在する実際のチャプター番号一覧を取得
   List<int> _getAvailableChapters() {
     final targetWords = _allWords.where((w) {
-      if (_onlyFavorite && !w.isFavorite) return false;
-      if (_selectedLevel != 0 && w.level != _selectedLevel) return false;
+      if (_onlyFavorite && !w.isFavorite) {
+        return false;
+      }
+      if (_selectedLevel != 0 && w.level != _selectedLevel) {
+        return false;
+      }
       return true;
     }).toList();
 
@@ -77,11 +79,9 @@ class _WordsScreenState extends State<WordsScreen> {
     return chapters;
   }
 
-  /// 星マークタップ時の高速更新（全件読み直しを避けてメモリ上を即時書き換え）
   Future<void> _toggleFavoriteFast(Word targetWord) async {
     final newStatus = !targetWord.isFavorite;
 
-    // 1. メモリ上のデータを即時書き換え
     setState(() {
       final index = _allWords.indexWhere((w) => w.id == targetWord.id);
       if (index != -1) {
@@ -89,13 +89,10 @@ class _WordsScreenState extends State<WordsScreen> {
       }
     });
 
-    _applyFilter(); // 即座にフィルター再適用
-
-    // 2. バックグラウンドで非同期にDBを更新
+    _applyFilter();
     await widget.database.toggleFavorite(targetWord.id, newStatus);
   }
 
-  /// Dart標準機能のみを用いた安全なCSV1行パース関数
   List<String> _parseCsvLine(String line) {
     final List<String> result = [];
     final StringBuffer buffer = StringBuffer();
@@ -116,7 +113,6 @@ class _WordsScreenState extends State<WordsScreen> {
     return result;
   }
 
-  /// DB完全再構築処理（CSV取り込み）
   Future<void> _rebuildDatabase() async {
     setState(() => _isLoading = true);
     try {
@@ -189,7 +185,6 @@ class _WordsScreenState extends State<WordsScreen> {
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
                     children: [
-                      // 検索バー
                       TextField(
                         decoration: const InputDecoration(
                           hintText: '英語または日本語で検索',
@@ -203,12 +198,11 @@ class _WordsScreenState extends State<WordsScreen> {
                         },
                       ),
                       const SizedBox(height: 8),
-                      // レベル・チャプター選択
                       Row(
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<int>(
-                              value: _selectedLevel,
+                              initialValue: _selectedLevel,
                               decoration: const InputDecoration(
                                 labelText: 'レベル',
                                 border: OutlineInputBorder(),
@@ -261,7 +255,7 @@ class _WordsScreenState extends State<WordsScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: DropdownButtonFormField<int>(
-                              value:
+                              initialValue:
                                   availableChapters.contains(_selectedChapter)
                                   ? _selectedChapter
                                   : 0,
@@ -296,7 +290,6 @@ class _WordsScreenState extends State<WordsScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      // ★お気に入りフィルター切り替え用 FilterChip (ドロップダウンのすぐ下に表示)
                       Align(
                         alignment: Alignment.centerLeft,
                         child: FilterChip(
@@ -310,7 +303,7 @@ class _WordsScreenState extends State<WordsScreen> {
                           onSelected: (bool selected) {
                             setState(() {
                               _onlyFavorite = selected;
-                              _selectedChapter = 0; // 選択可能チャプターが変わるためリセット
+                              _selectedChapter = 0;
                             });
                             _applyFilter();
                           },
