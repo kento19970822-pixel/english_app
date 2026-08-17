@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260817-28
+// コード管理番号: VER-20260818-07
 import 'dart:io';
 
 import 'package:drift/drift.dart';
@@ -19,7 +19,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -145,6 +145,16 @@ class AppDatabase extends _$AppDatabase {
   Future<void> toggleFavorite(int id, bool isFavorite) {
     return (update(words)..where((t) => t.id.equals(id))).write(
       WordsCompanion(isFavorite: Value(isFavorite)),
+    );
+  }
+
+  /// 定着度（retention_point）の更新 (F-08用)
+  Future<void> updateRetentionPoint(int id, int retentionPoint) {
+    return (update(words)..where((t) => t.id.equals(id))).write(
+      WordsCompanion(
+        retentionPoint: Value(retentionPoint),
+        lastStudiedAt: Value(DateTime.now()),
+      ),
     );
   }
 

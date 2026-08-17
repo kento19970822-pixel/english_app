@@ -101,6 +101,30 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _retentionPointMeta = const VerificationMeta(
+    'retentionPoint',
+  );
+  @override
+  late final GeneratedColumn<int> retentionPoint = GeneratedColumn<int>(
+    'retention_point',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastStudiedAtMeta = const VerificationMeta(
+    'lastStudiedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastStudiedAt =
+      GeneratedColumn<DateTime>(
+        'last_studied_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -111,6 +135,8 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     chapter,
     phonetic,
     isFavorite,
+    retentionPoint,
+    lastStudiedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -173,6 +199,24 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         isFavorite.isAcceptableOrUnknown(data['is_favorite']!, _isFavoriteMeta),
       );
     }
+    if (data.containsKey('retention_point')) {
+      context.handle(
+        _retentionPointMeta,
+        retentionPoint.isAcceptableOrUnknown(
+          data['retention_point']!,
+          _retentionPointMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_studied_at')) {
+      context.handle(
+        _lastStudiedAtMeta,
+        lastStudiedAt.isAcceptableOrUnknown(
+          data['last_studied_at']!,
+          _lastStudiedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -214,6 +258,14 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_favorite'],
       )!,
+      retentionPoint: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}retention_point'],
+      )!,
+      lastStudiedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_studied_at'],
+      ),
     );
   }
 
@@ -232,6 +284,8 @@ class Word extends DataClass implements Insertable<Word> {
   final int chapter;
   final String? phonetic;
   final bool isFavorite;
+  final int retentionPoint;
+  final DateTime? lastStudiedAt;
   const Word({
     required this.id,
     required this.english,
@@ -241,6 +295,8 @@ class Word extends DataClass implements Insertable<Word> {
     required this.chapter,
     this.phonetic,
     required this.isFavorite,
+    required this.retentionPoint,
+    this.lastStudiedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -255,6 +311,10 @@ class Word extends DataClass implements Insertable<Word> {
       map['phonetic'] = Variable<String>(phonetic);
     }
     map['is_favorite'] = Variable<bool>(isFavorite);
+    map['retention_point'] = Variable<int>(retentionPoint);
+    if (!nullToAbsent || lastStudiedAt != null) {
+      map['last_studied_at'] = Variable<DateTime>(lastStudiedAt);
+    }
     return map;
   }
 
@@ -270,6 +330,10 @@ class Word extends DataClass implements Insertable<Word> {
           ? const Value.absent()
           : Value(phonetic),
       isFavorite: Value(isFavorite),
+      retentionPoint: Value(retentionPoint),
+      lastStudiedAt: lastStudiedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastStudiedAt),
     );
   }
 
@@ -287,6 +351,8 @@ class Word extends DataClass implements Insertable<Word> {
       chapter: serializer.fromJson<int>(json['chapter']),
       phonetic: serializer.fromJson<String?>(json['phonetic']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
+      retentionPoint: serializer.fromJson<int>(json['retentionPoint']),
+      lastStudiedAt: serializer.fromJson<DateTime?>(json['lastStudiedAt']),
     );
   }
   @override
@@ -301,6 +367,8 @@ class Word extends DataClass implements Insertable<Word> {
       'chapter': serializer.toJson<int>(chapter),
       'phonetic': serializer.toJson<String?>(phonetic),
       'isFavorite': serializer.toJson<bool>(isFavorite),
+      'retentionPoint': serializer.toJson<int>(retentionPoint),
+      'lastStudiedAt': serializer.toJson<DateTime?>(lastStudiedAt),
     };
   }
 
@@ -313,6 +381,8 @@ class Word extends DataClass implements Insertable<Word> {
     int? chapter,
     Value<String?> phonetic = const Value.absent(),
     bool? isFavorite,
+    int? retentionPoint,
+    Value<DateTime?> lastStudiedAt = const Value.absent(),
   }) => Word(
     id: id ?? this.id,
     english: english ?? this.english,
@@ -322,6 +392,10 @@ class Word extends DataClass implements Insertable<Word> {
     chapter: chapter ?? this.chapter,
     phonetic: phonetic.present ? phonetic.value : this.phonetic,
     isFavorite: isFavorite ?? this.isFavorite,
+    retentionPoint: retentionPoint ?? this.retentionPoint,
+    lastStudiedAt: lastStudiedAt.present
+        ? lastStudiedAt.value
+        : this.lastStudiedAt,
   );
   Word copyWithCompanion(WordsCompanion data) {
     return Word(
@@ -335,6 +409,12 @@ class Word extends DataClass implements Insertable<Word> {
       isFavorite: data.isFavorite.present
           ? data.isFavorite.value
           : this.isFavorite,
+      retentionPoint: data.retentionPoint.present
+          ? data.retentionPoint.value
+          : this.retentionPoint,
+      lastStudiedAt: data.lastStudiedAt.present
+          ? data.lastStudiedAt.value
+          : this.lastStudiedAt,
     );
   }
 
@@ -348,7 +428,9 @@ class Word extends DataClass implements Insertable<Word> {
           ..write('level: $level, ')
           ..write('chapter: $chapter, ')
           ..write('phonetic: $phonetic, ')
-          ..write('isFavorite: $isFavorite')
+          ..write('isFavorite: $isFavorite, ')
+          ..write('retentionPoint: $retentionPoint, ')
+          ..write('lastStudiedAt: $lastStudiedAt')
           ..write(')'))
         .toString();
   }
@@ -363,6 +445,8 @@ class Word extends DataClass implements Insertable<Word> {
     chapter,
     phonetic,
     isFavorite,
+    retentionPoint,
+    lastStudiedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -375,7 +459,9 @@ class Word extends DataClass implements Insertable<Word> {
           other.level == this.level &&
           other.chapter == this.chapter &&
           other.phonetic == this.phonetic &&
-          other.isFavorite == this.isFavorite);
+          other.isFavorite == this.isFavorite &&
+          other.retentionPoint == this.retentionPoint &&
+          other.lastStudiedAt == this.lastStudiedAt);
 }
 
 class WordsCompanion extends UpdateCompanion<Word> {
@@ -387,6 +473,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
   final Value<int> chapter;
   final Value<String?> phonetic;
   final Value<bool> isFavorite;
+  final Value<int> retentionPoint;
+  final Value<DateTime?> lastStudiedAt;
   const WordsCompanion({
     this.id = const Value.absent(),
     this.english = const Value.absent(),
@@ -396,6 +484,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.chapter = const Value.absent(),
     this.phonetic = const Value.absent(),
     this.isFavorite = const Value.absent(),
+    this.retentionPoint = const Value.absent(),
+    this.lastStudiedAt = const Value.absent(),
   });
   WordsCompanion.insert({
     this.id = const Value.absent(),
@@ -406,6 +496,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.chapter = const Value.absent(),
     this.phonetic = const Value.absent(),
     this.isFavorite = const Value.absent(),
+    this.retentionPoint = const Value.absent(),
+    this.lastStudiedAt = const Value.absent(),
   }) : english = Value(english),
        japanese = Value(japanese);
   static Insertable<Word> custom({
@@ -417,6 +509,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Expression<int>? chapter,
     Expression<String>? phonetic,
     Expression<bool>? isFavorite,
+    Expression<int>? retentionPoint,
+    Expression<DateTime>? lastStudiedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -427,6 +521,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
       if (chapter != null) 'chapter': chapter,
       if (phonetic != null) 'phonetic': phonetic,
       if (isFavorite != null) 'is_favorite': isFavorite,
+      if (retentionPoint != null) 'retention_point': retentionPoint,
+      if (lastStudiedAt != null) 'last_studied_at': lastStudiedAt,
     });
   }
 
@@ -439,6 +535,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Value<int>? chapter,
     Value<String?>? phonetic,
     Value<bool>? isFavorite,
+    Value<int>? retentionPoint,
+    Value<DateTime?>? lastStudiedAt,
   }) {
     return WordsCompanion(
       id: id ?? this.id,
@@ -449,6 +547,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
       chapter: chapter ?? this.chapter,
       phonetic: phonetic ?? this.phonetic,
       isFavorite: isFavorite ?? this.isFavorite,
+      retentionPoint: retentionPoint ?? this.retentionPoint,
+      lastStudiedAt: lastStudiedAt ?? this.lastStudiedAt,
     );
   }
 
@@ -479,6 +579,12 @@ class WordsCompanion extends UpdateCompanion<Word> {
     if (isFavorite.present) {
       map['is_favorite'] = Variable<bool>(isFavorite.value);
     }
+    if (retentionPoint.present) {
+      map['retention_point'] = Variable<int>(retentionPoint.value);
+    }
+    if (lastStudiedAt.present) {
+      map['last_studied_at'] = Variable<DateTime>(lastStudiedAt.value);
+    }
     return map;
   }
 
@@ -492,7 +598,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
           ..write('level: $level, ')
           ..write('chapter: $chapter, ')
           ..write('phonetic: $phonetic, ')
-          ..write('isFavorite: $isFavorite')
+          ..write('isFavorite: $isFavorite, ')
+          ..write('retentionPoint: $retentionPoint, ')
+          ..write('lastStudiedAt: $lastStudiedAt')
           ..write(')'))
         .toString();
   }
@@ -1651,6 +1759,8 @@ typedef $$WordsTableCreateCompanionBuilder = WordsCompanion Function({
   Value<int> chapter,
   Value<String?> phonetic,
   Value<bool> isFavorite,
+  Value<int> retentionPoint,
+  Value<DateTime?> lastStudiedAt,
 });
 typedef $$WordsTableUpdateCompanionBuilder = WordsCompanion Function({
   Value<int> id,
@@ -1661,6 +1771,8 @@ typedef $$WordsTableUpdateCompanionBuilder = WordsCompanion Function({
   Value<int> chapter,
   Value<String?> phonetic,
   Value<bool> isFavorite,
+  Value<int> retentionPoint,
+  Value<DateTime?> lastStudiedAt,
 });
 
 class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
@@ -1708,6 +1820,16 @@ class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
 
   ColumnFilters<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get retentionPoint => $composableBuilder(
+    column: $table.retentionPoint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastStudiedAt => $composableBuilder(
+    column: $table.lastStudiedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1760,6 +1882,16 @@ class $$WordsTableOrderingComposer
     column: $table.isFavorite,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get retentionPoint => $composableBuilder(
+    column: $table.retentionPoint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastStudiedAt => $composableBuilder(
+    column: $table.lastStudiedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$WordsTableAnnotationComposer
@@ -1794,6 +1926,16 @@ class $$WordsTableAnnotationComposer
 
   GeneratedColumn<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get retentionPoint => $composableBuilder(
+    column: $table.retentionPoint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastStudiedAt => $composableBuilder(
+    column: $table.lastStudiedAt,
     builder: (column) => column,
   );
 }
@@ -1834,6 +1976,8 @@ class $$WordsTableTableManager
                 Value<int> chapter = const Value.absent(),
                 Value<String?> phonetic = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
+                Value<int> retentionPoint = const Value.absent(),
+                Value<DateTime?> lastStudiedAt = const Value.absent(),
               }) => WordsCompanion(
                 id: id,
                 english: english,
@@ -1843,6 +1987,8 @@ class $$WordsTableTableManager
                 chapter: chapter,
                 phonetic: phonetic,
                 isFavorite: isFavorite,
+                retentionPoint: retentionPoint,
+                lastStudiedAt: lastStudiedAt,
               ),
           createCompanionCallback:
               ({
@@ -1854,6 +2000,8 @@ class $$WordsTableTableManager
                 Value<int> chapter = const Value.absent(),
                 Value<String?> phonetic = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
+                Value<int> retentionPoint = const Value.absent(),
+                Value<DateTime?> lastStudiedAt = const Value.absent(),
               }) => WordsCompanion.insert(
                 id: id,
                 english: english,
@@ -1863,6 +2011,8 @@ class $$WordsTableTableManager
                 chapter: chapter,
                 phonetic: phonetic,
                 isFavorite: isFavorite,
+                retentionPoint: retentionPoint,
+                lastStudiedAt: lastStudiedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

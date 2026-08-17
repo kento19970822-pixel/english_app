@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260818-03
+// コード管理番号: VER-20260818-06
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -416,6 +416,48 @@ class _WordsScreenState extends State<WordsScreen> {
                                       onSpeak: () => _speak(word.english),
                                       onToggleFavorite: () =>
                                           _toggleFavoriteFast(word),
+                                      // F-08: 👉 右スワイプ（暗記済み化 / 定着度100pt）
+                                      onSwipeRight: () async {
+                                        await widget.database
+                                            .updateRetentionPoint(word.id, 100);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .clearSnackBars();
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                '「${word.english}」を暗記済みに設定しました',
+                                              ),
+                                              duration: const Duration(
+                                                seconds: 1,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      // F-08: 👈 左スワイプ（0ptリセット）
+                                      onSwipeLeft: () async {
+                                        await widget.database
+                                            .updateRetentionPoint(word.id, 0);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .clearSnackBars();
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                '「${word.english}」の定着度を0ptにリセットしました',
+                                              ),
+                                              duration: const Duration(
+                                                seconds: 1,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
                                     );
                                   }, childCount: wordsInChapter.length),
                                 ),
