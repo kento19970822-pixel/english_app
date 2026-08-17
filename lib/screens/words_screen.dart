@@ -1,6 +1,7 @@
-// コード管理番号: VER-20260817-74
+// コード管理番号: VER-20260817-76
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 import '../db/app_database.dart';
 
@@ -14,6 +15,8 @@ class WordsScreen extends StatefulWidget {
 }
 
 class _WordsScreenState extends State<WordsScreen> {
+  final FlutterTts _flutterTts = FlutterTts();
+
   List<Word> _allWords = [];
   List<Word> _filteredWords = [];
 
@@ -27,7 +30,20 @@ class _WordsScreenState extends State<WordsScreen> {
   @override
   void initState() {
     super.initState();
+    _initTts();
     _loadWords();
+  }
+
+  Future<void> _initTts() async {
+    await _flutterTts.setLanguage('en-US');
+    await _flutterTts.setSpeechRate(0.5);
+  }
+
+  Future<void> _speak(String text) async {
+    if (text.isNotEmpty) {
+      await _flutterTts.stop();
+      await _flutterTts.speak(text);
+    }
   }
 
   Future<void> _loadWords() async {
@@ -160,6 +176,12 @@ class _WordsScreenState extends State<WordsScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _flutterTts.stop();
+    super.dispose();
   }
 
   @override
@@ -367,6 +389,14 @@ class _WordsScreenState extends State<WordsScreen> {
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.volume_up,
+                                        color: Colors.blueAccent,
+                                      ),
+                                      tooltip: '発音を聴く',
+                                      onPressed: () => _speak(word.english),
+                                    ),
                                     Chip(
                                       label: Text(
                                         'L${word.level}-Ch${word.chapter}',
