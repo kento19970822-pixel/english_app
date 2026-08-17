@@ -1,9 +1,11 @@
-// コード管理番号: VER-20260817-76
+// コード管理番号: VER-20260818-03
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 import '../db/app_database.dart';
+import '../widgets/sticky_chapter_header.dart';
+import '../widgets/word_card_tile.dart';
 
 class WordsScreen extends StatefulWidget {
   final AppDatabase database;
@@ -23,6 +25,7 @@ class _WordsScreenState extends State<WordsScreen> {
   int _selectedLevel = 0;
   int _selectedChapter = 0;
   bool _onlyFavorite = false;
+  bool _showJapanese = true; // F-07: 和訳表示スイッチ（デフォルトON）
   String _searchQuery = '';
 
   bool _isLoading = true;
@@ -93,6 +96,17 @@ class _WordsScreenState extends State<WordsScreen> {
     final chapters = targetWords.map((w) => w.chapter).toSet().toList();
     chapters.sort();
     return chapters;
+  }
+
+  /// フィルタリングされた単語を章（chapter）ごとにグループ化するヘルパー
+  Map<int, List<Word>> _groupWordsByChapter() {
+    final Map<int, List<Word>> grouped = {};
+    for (final word in _filteredWords) {
+      grouped.putIfAbsent(word.chapter, () => []).add(word);
+    }
+    return Map.fromEntries(
+      grouped.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+    );
   }
 
   Future<void> _toggleFavoriteFast(Word targetWord) async {
@@ -187,6 +201,7 @@ class _WordsScreenState extends State<WordsScreen> {
   @override
   Widget build(BuildContext context) {
     final availableChapters = _getAvailableChapters();
+    final groupedWords = _groupWordsByChapter();
 
     return Scaffold(
       appBar: AppBar(
@@ -312,24 +327,44 @@ class _WordsScreenState extends State<WordsScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: FilterChip(
-                          avatar: Icon(
-                            _onlyFavorite ? Icons.star : Icons.star_border,
-                            color: _onlyFavorite ? Colors.amber : Colors.grey,
-                            size: 18,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          FilterChip(
+                            avatar: Icon(
+                              _onlyFavorite ? Icons.star : Icons.star_border,
+                              color: _onlyFavorite ? Colors.amber : Colors.grey,
+                              size: 18,
+                            ),
+                            label: const Text('お気に入りのみ表示'),
+                            selected: _onlyFavorite,
+                            onSelected: (bool selected) {
+                              setState(() {
+                                _onlyFavorite = selected;
+                                _selectedChapter = 0;
+                              });
+                              _applyFilter();
+                            },
                           ),
-                          label: const Text('お気に入りのみ表示'),
-                          selected: _onlyFavorite,
-                          onSelected: (bool selected) {
-                            setState(() {
-                              _onlyFavorite = selected;
-                              _selectedChapter = 0;
-                            });
-                            _applyFilter();
-                          },
-                        ),
+                          // F-07: 和訳ON/OFF表示切り替えスイッチ
+                          Row(
+                            children: [
+                              const Text(
+                                '和訳表示',
+                                style: TextStyle(fontSize: 13),
+                              ),
+                              Switch(
+                                value: _showJapanese,
+                                activeColor: Colors.indigo,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _showJapanese = val;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -353,78 +388,71 @@ class _WordsScreenState extends State<WordsScreen> {
                 Expanded(
                   child: _filteredWords.isEmpty
                       ? const Center(child: Text('該当する単語が見つかりません'))
-                      : ListView.builder(
-                          itemCount: _filteredWords.length,
-                          itemBuilder: (context, index) {
-                            final word = _filteredWords[index];
-                            return Card(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              child: ListTile(
-                                title: Row(
-                                  children: [
-                                    Text(
-                                      word.english,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
-                                      ),
+                      : CustomScrollView(
+                          slivers: groupedWords.entries.map((entry) {
+                            final chapter = entry.key;
+                            final wordsInChapter = entry.value;
+
+                            return SliverMainAxisGroup(
+                              slivers: [
+                                SliverPersistentHeader(
+                                  pinned: true,
+                                  delegate: _StickyHeaderDelegate(
+                                    child: StickyChapterHeader(
+                                      chapter: chapter,
+                                      wordCount: wordsInChapter.length,
                                     ),
-                                    if (word.phonetic != null &&
-                                        word.phonetic!.isNotEmpty) ...[
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        word.phonetic!,
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
+                                  ),
                                 ),
-                                subtitle: Text(word.japanese),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.volume_up,
-                                        color: Colors.blueAccent,
-                                      ),
-                                      tooltip: '発音を聴く',
-                                      onPressed: () => _speak(word.english),
-                                    ),
-                                    Chip(
-                                      label: Text(
-                                        'L${word.level}-Ch${word.chapter}',
-                                        style: const TextStyle(fontSize: 11),
-                                      ),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        word.isFavorite
-                                            ? Icons.star
-                                            : Icons.star_border,
-                                        color: word.isFavorite
-                                            ? Colors.amber
-                                            : Colors.grey,
-                                      ),
-                                      onPressed: () =>
+                                SliverList(
+                                  delegate: SliverChildBuilderDelegate((
+                                    context,
+                                    index,
+                                  ) {
+                                    final word = wordsInChapter[index];
+                                    return WordCardTile(
+                                      word: word,
+                                      showJapanese: _showJapanese,
+                                      onSpeak: () => _speak(word.english),
+                                      onToggleFavorite: () =>
                                           _toggleFavoriteFast(word),
-                                    ),
-                                  ],
+                                    );
+                                  }, childCount: wordsInChapter.length),
                                 ),
-                              ),
+                              ],
                             );
-                          },
+                          }).toList(),
                         ),
                 ),
               ],
             ),
     );
+  }
+}
+
+/// Flutter標準の CustomScrollView 用の粘着ヘッダーデリゲート
+class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _StickyHeaderDelegate({required this.child});
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  double get maxExtent => 40.0;
+
+  @override
+  double get minExtent => 40.0;
+
+  @override
+  bool shouldRebuild(covariant _StickyHeaderDelegate oldDelegate) {
+    return oldDelegate.child != child;
   }
 }
