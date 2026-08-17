@@ -149,7 +149,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     setState(() {
       allWords = dbWords.map((w) => WordModel.fromDrift(w)).toList();
       favoriteWordIds = dbWords
-          .where((w) => w.isFavorite)
+          .where((w) => w.isFavorite == true)
           .map((w) => w.id)
           .toSet();
       isLoading = false;

@@ -50,7 +50,41 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('A1'),
+  );
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<int> level = GeneratedColumn<int>(
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _chapterMeta = const VerificationMeta(
+    'chapter',
+  );
+  @override
+  late final GeneratedColumn<int> chapter = GeneratedColumn<int>(
+    'chapter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _phoneticMeta = const VerificationMeta(
+    'phonetic',
+  );
+  @override
+  late final GeneratedColumn<String> phonetic = GeneratedColumn<String>(
+    'phonetic',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _isFavoriteMeta = const VerificationMeta(
     'isFavorite',
@@ -73,6 +107,9 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     english,
     japanese,
     cefr,
+    level,
+    chapter,
+    phonetic,
     isFavorite,
   ];
   @override
@@ -111,8 +148,24 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         _cefrMeta,
         cefr.isAcceptableOrUnknown(data['cefr']!, _cefrMeta),
       );
-    } else if (isInserting) {
-      context.missing(_cefrMeta);
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    }
+    if (data.containsKey('chapter')) {
+      context.handle(
+        _chapterMeta,
+        chapter.isAcceptableOrUnknown(data['chapter']!, _chapterMeta),
+      );
+    }
+    if (data.containsKey('phonetic')) {
+      context.handle(
+        _phoneticMeta,
+        phonetic.isAcceptableOrUnknown(data['phonetic']!, _phoneticMeta),
+      );
     }
     if (data.containsKey('is_favorite')) {
       context.handle(
@@ -145,6 +198,18 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         DriftSqlType.string,
         data['${effectivePrefix}cefr'],
       )!,
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}level'],
+      )!,
+      chapter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}chapter'],
+      )!,
+      phonetic: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phonetic'],
+      ),
       isFavorite: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_favorite'],
@@ -163,12 +228,18 @@ class Word extends DataClass implements Insertable<Word> {
   final String english;
   final String japanese;
   final String cefr;
+  final int level;
+  final int chapter;
+  final String? phonetic;
   final bool isFavorite;
   const Word({
     required this.id,
     required this.english,
     required this.japanese,
     required this.cefr,
+    required this.level,
+    required this.chapter,
+    this.phonetic,
     required this.isFavorite,
   });
   @override
@@ -178,6 +249,11 @@ class Word extends DataClass implements Insertable<Word> {
     map['english'] = Variable<String>(english);
     map['japanese'] = Variable<String>(japanese);
     map['cefr'] = Variable<String>(cefr);
+    map['level'] = Variable<int>(level);
+    map['chapter'] = Variable<int>(chapter);
+    if (!nullToAbsent || phonetic != null) {
+      map['phonetic'] = Variable<String>(phonetic);
+    }
     map['is_favorite'] = Variable<bool>(isFavorite);
     return map;
   }
@@ -188,6 +264,11 @@ class Word extends DataClass implements Insertable<Word> {
       english: Value(english),
       japanese: Value(japanese),
       cefr: Value(cefr),
+      level: Value(level),
+      chapter: Value(chapter),
+      phonetic: phonetic == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phonetic),
       isFavorite: Value(isFavorite),
     );
   }
@@ -202,6 +283,9 @@ class Word extends DataClass implements Insertable<Word> {
       english: serializer.fromJson<String>(json['english']),
       japanese: serializer.fromJson<String>(json['japanese']),
       cefr: serializer.fromJson<String>(json['cefr']),
+      level: serializer.fromJson<int>(json['level']),
+      chapter: serializer.fromJson<int>(json['chapter']),
+      phonetic: serializer.fromJson<String?>(json['phonetic']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
     );
   }
@@ -213,6 +297,9 @@ class Word extends DataClass implements Insertable<Word> {
       'english': serializer.toJson<String>(english),
       'japanese': serializer.toJson<String>(japanese),
       'cefr': serializer.toJson<String>(cefr),
+      'level': serializer.toJson<int>(level),
+      'chapter': serializer.toJson<int>(chapter),
+      'phonetic': serializer.toJson<String?>(phonetic),
       'isFavorite': serializer.toJson<bool>(isFavorite),
     };
   }
@@ -222,12 +309,18 @@ class Word extends DataClass implements Insertable<Word> {
     String? english,
     String? japanese,
     String? cefr,
+    int? level,
+    int? chapter,
+    Value<String?> phonetic = const Value.absent(),
     bool? isFavorite,
   }) => Word(
     id: id ?? this.id,
     english: english ?? this.english,
     japanese: japanese ?? this.japanese,
     cefr: cefr ?? this.cefr,
+    level: level ?? this.level,
+    chapter: chapter ?? this.chapter,
+    phonetic: phonetic.present ? phonetic.value : this.phonetic,
     isFavorite: isFavorite ?? this.isFavorite,
   );
   Word copyWithCompanion(WordsCompanion data) {
@@ -236,6 +329,9 @@ class Word extends DataClass implements Insertable<Word> {
       english: data.english.present ? data.english.value : this.english,
       japanese: data.japanese.present ? data.japanese.value : this.japanese,
       cefr: data.cefr.present ? data.cefr.value : this.cefr,
+      level: data.level.present ? data.level.value : this.level,
+      chapter: data.chapter.present ? data.chapter.value : this.chapter,
+      phonetic: data.phonetic.present ? data.phonetic.value : this.phonetic,
       isFavorite: data.isFavorite.present
           ? data.isFavorite.value
           : this.isFavorite,
@@ -249,13 +345,25 @@ class Word extends DataClass implements Insertable<Word> {
           ..write('english: $english, ')
           ..write('japanese: $japanese, ')
           ..write('cefr: $cefr, ')
+          ..write('level: $level, ')
+          ..write('chapter: $chapter, ')
+          ..write('phonetic: $phonetic, ')
           ..write('isFavorite: $isFavorite')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, english, japanese, cefr, isFavorite);
+  int get hashCode => Object.hash(
+    id,
+    english,
+    japanese,
+    cefr,
+    level,
+    chapter,
+    phonetic,
+    isFavorite,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -264,6 +372,9 @@ class Word extends DataClass implements Insertable<Word> {
           other.english == this.english &&
           other.japanese == this.japanese &&
           other.cefr == this.cefr &&
+          other.level == this.level &&
+          other.chapter == this.chapter &&
+          other.phonetic == this.phonetic &&
           other.isFavorite == this.isFavorite);
 }
 
@@ -272,28 +383,39 @@ class WordsCompanion extends UpdateCompanion<Word> {
   final Value<String> english;
   final Value<String> japanese;
   final Value<String> cefr;
+  final Value<int> level;
+  final Value<int> chapter;
+  final Value<String?> phonetic;
   final Value<bool> isFavorite;
   const WordsCompanion({
     this.id = const Value.absent(),
     this.english = const Value.absent(),
     this.japanese = const Value.absent(),
     this.cefr = const Value.absent(),
+    this.level = const Value.absent(),
+    this.chapter = const Value.absent(),
+    this.phonetic = const Value.absent(),
     this.isFavorite = const Value.absent(),
   });
   WordsCompanion.insert({
     this.id = const Value.absent(),
     required String english,
     required String japanese,
-    required String cefr,
+    this.cefr = const Value.absent(),
+    this.level = const Value.absent(),
+    this.chapter = const Value.absent(),
+    this.phonetic = const Value.absent(),
     this.isFavorite = const Value.absent(),
   }) : english = Value(english),
-       japanese = Value(japanese),
-       cefr = Value(cefr);
+       japanese = Value(japanese);
   static Insertable<Word> custom({
     Expression<int>? id,
     Expression<String>? english,
     Expression<String>? japanese,
     Expression<String>? cefr,
+    Expression<int>? level,
+    Expression<int>? chapter,
+    Expression<String>? phonetic,
     Expression<bool>? isFavorite,
   }) {
     return RawValuesInsertable({
@@ -301,6 +423,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
       if (english != null) 'english': english,
       if (japanese != null) 'japanese': japanese,
       if (cefr != null) 'cefr': cefr,
+      if (level != null) 'level': level,
+      if (chapter != null) 'chapter': chapter,
+      if (phonetic != null) 'phonetic': phonetic,
       if (isFavorite != null) 'is_favorite': isFavorite,
     });
   }
@@ -310,6 +435,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Value<String>? english,
     Value<String>? japanese,
     Value<String>? cefr,
+    Value<int>? level,
+    Value<int>? chapter,
+    Value<String?>? phonetic,
     Value<bool>? isFavorite,
   }) {
     return WordsCompanion(
@@ -317,6 +445,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
       english: english ?? this.english,
       japanese: japanese ?? this.japanese,
       cefr: cefr ?? this.cefr,
+      level: level ?? this.level,
+      chapter: chapter ?? this.chapter,
+      phonetic: phonetic ?? this.phonetic,
       isFavorite: isFavorite ?? this.isFavorite,
     );
   }
@@ -336,6 +467,15 @@ class WordsCompanion extends UpdateCompanion<Word> {
     if (cefr.present) {
       map['cefr'] = Variable<String>(cefr.value);
     }
+    if (level.present) {
+      map['level'] = Variable<int>(level.value);
+    }
+    if (chapter.present) {
+      map['chapter'] = Variable<int>(chapter.value);
+    }
+    if (phonetic.present) {
+      map['phonetic'] = Variable<String>(phonetic.value);
+    }
     if (isFavorite.present) {
       map['is_favorite'] = Variable<bool>(isFavorite.value);
     }
@@ -349,18 +489,21 @@ class WordsCompanion extends UpdateCompanion<Word> {
           ..write('english: $english, ')
           ..write('japanese: $japanese, ')
           ..write('cefr: $cefr, ')
+          ..write('level: $level, ')
+          ..write('chapter: $chapter, ')
+          ..write('phonetic: $phonetic, ')
           ..write('isFavorite: $isFavorite')
           ..write(')'))
         .toString();
   }
 }
 
-class $GameHistoriesTable extends GameHistories
-    with TableInfo<$GameHistoriesTable, GameHistory> {
+class $LearningHistoryTable extends LearningHistory
+    with TableInfo<$LearningHistoryTable, LearningHistoryData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $GameHistoriesTable(this.attachedDatabase, [this._alias]);
+  $LearningHistoryTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -410,10 +553,10 @@ class $GameHistoriesTable extends GameHistories
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'game_histories';
+  static const String $name = 'learning_history';
   @override
   VerificationContext validateIntegrity(
-    Insertable<GameHistory> instance, {
+    Insertable<LearningHistoryData> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -449,9 +592,9 @@ class $GameHistoriesTable extends GameHistories
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  GameHistory map(Map<String, dynamic> data, {String? tablePrefix}) {
+  LearningHistoryData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return GameHistory(
+    return LearningHistoryData(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -472,17 +615,18 @@ class $GameHistoriesTable extends GameHistories
   }
 
   @override
-  $GameHistoriesTable createAlias(String alias) {
-    return $GameHistoriesTable(attachedDatabase, alias);
+  $LearningHistoryTable createAlias(String alias) {
+    return $LearningHistoryTable(attachedDatabase, alias);
   }
 }
 
-class GameHistory extends DataClass implements Insertable<GameHistory> {
+class LearningHistoryData extends DataClass
+    implements Insertable<LearningHistoryData> {
   final int id;
   final int score;
   final int level;
   final DateTime playedAt;
-  const GameHistory({
+  const LearningHistoryData({
     required this.id,
     required this.score,
     required this.level,
@@ -498,8 +642,8 @@ class GameHistory extends DataClass implements Insertable<GameHistory> {
     return map;
   }
 
-  GameHistoriesCompanion toCompanion(bool nullToAbsent) {
-    return GameHistoriesCompanion(
+  LearningHistoryCompanion toCompanion(bool nullToAbsent) {
+    return LearningHistoryCompanion(
       id: Value(id),
       score: Value(score),
       level: Value(level),
@@ -507,12 +651,12 @@ class GameHistory extends DataClass implements Insertable<GameHistory> {
     );
   }
 
-  factory GameHistory.fromJson(
+  factory LearningHistoryData.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return GameHistory(
+    return LearningHistoryData(
       id: serializer.fromJson<int>(json['id']),
       score: serializer.fromJson<int>(json['score']),
       level: serializer.fromJson<int>(json['level']),
@@ -530,15 +674,19 @@ class GameHistory extends DataClass implements Insertable<GameHistory> {
     };
   }
 
-  GameHistory copyWith({int? id, int? score, int? level, DateTime? playedAt}) =>
-      GameHistory(
-        id: id ?? this.id,
-        score: score ?? this.score,
-        level: level ?? this.level,
-        playedAt: playedAt ?? this.playedAt,
-      );
-  GameHistory copyWithCompanion(GameHistoriesCompanion data) {
-    return GameHistory(
+  LearningHistoryData copyWith({
+    int? id,
+    int? score,
+    int? level,
+    DateTime? playedAt,
+  }) => LearningHistoryData(
+    id: id ?? this.id,
+    score: score ?? this.score,
+    level: level ?? this.level,
+    playedAt: playedAt ?? this.playedAt,
+  );
+  LearningHistoryData copyWithCompanion(LearningHistoryCompanion data) {
+    return LearningHistoryData(
       id: data.id.present ? data.id.value : this.id,
       score: data.score.present ? data.score.value : this.score,
       level: data.level.present ? data.level.value : this.level,
@@ -548,7 +696,7 @@ class GameHistory extends DataClass implements Insertable<GameHistory> {
 
   @override
   String toString() {
-    return (StringBuffer('GameHistory(')
+    return (StringBuffer('LearningHistoryData(')
           ..write('id: $id, ')
           ..write('score: $score, ')
           ..write('level: $level, ')
@@ -562,32 +710,32 @@ class GameHistory extends DataClass implements Insertable<GameHistory> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is GameHistory &&
+      (other is LearningHistoryData &&
           other.id == this.id &&
           other.score == this.score &&
           other.level == this.level &&
           other.playedAt == this.playedAt);
 }
 
-class GameHistoriesCompanion extends UpdateCompanion<GameHistory> {
+class LearningHistoryCompanion extends UpdateCompanion<LearningHistoryData> {
   final Value<int> id;
   final Value<int> score;
   final Value<int> level;
   final Value<DateTime> playedAt;
-  const GameHistoriesCompanion({
+  const LearningHistoryCompanion({
     this.id = const Value.absent(),
     this.score = const Value.absent(),
     this.level = const Value.absent(),
     this.playedAt = const Value.absent(),
   });
-  GameHistoriesCompanion.insert({
+  LearningHistoryCompanion.insert({
     this.id = const Value.absent(),
     required int score,
     required int level,
     this.playedAt = const Value.absent(),
   }) : score = Value(score),
        level = Value(level);
-  static Insertable<GameHistory> custom({
+  static Insertable<LearningHistoryData> custom({
     Expression<int>? id,
     Expression<int>? score,
     Expression<int>? level,
@@ -601,13 +749,13 @@ class GameHistoriesCompanion extends UpdateCompanion<GameHistory> {
     });
   }
 
-  GameHistoriesCompanion copyWith({
+  LearningHistoryCompanion copyWith({
     Value<int>? id,
     Value<int>? score,
     Value<int>? level,
     Value<DateTime>? playedAt,
   }) {
-    return GameHistoriesCompanion(
+    return LearningHistoryCompanion(
       id: id ?? this.id,
       score: score ?? this.score,
       level: level ?? this.level,
@@ -635,7 +783,7 @@ class GameHistoriesCompanion extends UpdateCompanion<GameHistory> {
 
   @override
   String toString() {
-    return (StringBuffer('GameHistoriesCompanion(')
+    return (StringBuffer('LearningHistoryCompanion(')
           ..write('id: $id, ')
           ..write('score: $score, ')
           ..write('level: $level, ')
@@ -645,23 +793,863 @@ class GameHistoriesCompanion extends UpdateCompanion<GameHistory> {
   }
 }
 
+class $DailyRecordsTable extends DailyRecords
+    with TableInfo<$DailyRecordsTable, DailyRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dateStrMeta = const VerificationMeta(
+    'dateStr',
+  );
+  @override
+  late final GeneratedColumn<String> dateStr = GeneratedColumn<String>(
+    'date_str',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _memorizedCountMeta = const VerificationMeta(
+    'memorizedCount',
+  );
+  @override
+  late final GeneratedColumn<int> memorizedCount = GeneratedColumn<int>(
+    'memorized_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _playedCountMeta = const VerificationMeta(
+    'playedCount',
+  );
+  @override
+  late final GeneratedColumn<int> playedCount = GeneratedColumn<int>(
+    'played_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _appliedStampIdMeta = const VerificationMeta(
+    'appliedStampId',
+  );
+  @override
+  late final GeneratedColumn<String> appliedStampId = GeneratedColumn<String>(
+    'applied_stamp_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    dateStr,
+    memorizedCount,
+    playedCount,
+    appliedStampId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DailyRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('date_str')) {
+      context.handle(
+        _dateStrMeta,
+        dateStr.isAcceptableOrUnknown(data['date_str']!, _dateStrMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateStrMeta);
+    }
+    if (data.containsKey('memorized_count')) {
+      context.handle(
+        _memorizedCountMeta,
+        memorizedCount.isAcceptableOrUnknown(
+          data['memorized_count']!,
+          _memorizedCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('played_count')) {
+      context.handle(
+        _playedCountMeta,
+        playedCount.isAcceptableOrUnknown(
+          data['played_count']!,
+          _playedCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('applied_stamp_id')) {
+      context.handle(
+        _appliedStampIdMeta,
+        appliedStampId.isAcceptableOrUnknown(
+          data['applied_stamp_id']!,
+          _appliedStampIdMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {dateStr};
+  @override
+  DailyRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyRecord(
+      dateStr: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date_str'],
+      )!,
+      memorizedCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}memorized_count'],
+      )!,
+      playedCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}played_count'],
+      )!,
+      appliedStampId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}applied_stamp_id'],
+      ),
+    );
+  }
+
+  @override
+  $DailyRecordsTable createAlias(String alias) {
+    return $DailyRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class DailyRecord extends DataClass implements Insertable<DailyRecord> {
+  /// 日付文字列 (`YYYY-MM-DD` を主キーとする)
+  final String dateStr;
+
+  /// その日に新しく暗記済みにした単語数
+  final int memorizedCount;
+
+  /// その日のゲームプレイ回数
+  final int playedCount;
+
+  /// その日カレンダーに押されたスタンプID (Null許容)
+  final String? appliedStampId;
+  const DailyRecord({
+    required this.dateStr,
+    required this.memorizedCount,
+    required this.playedCount,
+    this.appliedStampId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['date_str'] = Variable<String>(dateStr);
+    map['memorized_count'] = Variable<int>(memorizedCount);
+    map['played_count'] = Variable<int>(playedCount);
+    if (!nullToAbsent || appliedStampId != null) {
+      map['applied_stamp_id'] = Variable<String>(appliedStampId);
+    }
+    return map;
+  }
+
+  DailyRecordsCompanion toCompanion(bool nullToAbsent) {
+    return DailyRecordsCompanion(
+      dateStr: Value(dateStr),
+      memorizedCount: Value(memorizedCount),
+      playedCount: Value(playedCount),
+      appliedStampId: appliedStampId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(appliedStampId),
+    );
+  }
+
+  factory DailyRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyRecord(
+      dateStr: serializer.fromJson<String>(json['dateStr']),
+      memorizedCount: serializer.fromJson<int>(json['memorizedCount']),
+      playedCount: serializer.fromJson<int>(json['playedCount']),
+      appliedStampId: serializer.fromJson<String?>(json['appliedStampId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'dateStr': serializer.toJson<String>(dateStr),
+      'memorizedCount': serializer.toJson<int>(memorizedCount),
+      'playedCount': serializer.toJson<int>(playedCount),
+      'appliedStampId': serializer.toJson<String?>(appliedStampId),
+    };
+  }
+
+  DailyRecord copyWith({
+    String? dateStr,
+    int? memorizedCount,
+    int? playedCount,
+    Value<String?> appliedStampId = const Value.absent(),
+  }) => DailyRecord(
+    dateStr: dateStr ?? this.dateStr,
+    memorizedCount: memorizedCount ?? this.memorizedCount,
+    playedCount: playedCount ?? this.playedCount,
+    appliedStampId: appliedStampId.present
+        ? appliedStampId.value
+        : this.appliedStampId,
+  );
+  DailyRecord copyWithCompanion(DailyRecordsCompanion data) {
+    return DailyRecord(
+      dateStr: data.dateStr.present ? data.dateStr.value : this.dateStr,
+      memorizedCount: data.memorizedCount.present
+          ? data.memorizedCount.value
+          : this.memorizedCount,
+      playedCount: data.playedCount.present
+          ? data.playedCount.value
+          : this.playedCount,
+      appliedStampId: data.appliedStampId.present
+          ? data.appliedStampId.value
+          : this.appliedStampId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyRecord(')
+          ..write('dateStr: $dateStr, ')
+          ..write('memorizedCount: $memorizedCount, ')
+          ..write('playedCount: $playedCount, ')
+          ..write('appliedStampId: $appliedStampId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(dateStr, memorizedCount, playedCount, appliedStampId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyRecord &&
+          other.dateStr == this.dateStr &&
+          other.memorizedCount == this.memorizedCount &&
+          other.playedCount == this.playedCount &&
+          other.appliedStampId == this.appliedStampId);
+}
+
+class DailyRecordsCompanion extends UpdateCompanion<DailyRecord> {
+  final Value<String> dateStr;
+  final Value<int> memorizedCount;
+  final Value<int> playedCount;
+  final Value<String?> appliedStampId;
+  final Value<int> rowid;
+  const DailyRecordsCompanion({
+    this.dateStr = const Value.absent(),
+    this.memorizedCount = const Value.absent(),
+    this.playedCount = const Value.absent(),
+    this.appliedStampId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DailyRecordsCompanion.insert({
+    required String dateStr,
+    this.memorizedCount = const Value.absent(),
+    this.playedCount = const Value.absent(),
+    this.appliedStampId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : dateStr = Value(dateStr);
+  static Insertable<DailyRecord> custom({
+    Expression<String>? dateStr,
+    Expression<int>? memorizedCount,
+    Expression<int>? playedCount,
+    Expression<String>? appliedStampId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (dateStr != null) 'date_str': dateStr,
+      if (memorizedCount != null) 'memorized_count': memorizedCount,
+      if (playedCount != null) 'played_count': playedCount,
+      if (appliedStampId != null) 'applied_stamp_id': appliedStampId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DailyRecordsCompanion copyWith({
+    Value<String>? dateStr,
+    Value<int>? memorizedCount,
+    Value<int>? playedCount,
+    Value<String?>? appliedStampId,
+    Value<int>? rowid,
+  }) {
+    return DailyRecordsCompanion(
+      dateStr: dateStr ?? this.dateStr,
+      memorizedCount: memorizedCount ?? this.memorizedCount,
+      playedCount: playedCount ?? this.playedCount,
+      appliedStampId: appliedStampId ?? this.appliedStampId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (dateStr.present) {
+      map['date_str'] = Variable<String>(dateStr.value);
+    }
+    if (memorizedCount.present) {
+      map['memorized_count'] = Variable<int>(memorizedCount.value);
+    }
+    if (playedCount.present) {
+      map['played_count'] = Variable<int>(playedCount.value);
+    }
+    if (appliedStampId.present) {
+      map['applied_stamp_id'] = Variable<String>(appliedStampId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyRecordsCompanion(')
+          ..write('dateStr: $dateStr, ')
+          ..write('memorizedCount: $memorizedCount, ')
+          ..write('playedCount: $playedCount, ')
+          ..write('appliedStampId: $appliedStampId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StampsTable extends Stamps with TableInfo<$StampsTable, Stamp> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StampsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _iconCodeMeta = const VerificationMeta(
+    'iconCode',
+  );
+  @override
+  late final GeneratedColumn<String> iconCode = GeneratedColumn<String>(
+    'icon_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _conditionTypeMeta = const VerificationMeta(
+    'conditionType',
+  );
+  @override
+  late final GeneratedColumn<String> conditionType = GeneratedColumn<String>(
+    'condition_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('none'),
+  );
+  static const VerificationMeta _conditionValueMeta = const VerificationMeta(
+    'conditionValue',
+  );
+  @override
+  late final GeneratedColumn<int> conditionValue = GeneratedColumn<int>(
+    'condition_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isUnlockedMeta = const VerificationMeta(
+    'isUnlocked',
+  );
+  @override
+  late final GeneratedColumn<bool> isUnlocked = GeneratedColumn<bool>(
+    'is_unlocked',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_unlocked" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _unlockedAtMeta = const VerificationMeta(
+    'unlockedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> unlockedAt = GeneratedColumn<DateTime>(
+    'unlocked_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    iconCode,
+    conditionType,
+    conditionValue,
+    isUnlocked,
+    unlockedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'stamps';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Stamp> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('icon_code')) {
+      context.handle(
+        _iconCodeMeta,
+        iconCode.isAcceptableOrUnknown(data['icon_code']!, _iconCodeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_iconCodeMeta);
+    }
+    if (data.containsKey('condition_type')) {
+      context.handle(
+        _conditionTypeMeta,
+        conditionType.isAcceptableOrUnknown(
+          data['condition_type']!,
+          _conditionTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('condition_value')) {
+      context.handle(
+        _conditionValueMeta,
+        conditionValue.isAcceptableOrUnknown(
+          data['condition_value']!,
+          _conditionValueMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_unlocked')) {
+      context.handle(
+        _isUnlockedMeta,
+        isUnlocked.isAcceptableOrUnknown(data['is_unlocked']!, _isUnlockedMeta),
+      );
+    }
+    if (data.containsKey('unlocked_at')) {
+      context.handle(
+        _unlockedAtMeta,
+        unlockedAt.isAcceptableOrUnknown(data['unlocked_at']!, _unlockedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Stamp map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Stamp(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      iconCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon_code'],
+      )!,
+      conditionType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}condition_type'],
+      )!,
+      conditionValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}condition_value'],
+      )!,
+      isUnlocked: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_unlocked'],
+      )!,
+      unlockedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}unlocked_at'],
+      ),
+    );
+  }
+
+  @override
+  $StampsTable createAlias(String alias) {
+    return $StampsTable(attachedDatabase, alias);
+  }
+}
+
+class Stamp extends DataClass implements Insertable<Stamp> {
+  /// スタンプID (例: `stamp_lion`, `stamp_cat`)
+  final String id;
+
+  /// スタンプ名 (例: ライオンスタンプ)
+  final String name;
+
+  /// 表示用アイコン識別子 / 画像アセットパス
+  final String iconCode;
+
+  /// 出現条件種別 (`none`, `streak`, `daily_memorized`)
+  final String conditionType;
+
+  /// 条件閾値 (例: 連続3日なら 3)
+  final int conditionValue;
+
+  /// 獲得（ロック解除）フラグ
+  final bool isUnlocked;
+
+  /// 初回獲得日時
+  final DateTime? unlockedAt;
+  const Stamp({
+    required this.id,
+    required this.name,
+    required this.iconCode,
+    required this.conditionType,
+    required this.conditionValue,
+    required this.isUnlocked,
+    this.unlockedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['icon_code'] = Variable<String>(iconCode);
+    map['condition_type'] = Variable<String>(conditionType);
+    map['condition_value'] = Variable<int>(conditionValue);
+    map['is_unlocked'] = Variable<bool>(isUnlocked);
+    if (!nullToAbsent || unlockedAt != null) {
+      map['unlocked_at'] = Variable<DateTime>(unlockedAt);
+    }
+    return map;
+  }
+
+  StampsCompanion toCompanion(bool nullToAbsent) {
+    return StampsCompanion(
+      id: Value(id),
+      name: Value(name),
+      iconCode: Value(iconCode),
+      conditionType: Value(conditionType),
+      conditionValue: Value(conditionValue),
+      isUnlocked: Value(isUnlocked),
+      unlockedAt: unlockedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unlockedAt),
+    );
+  }
+
+  factory Stamp.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Stamp(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      iconCode: serializer.fromJson<String>(json['iconCode']),
+      conditionType: serializer.fromJson<String>(json['conditionType']),
+      conditionValue: serializer.fromJson<int>(json['conditionValue']),
+      isUnlocked: serializer.fromJson<bool>(json['isUnlocked']),
+      unlockedAt: serializer.fromJson<DateTime?>(json['unlockedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'iconCode': serializer.toJson<String>(iconCode),
+      'conditionType': serializer.toJson<String>(conditionType),
+      'conditionValue': serializer.toJson<int>(conditionValue),
+      'isUnlocked': serializer.toJson<bool>(isUnlocked),
+      'unlockedAt': serializer.toJson<DateTime?>(unlockedAt),
+    };
+  }
+
+  Stamp copyWith({
+    String? id,
+    String? name,
+    String? iconCode,
+    String? conditionType,
+    int? conditionValue,
+    bool? isUnlocked,
+    Value<DateTime?> unlockedAt = const Value.absent(),
+  }) => Stamp(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    iconCode: iconCode ?? this.iconCode,
+    conditionType: conditionType ?? this.conditionType,
+    conditionValue: conditionValue ?? this.conditionValue,
+    isUnlocked: isUnlocked ?? this.isUnlocked,
+    unlockedAt: unlockedAt.present ? unlockedAt.value : this.unlockedAt,
+  );
+  Stamp copyWithCompanion(StampsCompanion data) {
+    return Stamp(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      iconCode: data.iconCode.present ? data.iconCode.value : this.iconCode,
+      conditionType: data.conditionType.present
+          ? data.conditionType.value
+          : this.conditionType,
+      conditionValue: data.conditionValue.present
+          ? data.conditionValue.value
+          : this.conditionValue,
+      isUnlocked: data.isUnlocked.present
+          ? data.isUnlocked.value
+          : this.isUnlocked,
+      unlockedAt: data.unlockedAt.present
+          ? data.unlockedAt.value
+          : this.unlockedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Stamp(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('iconCode: $iconCode, ')
+          ..write('conditionType: $conditionType, ')
+          ..write('conditionValue: $conditionValue, ')
+          ..write('isUnlocked: $isUnlocked, ')
+          ..write('unlockedAt: $unlockedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    iconCode,
+    conditionType,
+    conditionValue,
+    isUnlocked,
+    unlockedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Stamp &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.iconCode == this.iconCode &&
+          other.conditionType == this.conditionType &&
+          other.conditionValue == this.conditionValue &&
+          other.isUnlocked == this.isUnlocked &&
+          other.unlockedAt == this.unlockedAt);
+}
+
+class StampsCompanion extends UpdateCompanion<Stamp> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> iconCode;
+  final Value<String> conditionType;
+  final Value<int> conditionValue;
+  final Value<bool> isUnlocked;
+  final Value<DateTime?> unlockedAt;
+  final Value<int> rowid;
+  const StampsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.iconCode = const Value.absent(),
+    this.conditionType = const Value.absent(),
+    this.conditionValue = const Value.absent(),
+    this.isUnlocked = const Value.absent(),
+    this.unlockedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StampsCompanion.insert({
+    required String id,
+    required String name,
+    required String iconCode,
+    this.conditionType = const Value.absent(),
+    this.conditionValue = const Value.absent(),
+    this.isUnlocked = const Value.absent(),
+    this.unlockedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       iconCode = Value(iconCode);
+  static Insertable<Stamp> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? iconCode,
+    Expression<String>? conditionType,
+    Expression<int>? conditionValue,
+    Expression<bool>? isUnlocked,
+    Expression<DateTime>? unlockedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (iconCode != null) 'icon_code': iconCode,
+      if (conditionType != null) 'condition_type': conditionType,
+      if (conditionValue != null) 'condition_value': conditionValue,
+      if (isUnlocked != null) 'is_unlocked': isUnlocked,
+      if (unlockedAt != null) 'unlocked_at': unlockedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StampsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? iconCode,
+    Value<String>? conditionType,
+    Value<int>? conditionValue,
+    Value<bool>? isUnlocked,
+    Value<DateTime?>? unlockedAt,
+    Value<int>? rowid,
+  }) {
+    return StampsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      iconCode: iconCode ?? this.iconCode,
+      conditionType: conditionType ?? this.conditionType,
+      conditionValue: conditionValue ?? this.conditionValue,
+      isUnlocked: isUnlocked ?? this.isUnlocked,
+      unlockedAt: unlockedAt ?? this.unlockedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (iconCode.present) {
+      map['icon_code'] = Variable<String>(iconCode.value);
+    }
+    if (conditionType.present) {
+      map['condition_type'] = Variable<String>(conditionType.value);
+    }
+    if (conditionValue.present) {
+      map['condition_value'] = Variable<int>(conditionValue.value);
+    }
+    if (isUnlocked.present) {
+      map['is_unlocked'] = Variable<bool>(isUnlocked.value);
+    }
+    if (unlockedAt.present) {
+      map['unlocked_at'] = Variable<DateTime>(unlockedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StampsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('iconCode: $iconCode, ')
+          ..write('conditionType: $conditionType, ')
+          ..write('conditionValue: $conditionValue, ')
+          ..write('isUnlocked: $isUnlocked, ')
+          ..write('unlockedAt: $unlockedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $WordsTable words = $WordsTable(this);
-  late final $GameHistoriesTable gameHistories = $GameHistoriesTable(this);
+  late final $LearningHistoryTable learningHistory = $LearningHistoryTable(
+    this,
+  );
+  late final $DailyRecordsTable dailyRecords = $DailyRecordsTable(this);
+  late final $StampsTable stamps = $StampsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [words, gameHistories];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    words,
+    learningHistory,
+    dailyRecords,
+    stamps,
+  ];
 }
 
 typedef $$WordsTableCreateCompanionBuilder = WordsCompanion Function({
   Value<int> id,
   required String english,
   required String japanese,
-  required String cefr,
+  Value<String> cefr,
+  Value<int> level,
+  Value<int> chapter,
+  Value<String?> phonetic,
   Value<bool> isFavorite,
 });
 typedef $$WordsTableUpdateCompanionBuilder = WordsCompanion Function({
@@ -669,6 +1657,9 @@ typedef $$WordsTableUpdateCompanionBuilder = WordsCompanion Function({
   Value<String> english,
   Value<String> japanese,
   Value<String> cefr,
+  Value<int> level,
+  Value<int> chapter,
+  Value<String?> phonetic,
   Value<bool> isFavorite,
 });
 
@@ -697,6 +1688,21 @@ class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
 
   ColumnFilters<String> get cefr => $composableBuilder(
     column: $table.cefr,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get chapter => $composableBuilder(
+    column: $table.chapter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phonetic => $composableBuilder(
+    column: $table.phonetic,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -735,6 +1741,21 @@ class $$WordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get chapter => $composableBuilder(
+    column: $table.chapter,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get phonetic => $composableBuilder(
+    column: $table.phonetic,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
     builder: (column) => ColumnOrderings(column),
@@ -761,6 +1782,15 @@ class $$WordsTableAnnotationComposer
 
   GeneratedColumn<String> get cefr =>
       $composableBuilder(column: $table.cefr, builder: (column) => column);
+
+  GeneratedColumn<int> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<int> get chapter =>
+      $composableBuilder(column: $table.chapter, builder: (column) => column);
+
+  GeneratedColumn<String> get phonetic =>
+      $composableBuilder(column: $table.phonetic, builder: (column) => column);
 
   GeneratedColumn<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
@@ -800,12 +1830,18 @@ class $$WordsTableTableManager
                 Value<String> english = const Value.absent(),
                 Value<String> japanese = const Value.absent(),
                 Value<String> cefr = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<int> chapter = const Value.absent(),
+                Value<String?> phonetic = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
               }) => WordsCompanion(
                 id: id,
                 english: english,
                 japanese: japanese,
                 cefr: cefr,
+                level: level,
+                chapter: chapter,
+                phonetic: phonetic,
                 isFavorite: isFavorite,
               ),
           createCompanionCallback:
@@ -813,13 +1849,19 @@ class $$WordsTableTableManager
                 Value<int> id = const Value.absent(),
                 required String english,
                 required String japanese,
-                required String cefr,
+                Value<String> cefr = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<int> chapter = const Value.absent(),
+                Value<String?> phonetic = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
               }) => WordsCompanion.insert(
                 id: id,
                 english: english,
                 japanese: japanese,
                 cefr: cefr,
+                level: level,
+                chapter: chapter,
+                phonetic: phonetic,
                 isFavorite: isFavorite,
               ),
           withReferenceMapper: (p0) => p0
@@ -844,24 +1886,24 @@ typedef $$WordsTableProcessedTableManager =
       Word,
       PrefetchHooks Function()
     >;
-typedef $$GameHistoriesTableCreateCompanionBuilder =
-    GameHistoriesCompanion Function({
+typedef $$LearningHistoryTableCreateCompanionBuilder =
+    LearningHistoryCompanion Function({
       Value<int> id,
       required int score,
       required int level,
       Value<DateTime> playedAt,
     });
-typedef $$GameHistoriesTableUpdateCompanionBuilder =
-    GameHistoriesCompanion Function({
+typedef $$LearningHistoryTableUpdateCompanionBuilder =
+    LearningHistoryCompanion Function({
       Value<int> id,
       Value<int> score,
       Value<int> level,
       Value<DateTime> playedAt,
     });
 
-class $$GameHistoriesTableFilterComposer
-    extends Composer<_$AppDatabase, $GameHistoriesTable> {
-  $$GameHistoriesTableFilterComposer({
+class $$LearningHistoryTableFilterComposer
+    extends Composer<_$AppDatabase, $LearningHistoryTable> {
+  $$LearningHistoryTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -889,9 +1931,9 @@ class $$GameHistoriesTableFilterComposer
   );
 }
 
-class $$GameHistoriesTableOrderingComposer
-    extends Composer<_$AppDatabase, $GameHistoriesTable> {
-  $$GameHistoriesTableOrderingComposer({
+class $$LearningHistoryTableOrderingComposer
+    extends Composer<_$AppDatabase, $LearningHistoryTable> {
+  $$LearningHistoryTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -919,9 +1961,9 @@ class $$GameHistoriesTableOrderingComposer
   );
 }
 
-class $$GameHistoriesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $GameHistoriesTable> {
-  $$GameHistoriesTableAnnotationComposer({
+class $$LearningHistoryTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LearningHistoryTable> {
+  $$LearningHistoryTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -941,42 +1983,48 @@ class $$GameHistoriesTableAnnotationComposer
       $composableBuilder(column: $table.playedAt, builder: (column) => column);
 }
 
-class $$GameHistoriesTableTableManager
+class $$LearningHistoryTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $GameHistoriesTable,
-          GameHistory,
-          $$GameHistoriesTableFilterComposer,
-          $$GameHistoriesTableOrderingComposer,
-          $$GameHistoriesTableAnnotationComposer,
-          $$GameHistoriesTableCreateCompanionBuilder,
-          $$GameHistoriesTableUpdateCompanionBuilder,
+          $LearningHistoryTable,
+          LearningHistoryData,
+          $$LearningHistoryTableFilterComposer,
+          $$LearningHistoryTableOrderingComposer,
+          $$LearningHistoryTableAnnotationComposer,
+          $$LearningHistoryTableCreateCompanionBuilder,
+          $$LearningHistoryTableUpdateCompanionBuilder,
           (
-            GameHistory,
-            BaseReferences<_$AppDatabase, $GameHistoriesTable, GameHistory>,
+            LearningHistoryData,
+            BaseReferences<
+              _$AppDatabase,
+              $LearningHistoryTable,
+              LearningHistoryData
+            >,
           ),
-          GameHistory,
+          LearningHistoryData,
           PrefetchHooks Function()
         > {
-  $$GameHistoriesTableTableManager(_$AppDatabase db, $GameHistoriesTable table)
-    : super(
+  $$LearningHistoryTableTableManager(
+    _$AppDatabase db,
+    $LearningHistoryTable table,
+  ) : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$GameHistoriesTableFilterComposer($db: db, $table: table),
+              $$LearningHistoryTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$GameHistoriesTableOrderingComposer($db: db, $table: table),
+              $$LearningHistoryTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$GameHistoriesTableAnnotationComposer($db: db, $table: table),
+              $$LearningHistoryTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 Value<int> score = const Value.absent(),
                 Value<int> level = const Value.absent(),
                 Value<DateTime> playedAt = const Value.absent(),
-              }) => GameHistoriesCompanion(
+              }) => LearningHistoryCompanion(
                 id: id,
                 score: score,
                 level: level,
@@ -988,7 +2036,7 @@ class $$GameHistoriesTableTableManager
                 required int score,
                 required int level,
                 Value<DateTime> playedAt = const Value.absent(),
-              }) => GameHistoriesCompanion.insert(
+              }) => LearningHistoryCompanion.insert(
                 id: id,
                 score: score,
                 level: level,
@@ -1002,21 +2050,450 @@ class $$GameHistoriesTableTableManager
       );
 }
 
-typedef $$GameHistoriesTableProcessedTableManager =
+typedef $$LearningHistoryTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $GameHistoriesTable,
-      GameHistory,
-      $$GameHistoriesTableFilterComposer,
-      $$GameHistoriesTableOrderingComposer,
-      $$GameHistoriesTableAnnotationComposer,
-      $$GameHistoriesTableCreateCompanionBuilder,
-      $$GameHistoriesTableUpdateCompanionBuilder,
+      $LearningHistoryTable,
+      LearningHistoryData,
+      $$LearningHistoryTableFilterComposer,
+      $$LearningHistoryTableOrderingComposer,
+      $$LearningHistoryTableAnnotationComposer,
+      $$LearningHistoryTableCreateCompanionBuilder,
+      $$LearningHistoryTableUpdateCompanionBuilder,
       (
-        GameHistory,
-        BaseReferences<_$AppDatabase, $GameHistoriesTable, GameHistory>,
+        LearningHistoryData,
+        BaseReferences<
+          _$AppDatabase,
+          $LearningHistoryTable,
+          LearningHistoryData
+        >,
       ),
-      GameHistory,
+      LearningHistoryData,
+      PrefetchHooks Function()
+    >;
+typedef $$DailyRecordsTableCreateCompanionBuilder =
+    DailyRecordsCompanion Function({
+      required String dateStr,
+      Value<int> memorizedCount,
+      Value<int> playedCount,
+      Value<String?> appliedStampId,
+      Value<int> rowid,
+    });
+typedef $$DailyRecordsTableUpdateCompanionBuilder =
+    DailyRecordsCompanion Function({
+      Value<String> dateStr,
+      Value<int> memorizedCount,
+      Value<int> playedCount,
+      Value<String?> appliedStampId,
+      Value<int> rowid,
+    });
+
+class $$DailyRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyRecordsTable> {
+  $$DailyRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get dateStr => $composableBuilder(
+    column: $table.dateStr,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get memorizedCount => $composableBuilder(
+    column: $table.memorizedCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get playedCount => $composableBuilder(
+    column: $table.playedCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get appliedStampId => $composableBuilder(
+    column: $table.appliedStampId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DailyRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyRecordsTable> {
+  $$DailyRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get dateStr => $composableBuilder(
+    column: $table.dateStr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get memorizedCount => $composableBuilder(
+    column: $table.memorizedCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get playedCount => $composableBuilder(
+    column: $table.playedCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get appliedStampId => $composableBuilder(
+    column: $table.appliedStampId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DailyRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyRecordsTable> {
+  $$DailyRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get dateStr =>
+      $composableBuilder(column: $table.dateStr, builder: (column) => column);
+
+  GeneratedColumn<int> get memorizedCount => $composableBuilder(
+    column: $table.memorizedCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get playedCount => $composableBuilder(
+    column: $table.playedCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get appliedStampId => $composableBuilder(
+    column: $table.appliedStampId,
+    builder: (column) => column,
+  );
+}
+
+class $$DailyRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DailyRecordsTable,
+          DailyRecord,
+          $$DailyRecordsTableFilterComposer,
+          $$DailyRecordsTableOrderingComposer,
+          $$DailyRecordsTableAnnotationComposer,
+          $$DailyRecordsTableCreateCompanionBuilder,
+          $$DailyRecordsTableUpdateCompanionBuilder,
+          (
+            DailyRecord,
+            BaseReferences<_$AppDatabase, $DailyRecordsTable, DailyRecord>,
+          ),
+          DailyRecord,
+          PrefetchHooks Function()
+        > {
+  $$DailyRecordsTableTableManager(_$AppDatabase db, $DailyRecordsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyRecordsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailyRecordsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> dateStr = const Value.absent(),
+                Value<int> memorizedCount = const Value.absent(),
+                Value<int> playedCount = const Value.absent(),
+                Value<String?> appliedStampId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyRecordsCompanion(
+                dateStr: dateStr,
+                memorizedCount: memorizedCount,
+                playedCount: playedCount,
+                appliedStampId: appliedStampId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String dateStr,
+                Value<int> memorizedCount = const Value.absent(),
+                Value<int> playedCount = const Value.absent(),
+                Value<String?> appliedStampId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyRecordsCompanion.insert(
+                dateStr: dateStr,
+                memorizedCount: memorizedCount,
+                playedCount: playedCount,
+                appliedStampId: appliedStampId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DailyRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DailyRecordsTable,
+      DailyRecord,
+      $$DailyRecordsTableFilterComposer,
+      $$DailyRecordsTableOrderingComposer,
+      $$DailyRecordsTableAnnotationComposer,
+      $$DailyRecordsTableCreateCompanionBuilder,
+      $$DailyRecordsTableUpdateCompanionBuilder,
+      (
+        DailyRecord,
+        BaseReferences<_$AppDatabase, $DailyRecordsTable, DailyRecord>,
+      ),
+      DailyRecord,
+      PrefetchHooks Function()
+    >;
+typedef $$StampsTableCreateCompanionBuilder = StampsCompanion Function({
+  required String id,
+  required String name,
+  required String iconCode,
+  Value<String> conditionType,
+  Value<int> conditionValue,
+  Value<bool> isUnlocked,
+  Value<DateTime?> unlockedAt,
+  Value<int> rowid,
+});
+typedef $$StampsTableUpdateCompanionBuilder = StampsCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> iconCode,
+  Value<String> conditionType,
+  Value<int> conditionValue,
+  Value<bool> isUnlocked,
+  Value<DateTime?> unlockedAt,
+  Value<int> rowid,
+});
+
+class $$StampsTableFilterComposer
+    extends Composer<_$AppDatabase, $StampsTable> {
+  $$StampsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get iconCode => $composableBuilder(
+    column: $table.iconCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get conditionType => $composableBuilder(
+    column: $table.conditionType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get conditionValue => $composableBuilder(
+    column: $table.conditionValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isUnlocked => $composableBuilder(
+    column: $table.isUnlocked,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StampsTableOrderingComposer
+    extends Composer<_$AppDatabase, $StampsTable> {
+  $$StampsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get iconCode => $composableBuilder(
+    column: $table.iconCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get conditionType => $composableBuilder(
+    column: $table.conditionType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get conditionValue => $composableBuilder(
+    column: $table.conditionValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isUnlocked => $composableBuilder(
+    column: $table.isUnlocked,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StampsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StampsTable> {
+  $$StampsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get iconCode =>
+      $composableBuilder(column: $table.iconCode, builder: (column) => column);
+
+  GeneratedColumn<String> get conditionType => $composableBuilder(
+    column: $table.conditionType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get conditionValue => $composableBuilder(
+    column: $table.conditionValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isUnlocked => $composableBuilder(
+    column: $table.isUnlocked,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$StampsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StampsTable,
+          Stamp,
+          $$StampsTableFilterComposer,
+          $$StampsTableOrderingComposer,
+          $$StampsTableAnnotationComposer,
+          $$StampsTableCreateCompanionBuilder,
+          $$StampsTableUpdateCompanionBuilder,
+          (Stamp, BaseReferences<_$AppDatabase, $StampsTable, Stamp>),
+          Stamp,
+          PrefetchHooks Function()
+        > {
+  $$StampsTableTableManager(_$AppDatabase db, $StampsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StampsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StampsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StampsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> iconCode = const Value.absent(),
+                Value<String> conditionType = const Value.absent(),
+                Value<int> conditionValue = const Value.absent(),
+                Value<bool> isUnlocked = const Value.absent(),
+                Value<DateTime?> unlockedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StampsCompanion(
+                id: id,
+                name: name,
+                iconCode: iconCode,
+                conditionType: conditionType,
+                conditionValue: conditionValue,
+                isUnlocked: isUnlocked,
+                unlockedAt: unlockedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required String iconCode,
+                Value<String> conditionType = const Value.absent(),
+                Value<int> conditionValue = const Value.absent(),
+                Value<bool> isUnlocked = const Value.absent(),
+                Value<DateTime?> unlockedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StampsCompanion.insert(
+                id: id,
+                name: name,
+                iconCode: iconCode,
+                conditionType: conditionType,
+                conditionValue: conditionValue,
+                isUnlocked: isUnlocked,
+                unlockedAt: unlockedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StampsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StampsTable,
+      Stamp,
+      $$StampsTableFilterComposer,
+      $$StampsTableOrderingComposer,
+      $$StampsTableAnnotationComposer,
+      $$StampsTableCreateCompanionBuilder,
+      $$StampsTableUpdateCompanionBuilder,
+      (Stamp, BaseReferences<_$AppDatabase, $StampsTable, Stamp>),
+      Stamp,
       PrefetchHooks Function()
     >;
 
@@ -1025,6 +2502,10 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$WordsTableTableManager get words =>
       $$WordsTableTableManager(_db, _db.words);
-  $$GameHistoriesTableTableManager get gameHistories =>
-      $$GameHistoriesTableTableManager(_db, _db.gameHistories);
+  $$LearningHistoryTableTableManager get learningHistory =>
+      $$LearningHistoryTableTableManager(_db, _db.learningHistory);
+  $$DailyRecordsTableTableManager get dailyRecords =>
+      $$DailyRecordsTableTableManager(_db, _db.dailyRecords);
+  $$StampsTableTableManager get stamps =>
+      $$StampsTableTableManager(_db, _db.stamps);
 }
