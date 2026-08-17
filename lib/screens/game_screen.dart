@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260817-126
+// コード管理番号: VER-20260817-127
 import 'dart:async';
 import 'dart:math';
 
@@ -175,7 +175,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
   }
 
-  /// 効果音（SE）再生メソッド
   void _playSE(String type) async {
     try {
       String fileName = "";
@@ -378,8 +377,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         setState(() {
           if (isLeft) {
             leftWord = null;
+            leftChoices = [];
           } else {
             rightWord = null;
+            rightChoices = [];
           }
         });
         _nextQuestion(isLeft: isLeft);
@@ -429,8 +430,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       setState(() {
         if (isLeft) {
           leftWord = null;
+          leftChoices = [];
         } else {
           rightWord = null;
+          rightChoices = [];
         }
       });
       _nextQuestion(isLeft: isLeft);
@@ -492,6 +495,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       isPaused = false;
       leftWord = null;
       rightWord = null;
+      leftChoices = [];
+      rightChoices = [];
     });
     widget.onGameStateChanged?.call(false);
   }
@@ -837,6 +842,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     required Color laneColor,
     required Color cardColor,
   }) {
+    // 選択肢がない場合（待機状態）でも4つのプレースホルダー枠を固定描画
+    final displayChoices = choices.isNotEmpty ? choices : List.filled(4, '');
+
     return Container(
       color: laneColor,
       child: Column(
@@ -955,9 +963,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             padding: const EdgeInsets.all(6),
             color: Colors.white,
             child: Column(
-              children: List.generate(choices.length, (index) {
-                final choice = choices[index];
-                final isDisabled = disabledChoices.contains(choice);
+              children: List.generate(displayChoices.length, (index) {
+                final choice = displayChoices[index];
+                final isPlaceholder = choice.isEmpty;
+                final isDisabled =
+                    isPlaceholder || disabledChoices.contains(choice);
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 3),
@@ -966,15 +976,29 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     height: 40,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        disabledBackgroundColor: Colors.red.shade100,
-                        disabledForegroundColor: Colors.red.shade700,
+                        disabledBackgroundColor: isPlaceholder
+                            ? Colors.grey[100]
+                            : Colors.red.shade100,
+                        disabledForegroundColor: isPlaceholder
+                            ? Colors.transparent
+                            : Colors.red.shade700,
                         backgroundColor: isDisabled
-                            ? Colors.red.shade100
+                            ? (isPlaceholder
+                                  ? Colors.grey[100]
+                                  : Colors.red.shade100)
                             : Colors.grey[100],
                         foregroundColor: isDisabled
-                            ? Colors.red.shade700
+                            ? (isPlaceholder
+                                  ? Colors.transparent
+                                  : Colors.red.shade700)
                             : Colors.black87,
-                        elevation: isDisabled ? 0 : 1,
+                        elevation: 0,
+                        side: BorderSide(
+                          color: isPlaceholder
+                              ? Colors.grey.shade300
+                              : Colors.transparent,
+                          width: 1,
+                        ),
                         padding: EdgeInsets.zero,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -991,7 +1015,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          decoration: isDisabled
+                          decoration: (!isPlaceholder && isDisabled)
                               ? TextDecoration.lineThrough
                               : null,
                         ),
