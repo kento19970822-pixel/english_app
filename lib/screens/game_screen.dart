@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260817-119
+// コード管理番号: VER-20260817-120
 import 'dart:async';
 import 'dart:math';
 
@@ -73,7 +73,7 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   final double totalGameDuration = 60.0;
-  final int dropDurationSeconds = 10;
+  final int dropDurationSeconds = 8; // デフォルト 8秒落下
 
   double remainingTime = 60.0;
   int score = 0;
@@ -120,7 +120,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _loadWordsFromDb();
     _initTts();
 
-    // 1. 左レーンのコントローラー初期化
     _leftDropController = AnimationController(
       vsync: this,
       duration: Duration(seconds: dropDurationSeconds),
@@ -131,7 +130,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       }
     });
 
-    // 2. 右レーンのコントローラー初期化
     _rightDropController = AnimationController(
       vsync: this,
       duration: Duration(seconds: dropDurationSeconds),
@@ -159,7 +157,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   Future<void> _initTts() async {
     try {
       await flutterTts.setLanguage("en-US");
-      await flutterTts.setSpeechRate(0.45);
+      await flutterTts.setSpeechRate(0.5);
     } catch (e) {
       debugPrint("TTS Init Error: $e");
     } finally {
@@ -182,19 +180,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     try {
       String soundUrl = "";
       if (type == 'correct') {
-        soundUrl =
-            "https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3";
-      } else if (type == 'wrong') {
-        soundUrl =
-            "https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3";
-      } else if (type == 'timeout') {
-        soundUrl =
-            "https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3";
+        soundUrl = "assets/sounds/correct.mp3";
+      } else if (type == 'wrong' || type == 'timeout') {
+        soundUrl = "assets/sounds/wrong.mp3";
       }
 
       if (soundUrl.isNotEmpty && !kIsWeb) {
         await _seAudioPlayer.stop();
-        await _seAudioPlayer.play(UrlSource(soundUrl));
+        await _seAudioPlayer.play(
+          AssetSource(soundUrl.replaceFirst('assets/', '')),
+        );
       }
     } catch (e) {
       debugPrint("SE Error: $e");
@@ -234,9 +229,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     if (levelWords.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('単語データが取得できませんでした。「単語一覧」タブをご確認ください。')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('単語データが取得できませんでした。')));
       }
       return;
     }
@@ -275,8 +269,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       }
     });
 
+    // 右レーンが第1問目として即時スタート
     _nextQuestion(isLeft: false);
 
+    // 2秒後に左レーンが追随スタート
     _leftStartTimer = Timer(const Duration(seconds: 2), () {
       _triggerLeftStart();
     });
@@ -356,24 +352,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       controller.stop();
       _playSE('correct');
 
-      final dropProgress = controller.value;
-      int addScore = 1;
-      if (dropProgress < 0.33) {
-        addScore = 3;
-      } else if (dropProgress < 0.66) {
-        addScore = 2;
-      }
+      // スコア計算: 基本 10pt + (コンボ * 2pt)
+      final addScore = 10 + (combo * 2);
 
       setState(() {
         score += addScore;
         combo += 1;
         if (isLeft) {
-          leftFeedback = "+$addScore! (Combo $combo)";
+          leftFeedback = "GREAT! (Combo $combo)";
         } else {
-          rightFeedback = "+$addScore! (Combo $combo)";
+          rightFeedback = "GREAT! (Combo $combo)";
         }
       });
 
+      // 右レーン即答時に左レーンが2秒を待たずに即時発進
       if (!isLeft && !isLeftStarted) {
         _triggerLeftStart();
       }
@@ -420,11 +412,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     setState(() {
       combo = 0;
-      remainingTime = max(0, remainingTime - 3.0);
       if (isLeft) {
-        leftFeedback = "タイムオーバー! (-3秒)";
+        leftFeedback = "タイムオーバー!";
       } else {
-        rightFeedback = "タイムオーバー! (-3秒)";
+        rightFeedback = "タイムオーバー!";
       }
     });
 
@@ -653,6 +644,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
+  /// 起動（スタート）画面
   Widget _buildStartScreen() {
     return Center(
       child: Padding(
@@ -853,6 +845,36 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 final maxY = constraints.maxHeight - 60;
                 return Stack(
                   children: [
+                    // 極薄（Opacity 0.2）の3分割判定線（Fast / Normal / Slow）を表示
+                    Column(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.green.withValues(alpha: 0.2),
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.blue.withValues(alpha: 0.2),
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(child: Container()),
+                      ],
+                    ),
                     if (word != null)
                       AnimatedBuilder(
                         animation: controller,
