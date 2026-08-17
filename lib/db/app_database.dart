@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260817-15
+// コード管理番号: VER-20260817-28
 import 'dart:io';
 
 import 'package:drift/drift.dart';
@@ -21,7 +21,6 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 2;
 
-  // スキーマ不整合を防止するマイグレーション設定
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onUpgrade: (m, from, to) async {
@@ -32,9 +31,10 @@ class AppDatabase extends _$AppDatabase {
     },
   );
 
-  // --- CEFR文字列を数値レベルに変換するヘルパー関数 ---
+  /// CEFR文字列を数値レベルに変換するヘルパー関数
   int _cefrToLevel(String cefr) {
-    switch (cefr.toUpperCase().trim()) {
+    final cleanCefr = cefr.toUpperCase().replaceAll('"', '').trim();
+    switch (cleanCefr) {
       case 'A1':
         return 1;
       case 'A2':
@@ -58,48 +58,65 @@ class AppDatabase extends _$AppDatabase {
   Future<List<Word>> getAllWords() => select(words).get();
 
   /// 単語データの括挿入（CSV取り込み用）
-  /// CEFRからレベルを自動変換し、100語ごとに章（chapter）を自動発番します。
+  /// チャプターは Level を横断して全体の通し番号（1, 2, 3, ...）で発番します。
   Future<void> insertRawWords(List<Map<String, String>> rawWords) async {
-    // 1. データの整形とソート（CEFR順 -> 元の並び順）
-    final processedList = rawWords.asMap().entries.map((entry) {
-      final index = entry.key;
-      final row = entry.value;
+    // 1. データの整形
+    final List<Map<String, dynamic>> processedList = [];
 
-      // CSVのヘッダー表記揺れ（小文字・大文字）に対応
+    for (var i = 0; i < rawWords.length; i++) {
+      final row = rawWords[i];
       final english = row['word'] ?? row['english'] ?? '';
       final japanese = row['Japanese'] ?? row['japanese'] ?? '';
       final cefr = row['CEFR'] ?? row['cefr'] ?? 'A1';
       final phonetic = row['Phonetic'] ?? row['phonetic'];
       final level = _cefrToLevel(cefr);
 
-      return {
-        'originalIndex': index,
+      processedList.add({
+        'originalIndex': i,
         'english': english,
         'japanese': japanese,
         'cefr': cefr,
         'level': level,
         'phonetic': phonetic,
-      };
-    }).toList();
+      });
+    }
 
-    // CEFR（レベル順） -> 元のインデックス順にソート
+    // 2. レベル昇順（1➔2➔3➔4➔5➔6）➔ 元の出現順 で確実にソート
     processedList.sort((a, b) {
-      final levelCompare = (a['level'] as int).compareTo(b['level'] as int);
-      if (levelCompare != 0) return levelCompare;
+      final aLevel = a['level'] as int;
+      final bLevel = b['level'] as int;
+      if (aLevel != bLevel) return aLevel.compareTo(bLevel);
       return (a['originalIndex'] as int).compareTo(b['originalIndex'] as int);
     });
 
-    // 2. レベルごとに100語ずつチャプターを計算してDB登録
-    final Map<int, int> levelWordCounts = {};
+    // 3. 通しチャプター発番ロジック（※チャプター番号は全レベルを通して絶対に1へリセットしません）
+    int globalChapter = 1; // 全体通しのチャプター番号
+    int currentLevel = -1; // 現在処理中のレベル
+    int levelWordCount = 0; // 現在のレベル内でのカウント
 
     await batch((batch) {
       for (final item in processedList) {
         final level = item['level'] as int;
-        final currentCount = levelWordCounts[level] ?? 0;
 
-        // 100語ごとに 1, 2, 3... と章番号を計算
-        final chapter = (currentCount / 100).floor() + 1;
-        levelWordCounts[level] = currentCount + 1;
+        if (currentLevel == -1) {
+          // 初回要素の設定
+          currentLevel = level;
+          levelWordCount = 0;
+        } else if (level != currentLevel) {
+          // レベルが切り替わった時：
+          // 前レベルの末尾に単語が存在していれば、次のレベルは必ず「＋1したチャプター番号」から開始する
+          if (levelWordCount > 0) {
+            globalChapter++;
+          }
+          currentLevel = level;
+          levelWordCount = 0;
+        } else if (levelWordCount > 0 && levelWordCount % 100 == 0) {
+          // 同一レベル内で 100 語に達した時：
+          // チャプター番号を ＋1 進める
+          globalChapter++;
+        }
+
+        levelWordCount++;
 
         final englishStr = item['english']?.toString() ?? '';
         final japaneseStr = item['japanese']?.toString() ?? '';
@@ -113,7 +130,7 @@ class AppDatabase extends _$AppDatabase {
             japanese: japaneseStr,
             cefr: Value(cefrStr),
             level: Value(level),
-            chapter: Value(chapter),
+            chapter: Value(globalChapter), // 通し番号をセット
             phonetic: Value(phoneticStr),
           ),
         );

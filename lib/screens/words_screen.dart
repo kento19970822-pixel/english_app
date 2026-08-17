@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260817-20
+// コード管理番号: VER-20260817-28
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -40,19 +40,14 @@ class _WordsScreenState extends State<WordsScreen> {
     _applyFilter();
   }
 
-  /// フィルター条件（レベル・章・検索キーワード）の適用
+  /// フィルター条件の適用
   void _applyFilter() {
     setState(() {
       _filteredWords = _allWords.where((word) {
-        // レベルフィルター
-        if (_selectedLevel != 0 && word.level != _selectedLevel) {
+        if (_selectedLevel != 0 && word.level != _selectedLevel) return false;
+        if (_selectedChapter != 0 && word.chapter != _selectedChapter)
           return false;
-        }
-        // チャプターフィルター
-        if (_selectedChapter != 0 && word.chapter != _selectedChapter) {
-          return false;
-        }
-        // 検索キーワードフィルター
+
         if (_searchQuery.isNotEmpty) {
           final query = _searchQuery.toLowerCase();
           final matchesEnglish = word.english.toLowerCase().contains(query);
@@ -64,39 +59,64 @@ class _WordsScreenState extends State<WordsScreen> {
     });
   }
 
-  /// 選択されているレベルに存在する最大チャプター数を取得
-  int _getMaxChapterForSelectedLevel() {
+  /// 選択されているレベル（または全体）に存在する実際のチャプター番号一覧を取得
+  List<int> _getAvailableChapters() {
     final targetWords = _selectedLevel == 0
         ? _allWords
         : _allWords.where((w) => w.level == _selectedLevel).toList();
 
-    if (targetWords.isEmpty) return 0;
-    return targetWords.map((w) => w.chapter).reduce((a, b) => a > b ? a : b);
+    final chapters = targetWords.map((w) => w.chapter).toSet().toList();
+    chapters.sort();
+    return chapters;
   }
 
-  /// DB完全再構築処理
+  /// Dart標準機能のみを用いた安全なCSV1行パース関数
+  List<String> _parseCsvLine(String line) {
+    final List<String> result = [];
+    final StringBuffer buffer = StringBuffer();
+    bool insideQuotes = false;
+
+    for (int i = 0; i < line.length; i++) {
+      final char = line[i];
+      if (char == '"') {
+        insideQuotes = !insideQuotes;
+      } else if (char == ',' && !insideQuotes) {
+        result.add(buffer.toString().trim());
+        buffer.clear();
+      } else {
+        buffer.write(char);
+      }
+    }
+    result.add(buffer.toString().trim());
+    return result;
+  }
+
+  /// DB完全再構築処理（CSV取り込み）
   Future<void> _rebuildDatabase() async {
     setState(() => _isLoading = true);
     try {
       final csvString = await rootBundle.loadString('assets/words.csv');
-      final lines = csvString.split('\n');
+      final lines = csvString.split(RegExp(r'\r?\n'));
       if (lines.isEmpty) return;
 
-      final header = lines.first.trim().split(',');
+      final rawHeader = _parseCsvLine(lines.first);
+      final header = rawHeader
+          .map((h) => h.replaceAll('"', '').trim())
+          .toList();
+
       final List<Map<String, String>> rawData = [];
 
       for (var i = 1; i < lines.length; i++) {
         final line = lines[i].trim();
         if (line.isEmpty) continue;
 
-        final values = line
-            .split(',')
-            .map((e) => e.replaceAll('"', '').trim())
+        final values = _parseCsvLine(line)
+            .map((v) => v.replaceAll('"', '').trim())
             .toList();
         if (values.length >= header.length) {
           final map = <String, String>{};
           for (var j = 0; j < header.length; j++) {
-            map[header[j].replaceAll('"', '').trim()] = values[j];
+            map[header[j]] = values[j];
           }
           rawData.add(map);
         }
@@ -107,8 +127,9 @@ class _WordsScreenState extends State<WordsScreen> {
       await _loadWords();
 
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('DBの完全再構築が完了しました！')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('DBの再構築が完了しました（全${_allWords.length}件）')),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -122,7 +143,7 @@ class _WordsScreenState extends State<WordsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final maxChapters = _getMaxChapterForSelectedLevel();
+    final availableChapters = _getAvailableChapters();
 
     return Scaffold(
       appBar: AppBar(
@@ -139,12 +160,10 @@ class _WordsScreenState extends State<WordsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // 検索 ＆ 絞り込みフィルターエリア
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
                     children: [
-                      // 検索バー
                       TextField(
                         decoration: const InputDecoration(
                           hintText: '英語または日本語で検索',
@@ -158,7 +177,6 @@ class _WordsScreenState extends State<WordsScreen> {
                         },
                       ),
                       const SizedBox(height: 8),
-                      // レベル & チャプター選択ドロップダウン
                       Row(
                         children: [
                           Expanded(
@@ -206,7 +224,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                 if (val != null) {
                                   setState(() {
                                     _selectedLevel = val;
-                                    _selectedChapter = 0; // レベル変更時は章選択をリセット
+                                    _selectedChapter = 0;
                                   });
                                   _applyFilter();
                                 }
@@ -216,7 +234,10 @@ class _WordsScreenState extends State<WordsScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: DropdownButtonFormField<int>(
-                              value: _selectedChapter,
+                              value:
+                                  availableChapters.contains(_selectedChapter)
+                                  ? _selectedChapter
+                                  : 0,
                               decoration: const InputDecoration(
                                 labelText: '章 (Chapter)',
                                 border: OutlineInputBorder(),
@@ -230,11 +251,10 @@ class _WordsScreenState extends State<WordsScreen> {
                                   value: 0,
                                   child: Text('すべての章'),
                                 ),
-                                ...List.generate(
-                                  maxChapters,
-                                  (index) => DropdownMenuItem(
-                                    value: index + 1,
-                                    child: Text('Ch. ${index + 1}'),
+                                ...availableChapters.map(
+                                  (ch) => DropdownMenuItem(
+                                    value: ch,
+                                    child: Text('Ch. $ch'),
                                   ),
                                 ),
                               ],
@@ -251,7 +271,6 @@ class _WordsScreenState extends State<WordsScreen> {
                     ],
                   ),
                 ),
-                // 該当件数表示（修正箇所）
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12.0,
@@ -268,7 +287,6 @@ class _WordsScreenState extends State<WordsScreen> {
                     ),
                   ),
                 ),
-                // 単語一覧リスト
                 Expanded(
                   child: _filteredWords.isEmpty
                       ? const Center(child: Text('該当する単語が見つかりません'))
@@ -291,7 +309,6 @@ class _WordsScreenState extends State<WordsScreen> {
                                         fontSize: 18,
                                       ),
                                     ),
-                                    // 発音記号が存在する場合のみ表示
                                     if (word.phonetic != null &&
                                         word.phonetic!.isNotEmpty) ...[
                                       const SizedBox(width: 8),
