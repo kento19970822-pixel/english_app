@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260818-15
+// コード管理番号: VER-20260818-17
 import 'dart:async';
 import 'dart:math';
 
@@ -108,6 +108,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   List<WordModel> questionQueue = [];
   List<WordModel> mistakenWords = [];
   Set<int> favoriteWordIds = {};
+
+  // F-05: 1ゲーム1変動原則（セッション中に既にDB反映・ポイント評価を行った単語IDを記録）
+  final Set<int> _processedWordIds = {};
 
   WordModel? leftWord;
   List<String> leftChoices = [];
@@ -269,6 +272,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       isLeftStarted = false;
       questionQueue = List.from(targetWords)..shuffle();
       mistakenWords.clear();
+      _processedWordIds.clear(); // F-05: 1ゲーム1変動フラグを初期化
 
       leftWord = null;
       rightWord = null;
@@ -379,7 +383,17 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       controller.stop();
       _playSE(result['soundType'] as String);
 
-      // F-04: 位置判定加点 (+50 / +30 / +10) ＋ コンボボーナス
+      // F-05: 1ゲーム1変動原則に基づき、初回回答時のみDBの定着度を更新
+      if (!_processedWordIds.contains(targetWord.id)) {
+        _processedWordIds.add(targetWord.id);
+        widget.database.updateWordQuizResult(
+          id: targetWord.id,
+          dropProgress: progress,
+          isCorrect: true,
+        );
+      }
+
+      // 画面上の加点および演出
       final int baseDelta = result['retentionDelta'] as int;
       final addScore = baseDelta + (combo * 2);
 
@@ -417,13 +431,24 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         _nextQuestion(isLeft: isLeft);
       });
     } else {
+      final progress = controller.value;
       final result = RetentionService.calculateScoreAndRetention(
-        dropProgress: controller.value,
+        dropProgress: progress,
         isCorrect: false,
       );
 
       _playSE(result['soundType'] as String);
       _recordMistake(targetWord);
+
+      // F-05: 1ゲーム1変動原則に基づき、初回回答時のみDBの定着度・制限フラグ等を更新
+      if (!_processedWordIds.contains(targetWord.id)) {
+        _processedWordIds.add(targetWord.id);
+        widget.database.updateWordQuizResult(
+          id: targetWord.id,
+          dropProgress: progress,
+          isCorrect: false,
+        );
+      }
 
       setState(() {
         combo = 0;
@@ -446,6 +471,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     _playSE('timeout');
     _recordMistake(targetWord);
+
+    // F-05: タイムオーバー時も初回であれば誤答扱いとしてDB更新（制限フラグ付与等）
+    if (!_processedWordIds.contains(targetWord.id)) {
+      _processedWordIds.add(targetWord.id);
+      widget.database.updateWordQuizResult(
+        id: targetWord.id,
+        dropProgress: 1.0,
+        isCorrect: false,
+      );
+    }
 
     setState(() {
       combo = 0;
@@ -838,7 +873,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 final maxY = constraints.maxHeight - 60;
                 return Stack(
                   children: [
-                    // F-04: 3分割判定線（Fast / Normal / Slow）とエリアガイド表示
                     Column(
                       children: [
                         Expanded(
