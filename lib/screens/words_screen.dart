@@ -1,5 +1,6 @@
-// コード管理番号: VER-20260818-21
+// コード管理番号: VER-20260818-22
 import 'package:flutter/material.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -41,6 +42,16 @@ class _WordsScreenState extends State<WordsScreen> {
     _loadWords();
   }
 
+  /// 画面が再表示された場合（タブ切り替え等）にDBから最新情報を同期する
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 初回ロード完了後、画面がアクティブになった際にバックグラウンドで最新DBを読み込む
+    if (!_isLoading) {
+      _refreshWordsSilent();
+    }
+  }
+
   Future<void> _initTts() async {
     await _flutterTts.setLanguage('en-US');
     await _flutterTts.setSpeechRate(0.5);
@@ -60,6 +71,17 @@ class _WordsScreenState extends State<WordsScreen> {
     _applyFilterAndCache();
     if (mounted) {
       setState(() => _isLoading = false);
+    }
+  }
+
+  /// ローダーを表示せずにサイレントにDBから最新データを同期する（ゲーム後の同期用）
+  Future<void> _refreshWordsSilent() async {
+    final words = await widget.database.getAllWords();
+    if (mounted) {
+      setState(() {
+        _allWords = words;
+        _applyFilterAndCache();
+      });
     }
   }
 
@@ -358,7 +380,6 @@ class _WordsScreenState extends State<WordsScreen> {
                                 value: _showJapanese,
                                 activeThumbColor: Colors.indigo,
                                 onChanged: (val) {
-                                  // 和訳切替はフィルター再計算を行わず、描画のみ行う（高速化）
                                   setState(() {
                                     _showJapanese = val;
                                   });
@@ -421,7 +442,6 @@ class _WordsScreenState extends State<WordsScreen> {
                                       onSwipeRight: () async {
                                         await widget.database
                                             .markAsMemorizedManual(word.id);
-                                        // メモリ上の値をローカル更新して再描画
                                         final idx = _allWords.indexWhere(
                                           (w) => w.id == word.id,
                                         );
