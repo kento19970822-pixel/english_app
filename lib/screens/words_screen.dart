@@ -355,7 +355,7 @@ class _WordsScreenState extends State<WordsScreen> {
                               ),
                               Switch(
                                 value: _showJapanese,
-                                activeColor: Colors.indigo,
+                                activeThumbColor: Colors.indigo,
                                 onChanged: (val) {
                                   setState(() {
                                     _showJapanese = val;
