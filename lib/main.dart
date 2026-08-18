@@ -1,10 +1,10 @@
-// コード管理番号: VER-20260818-25
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'db/app_database.dart';
 import 'screens/mode_select_screen.dart';
 import 'screens/words_screen.dart';
+import 'screens/calendar_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,6 +77,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         onGameStateChanged: _onGameStateChanged,
       ),
       WordsScreen(database: _database),
+      CalendarScreen(database: _database),
     ];
 
     return Scaffold(
@@ -98,6 +99,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                 NavigationDestination(
                   icon: Icon(Icons.list_alt),
                   label: '単語一覧',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.calendar_month),
+                  label: 'カレンダー',
                 ),
               ],
             ),

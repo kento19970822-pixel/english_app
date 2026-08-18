@@ -205,7 +205,7 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
-  /// クイズ回答結果に基づく定着度・フラグ・正誤カウント更新 (F-05)
+  /// クイズ回答結果に基づく定着度・フラグ・正誤カウント更新 (F-05/F-10)
   Future<void> updateWordQuizResult({
     required int id,
     required double dropProgress,
@@ -229,11 +229,13 @@ class AppDatabase extends _$AppDatabase {
     );
 
     final now = DateTime.now();
+    final wasMemorized = word.isMemorized;
+    final isNowMemorized = result['isMemorized'] as bool;
 
     await (update(words)..where((t) => t.id.equals(id))).write(
       WordsCompanion(
         retentionPoint: Value(result['retentionPoint'] as int),
-        isMemorized: Value(result['isMemorized'] as bool),
+        isMemorized: Value(isNowMemorized),
         isRestricted: Value(result['isRestricted'] as bool),
         correctCount: Value(
           isCorrect ? word.correctCount + 1 : word.correctCount,
@@ -245,17 +247,31 @@ class AppDatabase extends _$AppDatabase {
             : Value(word.lastRestrictedDate),
       ),
     );
+
+    // 新しく暗記済み（80pt以上）になった場合は日別暗記数をインクリメント (F-10)
+    if (!wasMemorized && isNowMemorized) {
+      await incrementDailyMemorizedCount();
+    }
   }
 
-  /// 手動チェック / 右スワイプ: 暗記済み(80pt)化 (F-08)
-  Future<void> markAsMemorizedManual(int id) {
-    return (update(words)..where((t) => t.id.equals(id))).write(
+  /// 手動チェック / 右スワイプ: 暗記済み(80pt)化 (F-08/F-10)
+  Future<void> markAsMemorizedManual(int id) async {
+    final word = await (select(
+      words,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    final wasMemorized = word?.isMemorized ?? false;
+
+    await (update(words)..where((t) => t.id.equals(id))).write(
       WordsCompanion(
         retentionPoint: const Value(80),
         isMemorized: const Value(true),
         lastStudiedAt: Value(DateTime.now()),
       ),
     );
+
+    if (!wasMemorized) {
+      await incrementDailyMemorizedCount();
+    }
   }
 
   /// 左スワイプ: 0ptリセット ＋ 制限フラグ付与 (F-08)
@@ -310,10 +326,121 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  // --- プレイ履歴操作 ---
+  // --- プレイ履歴 & 日別記録 (F-10) ---
 
-  /// ゲーム履歴の追加
-  Future<int> addGameHistory(int score, int level) {
+  /// 今日の日付文字列を取得 (YYYY-MM-DD)
+  String _getTodayStr() {
+    final now = DateTime.now();
+    return "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+  }
+
+  /// 今日の日別記録を取得または初期生成
+  Future<DailyRecord> getOrCreateTodayRecord() async {
+    final today = _getTodayStr();
+    final existing = await (select(
+      dailyRecords,
+    )..where((t) => t.dateStr.equals(today))).getSingleOrNull();
+
+    if (existing != null) {
+      return existing;
+    } else {
+      await into(dailyRecords)
+          .insert(DailyRecordsCompanion.insert(dateStr: today));
+      return (select(
+        dailyRecords,
+      )..where((t) => t.dateStr.equals(today))).getSingle();
+    }
+  }
+
+  /// 本日の新規暗記数を+1インクリメント
+  Future<void> incrementDailyMemorizedCount() async {
+    final today = _getTodayStr();
+    final record = await getOrCreateTodayRecord();
+    await (update(dailyRecords)..where((t) => t.dateStr.equals(today))).write(
+      DailyRecordsCompanion(memorizedCount: Value(record.memorizedCount + 1)),
+    );
+  }
+
+  /// 本日のプレイ回数を+1インクリメント
+  Future<void> incrementDailyPlayedCount() async {
+    final today = _getTodayStr();
+    final record = await getOrCreateTodayRecord();
+    await (update(dailyRecords)..where((t) => t.dateStr.equals(today))).write(
+      DailyRecordsCompanion(playedCount: Value(record.playedCount + 1)),
+    );
+  }
+
+  /// 指定年月の全日別記録を取得
+  Future<List<DailyRecord>> getDailyRecordsByMonth(int year, int month) async {
+    final monthStr = "$year-${month.toString().padLeft(2, '0')}";
+    return (select(
+      dailyRecords,
+    )..where((t) => t.dateStr.like('$monthStr%'))).get();
+  }
+
+  /// 連続プレイ日数（ストリーク）の算出
+  Future<int> calculateStreak() async {
+    final allRecords =
+        await (select(dailyRecords)..orderBy([
+              (t) =>
+                  OrderingTerm(expression: t.dateStr, mode: OrderingMode.desc),
+            ]))
+            .get();
+
+    if (allRecords.isEmpty) return 0;
+
+    final now = DateTime.now();
+    final todayStr = _getTodayStr();
+    final yesterday = now.subtract(const Duration(days: 1));
+    final yesterdayStr =
+        "${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}";
+
+    int streak = 0;
+    DateTime checkDate = now;
+
+    // 今日プレイ・暗記しているか確認
+    final hasTodayActivity = allRecords.any(
+      (r) =>
+          r.dateStr == todayStr && (r.playedCount > 0 || r.memorizedCount > 0),
+    );
+    final hasYesterdayActivity = allRecords.any(
+      (r) =>
+          r.dateStr == yesterdayStr &&
+          (r.playedCount > 0 || r.memorizedCount > 0),
+    );
+
+    if (!hasTodayActivity && !hasYesterdayActivity) {
+      return 0; // 今日も昨日も学習していなければストリーク切れ
+    }
+
+    if (!hasTodayActivity) {
+      checkDate = yesterday; // 今日未完了だが昨日完了している場合は昨日から遡って計算
+    }
+
+    while (true) {
+      final dateStr =
+          "${checkDate.year}-${checkDate.month.toString().padLeft(2, '0')}-${checkDate.day.toString().padLeft(2, '0')}";
+      final record = allRecords.firstWhere(
+        (r) => r.dateStr == dateStr,
+        orElse: () =>
+            const DailyRecord(dateStr: '', memorizedCount: 0, playedCount: 0),
+      );
+
+      if (record.dateStr.isNotEmpty &&
+          (record.playedCount > 0 || record.memorizedCount > 0)) {
+        streak++;
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  /// ゲーム履歴の追加 ＆ 日別プレイ回数加算
+  Future<int> addGameHistory(int score, int level) async {
+    await incrementDailyPlayedCount();
     return into(learningHistory)
         .insert(LearningHistoryCompanion.insert(score: score, level: level));
   }
