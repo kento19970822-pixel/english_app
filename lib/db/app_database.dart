@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260818-07
+// コード管理番号: VER-20260818-16
 import 'dart:io';
 
 import 'package:drift/drift.dart';
@@ -11,6 +11,7 @@ import 'tables/words.dart';
 import 'tables/learning_history.dart';
 import 'tables/daily_records.dart';
 import 'tables/stamps.dart';
+import '../services/retention_service.dart';
 
 part 'app_database.g.dart';
 
@@ -54,13 +55,14 @@ class AppDatabase extends _$AppDatabase {
 
   // --- 単語データ操作 ---
 
-  /// 全単語の取得
-  Future<List<Word>> getAllWords() => select(words).get();
+  /// 全単語の取得（0:00跨ぎ制限フラグの自動リセットを適用して取得）
+  Future<List<Word>> getAllWords() async {
+    await checkAndResetRestrictions();
+    return select(words).get();
+  }
 
   /// 単語データの括挿入（CSV取り込み用）
-  /// チャプターは Level を横断して全体の通し番号（1, 2, 3, ...）で発番します。
   Future<void> insertRawWords(List<Map<String, String>> rawWords) async {
-    // 1. データの整形
     final List<Map<String, dynamic>> processedList = [];
 
     for (var i = 0; i < rawWords.length; i++) {
@@ -81,7 +83,6 @@ class AppDatabase extends _$AppDatabase {
       });
     }
 
-    // 2. レベル昇順（1➔2➔3➔4➔5➔6）➔ 元の出現順 で確実にソート
     processedList.sort((a, b) {
       final aLevel = a['level'] as int;
       final bLevel = b['level'] as int;
@@ -89,30 +90,24 @@ class AppDatabase extends _$AppDatabase {
       return (a['originalIndex'] as int).compareTo(b['originalIndex'] as int);
     });
 
-    // 3. 通しチャプター発番ロジック（※チャプター番号は全レベルを通して絶対に1へリセットしません）
-    int globalChapter = 1; // 全体通しのチャプター番号
-    int currentLevel = -1; // 現在処理中のレベル
-    int levelWordCount = 0; // 現在のレベル内でのカウント
+    int globalChapter = 1;
+    int currentLevel = -1;
+    int levelWordCount = 0;
 
     await batch((batch) {
       for (final item in processedList) {
         final level = item['level'] as int;
 
         if (currentLevel == -1) {
-          // 初回要素の設定
           currentLevel = level;
           levelWordCount = 0;
         } else if (level != currentLevel) {
-          // レベルが切り替わった時：
-          // 前レベルの末尾に単語が存在していれば、次のレベルは必ず「＋1したチャプター番号」から開始する
           if (levelWordCount > 0) {
             globalChapter++;
           }
           currentLevel = level;
           levelWordCount = 0;
         } else if (levelWordCount > 0 && levelWordCount % 100 == 0) {
-          // 同一レベル内で 100 語に達した時：
-          // チャプター番号を ＋1 進める
           globalChapter++;
         }
 
@@ -130,7 +125,7 @@ class AppDatabase extends _$AppDatabase {
             japanese: japaneseStr,
             cefr: Value(cefrStr),
             level: Value(level),
-            chapter: Value(globalChapter), // 通し番号をセット
+            chapter: Value(globalChapter),
             phonetic: Value(phoneticStr),
           ),
         );
@@ -148,14 +143,109 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
-  /// 定着度（retention_point）の更新 (F-08用)
-  Future<void> updateRetentionPoint(int id, int retentionPoint) {
+  /// クイズ回答結果に基づく定着度・フラグ・正誤カウント更新 (F-05)
+  Future<void> updateWordQuizResult({
+    required int id,
+    required double dropProgress,
+    required bool isCorrect,
+  }) async {
+    final word = await (select(
+      words,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    if (word == null) return;
+
+    final eval = RetentionService.calculateScoreAndRetention(
+      dropProgress: dropProgress,
+      isCorrect: isCorrect,
+    );
+
+    final result = RetentionService.processQuizResult(
+      currentPoint: word.retentionPoint,
+      delta: eval['retentionDelta'] as int,
+      isRestricted: word.isRestricted,
+      setDailyLimit: eval['setDailyLimit'] as bool,
+    );
+
+    final now = DateTime.now();
+
+    await (update(words)..where((t) => t.id.equals(id))).write(
+      WordsCompanion(
+        retentionPoint: Value(result['retentionPoint'] as int),
+        isMemorized: Value(result['isMemorized'] as bool),
+        isRestricted: Value(result['isRestricted'] as bool),
+        correctCount: Value(
+          isCorrect ? word.correctCount + 1 : word.correctCount,
+        ),
+        wrongCount: Value(!isCorrect ? word.wrongCount + 1 : word.wrongCount),
+        lastStudiedAt: Value(now),
+        lastRestrictedDate: (eval['setDailyLimit'] as bool)
+            ? Value(now)
+            : Value(word.lastRestrictedDate),
+      ),
+    );
+  }
+
+  /// 手動チェック / 右スワイプ: 暗記済み(80pt)化 (F-08)
+  Future<void> markAsMemorizedManual(int id) {
     return (update(words)..where((t) => t.id.equals(id))).write(
       WordsCompanion(
-        retentionPoint: Value(retentionPoint),
+        retentionPoint: const Value(80),
+        isMemorized: const Value(true),
         lastStudiedAt: Value(DateTime.now()),
       ),
     );
+  }
+
+  /// 左スワイプ: 0ptリセット ＋ 制限フラグ付与 (F-08)
+  Future<void> resetRetentionManual(int id) {
+    final now = DateTime.now();
+    return (update(words)..where((t) => t.id.equals(id))).write(
+      WordsCompanion(
+        retentionPoint: const Value(0),
+        isMemorized: const Value(false),
+        isRestricted: const Value(true),
+        lastStudiedAt: Value(now),
+        lastRestrictedDate: Value(now),
+      ),
+    );
+  }
+
+  /// 暗記フラグ一括更新（メンテ）: 80pt未満に落ちた単語のisMemorizedを解除 (F-09)
+  Future<int> syncMemorizedFlags() async {
+    final all = await select(words).get();
+    int count = 0;
+
+    for (final word in all) {
+      if (word.isMemorized && word.retentionPoint < 80) {
+        await (update(words)..where((t) => t.id.equals(word.id))).write(
+          const WordsCompanion(isMemorized: Value(false)),
+        );
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /// 日付跨ぎ制限フラグの自動解除チェック (0:00超過)
+  Future<void> checkAndResetRestrictions() async {
+    final restrictedWords = await (select(
+      words,
+    )..where((t) => t.isRestricted.equals(true))).get();
+    final now = DateTime.now();
+
+    for (final word in restrictedWords) {
+      if (RetentionService.shouldResetRestriction(
+        word.lastRestrictedDate,
+        now: now,
+      )) {
+        await (update(words)..where((t) => t.id.equals(word.id))).write(
+          const WordsCompanion(
+            isRestricted: Value(false),
+            lastRestrictedDate: Value(null),
+          ),
+        );
+      }
+    }
   }
 
   // --- プレイ履歴操作 ---

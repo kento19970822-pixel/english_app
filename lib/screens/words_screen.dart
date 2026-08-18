@@ -419,7 +419,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                       // F-08: 👉 右スワイプ（暗記済み化 / 定着度100pt）
                                       onSwipeRight: () async {
                                         await widget.database
-                                            .updateRetentionPoint(word.id, 100);
+                                            .markAsMemorizedManual(word.id);
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(context)
                                               .clearSnackBars();
@@ -440,7 +440,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                       // F-08: 👈 左スワイプ（0ptリセット）
                                       onSwipeLeft: () async {
                                         await widget.database
-                                            .updateRetentionPoint(word.id, 0);
+                                            .resetRetentionManual(word.id);
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(context)
                                               .clearSnackBars();
