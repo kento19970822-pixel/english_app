@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260818-05
+// コード管理番号: VER-20260818-15
 import 'dart:async';
 import 'dart:math';
 
@@ -379,12 +379,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       controller.stop();
       _playSE(result['soundType'] as String);
 
-      final addScore = 10 + (combo * 2);
+      // F-04: 位置判定加点 (+50 / +30 / +10) ＋ コンボボーナス
+      final int baseDelta = result['retentionDelta'] as int;
+      final addScore = baseDelta + (combo * 2);
 
       setState(() {
         score += addScore;
         combo += 1;
-        final fb = "${result['feedbackText']} (Combo $combo)";
+        final fb = "${result['feedbackText']} (+$addScore)";
         if (isLeft) {
           leftFeedback = fb;
         } else {
@@ -428,9 +430,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         if (isLeft) {
           leftDisabledChoices.add(selectedChoice);
           leftMistaken = true;
+          leftFeedback = result['feedbackText'] as String;
         } else {
           rightDisabledChoices.add(selectedChoice);
           rightMistaken = true;
+          rightFeedback = result['feedbackText'] as String;
         }
       });
     }
@@ -834,33 +838,69 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 final maxY = constraints.maxHeight - 60;
                 return Stack(
                   children: [
+                    // F-04: 3分割判定線（Fast / Normal / Slow）とエリアガイド表示
                     Column(
                       children: [
                         Expanded(
                           child: Container(
+                            alignment: Alignment.topRight,
+                            padding: const EdgeInsets.only(top: 4, right: 6),
                             decoration: BoxDecoration(
                               border: Border(
                                 bottom: BorderSide(
-                                  color: Colors.green.withAlpha(50),
-                                  width: 1,
+                                  color: Colors.green.withValues(alpha: 0.3),
+                                  width: 1.5,
                                 ),
+                              ),
+                            ),
+                            child: Text(
+                              'Fast (+50)',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.withValues(alpha: 0.4),
                               ),
                             ),
                           ),
                         ),
                         Expanded(
                           child: Container(
+                            alignment: Alignment.topRight,
+                            padding: const EdgeInsets.only(top: 4, right: 6),
                             decoration: BoxDecoration(
                               border: Border(
                                 bottom: BorderSide(
-                                  color: Colors.blue.withAlpha(50),
-                                  width: 1,
+                                  color: Colors.blue.withValues(alpha: 0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              'Normal (+30)',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.withValues(alpha: 0.4),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            alignment: Alignment.topRight,
+                            padding: const EdgeInsets.only(top: 4, right: 6),
+                            child: Text(
+                              'Slow (+10)',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.amber.shade800.withValues(
+                                  alpha: 0.4,
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        Expanded(child: Container()),
                       ],
                     ),
                     if (word != null)
@@ -920,7 +960,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withAlpha(180),
+                            color: Colors.black.withValues(alpha: 0.75),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
