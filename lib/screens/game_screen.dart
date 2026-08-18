@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260818-04
+// コード管理番号: VER-20260818-05
 import 'dart:async';
 import 'dart:math';
 
@@ -573,100 +573,110 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         ? '学習モード (Ch.$selectedChapter)'
         : 'チャレンジモード';
 
-    return Scaffold(
-      backgroundColor: Colors.grey[200],
-      appBar: AppBar(
-        title: Text(modeTitle),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          if (isGameStarted && !isGameOver)
-            IconButton(
-              icon: Icon(
-                isPaused ? Icons.play_arrow : Icons.pause,
-                size: 28,
-                color: Colors.indigo,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          widget.onGameStateChanged?.call(false);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.grey[200],
+        appBar: AppBar(
+          title: Text(modeTitle),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          actions: [
+            if (isGameStarted && !isGameOver)
+              IconButton(
+                icon: Icon(
+                  isPaused ? Icons.play_arrow : Icons.pause,
+                  size: 28,
+                  color: Colors.indigo,
+                ),
+                onPressed: _togglePause,
               ),
-              onPressed: _togglePause,
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Colors.white,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '残り時間: ${max(0, remainingTime).toStringAsFixed(1)}s',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: remainingTime <= 10 ? Colors.red : Colors.black,
-                    ),
-                  ),
-                  if (combo > 1)
+          ],
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                color: Colors.white,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     Text(
-                      '$combo COMBO!',
+                      '残り時間: ${max(0, remainingTime).toStringAsFixed(1)}s',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: remainingTime <= 10 ? Colors.red : Colors.black,
+                      ),
+                    ),
+                    if (combo > 1)
+                      Text(
+                        '$combo COMBO!',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    Text(
+                      'スコア: $score',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange,
+                        color: Colors.indigo,
                       ),
                     ),
-                  Text(
-                    'スコア: $score',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.indigo,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: isGameOver
-                  ? _buildResultScreen()
-                  : Row(
-                      children: [
-                        Expanded(
-                          child: _buildLane(
-                            isLeft: true,
-                            word: leftWord,
-                            choices: leftChoices,
-                            disabledChoices: leftDisabledChoices,
-                            controller: _leftDropController,
-                            feedback: leftFeedback,
-                            laneColor: Colors.blue.shade50,
-                            cardColor: Colors.blue.shade600,
+              const Divider(height: 1),
+              Expanded(
+                child: isGameOver
+                    ? _buildResultScreen()
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: _buildLane(
+                              isLeft: true,
+                              word: leftWord,
+                              choices: leftChoices,
+                              disabledChoices: leftDisabledChoices,
+                              controller: _leftDropController,
+                              feedback: leftFeedback,
+                              laneColor: Colors.blue.shade50,
+                              cardColor: Colors.blue.shade600,
+                            ),
                           ),
-                        ),
-                        const VerticalDivider(
-                          width: 2,
-                          thickness: 2,
-                          color: Colors.grey,
-                        ),
-                        Expanded(
-                          child: _buildLane(
-                            isLeft: false,
-                            word: rightWord,
-                            choices: rightChoices,
-                            disabledChoices: rightDisabledChoices,
-                            controller: _rightDropController,
-                            feedback: rightFeedback,
-                            laneColor: Colors.indigo.shade50,
-                            cardColor: Colors.indigo.shade600,
+                          const VerticalDivider(
+                            width: 2,
+                            thickness: 2,
+                            color: Colors.grey,
                           ),
-                        ),
-                      ],
-                    ),
-            ),
-          ],
+                          Expanded(
+                            child: _buildLane(
+                              isLeft: false,
+                              word: rightWord,
+                              choices: rightChoices,
+                              disabledChoices: rightDisabledChoices,
+                              controller: _rightDropController,
+                              feedback: rightFeedback,
+                              laneColor: Colors.indigo.shade50,
+                              cardColor: Colors.indigo.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
