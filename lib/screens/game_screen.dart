@@ -1,4 +1,3 @@
-// コード管理番号: VER-20260818-17
 import 'dart:async';
 import 'dart:math';
 
@@ -563,17 +562,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
   }
 
-  void _endGame() {
+  void _endGame() async {
     _resetAndStopAll();
 
-    if (score > 0) {
-      widget.database.addGameHistory(score, selectedLevel);
-    }
+    // F-10: 本日のプレイ回数加算と学習履歴の保存
+    await widget.database.addGameHistory(score, selectedLevel);
 
-    setState(() {
-      isGameOver = true;
-      isPaused = false;
-    });
+    if (mounted) {
+      setState(() {
+        isGameOver = true;
+        isPaused = false;
+      });
+    }
   }
 
   Future<void> _toggleFavorite(WordModel word) async {
