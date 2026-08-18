@@ -1,5 +1,6 @@
-// コード管理番号: VER-20260818-05
+// コード管理番号: VER-20260818-25
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'db/app_database.dart';
 import 'screens/mode_select_screen.dart';
@@ -40,6 +41,20 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   void initState() {
     super.initState();
     _database = AppDatabase();
+    _checkAndRunDailySync();
+  }
+
+  /// 1日1回のみ日跨ぎ一括同期（忘却減算・制限解除）を実行
+  Future<void> _checkAndRunDailySync() async {
+    final prefs = await SharedPreferences.getInstance();
+    final todayStr = DateTime.now().toIso8601String().split('T')[0];
+    final lastSyncDate = prefs.getString('last_daily_sync_date');
+
+    // 日付が変わっている場合のみ実行
+    if (lastSyncDate != todayStr) {
+      await _database.syncDailyForgettingAndRestrictions();
+      await prefs.setString('last_daily_sync_date', todayStr);
+    }
   }
 
   @override

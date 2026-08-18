@@ -1,4 +1,3 @@
-// コード管理番号: VER-20260818-16
 import 'dart:io';
 
 import 'package:drift/drift.dart';
@@ -55,10 +54,73 @@ class AppDatabase extends _$AppDatabase {
 
   // --- 単語データ操作 ---
 
-  /// 全単語の取得（0:00跨ぎ制限フラグの自動リセットを適用して取得）
+  /// 全単語の取得
   Future<List<Word>> getAllWords() async {
-    await checkAndResetRestrictions();
     return select(words).get();
+  }
+
+  /// 【1日1回処理】忘却曲線による定着度ポイント減算 ＆ 制限フラグ一括解除 (F-05)
+  /// ※is_memorized フラグは自動では外さず手動更新用に保持する
+  Future<int> syncDailyForgettingAndRestrictions() async {
+    final now = DateTime.now();
+    final allWordsList = await select(words).get();
+    int updatedCount = 0;
+
+    for (final word in allWordsList) {
+      bool needUpdate = false;
+      int newPoint = word.retentionPoint;
+      bool newIsRestricted = word.isRestricted;
+      DateTime? newLastRestrictedDate = word.lastRestrictedDate;
+
+      // 1. 忘却曲線減衰処理 (最終解答日時が存在する場合)
+      if (word.lastStudiedAt != null) {
+        newPoint = RetentionService.calculateForgettingCurve(
+          currentPoint: word.retentionPoint,
+          lastStudiedAt: word.lastStudiedAt!,
+          correctCount: word.correctCount,
+          now: now,
+        );
+
+        if (newPoint != word.retentionPoint) {
+          needUpdate = true;
+        }
+      }
+
+      // 2. 日付跨ぎ制限フラグの解除 (0:00超過)
+      if (word.isRestricted) {
+        newIsRestricted = false;
+        newLastRestrictedDate = null;
+        needUpdate = true;
+      }
+
+      // 変更がある場合のみDB更新
+      if (needUpdate) {
+        await (update(words)..where((t) => t.id.equals(word.id))).write(
+          WordsCompanion(
+            retentionPoint: Value(newPoint),
+            isRestricted: Value(newIsRestricted),
+            lastRestrictedDate: Value(newLastRestrictedDate),
+          ),
+        );
+        updatedCount++;
+      }
+    }
+
+    return updatedCount;
+  }
+
+  /// 【案B実装】学習モード用出題単語取得 (章指定)
+  /// 出題条件: (未暗記 OR 定着度 < 70pt) かつ 当日制限フラグなし
+  Future<List<Word>> getLearningWordsByChapter(int chapter) async {
+    return (select(words)
+          ..where((t) => t.chapter.equals(chapter))
+          ..where(
+            (t) =>
+                (t.isMemorized.equals(false) |
+                    t.retentionPoint.isSmallerThanValue(70)) &
+                t.isRestricted.equals(false),
+          ))
+        .get();
   }
 
   /// 単語データの括挿入（CSV取り込み用）
