@@ -113,6 +113,60 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _isMemorizedMeta = const VerificationMeta(
+    'isMemorized',
+  );
+  @override
+  late final GeneratedColumn<bool> isMemorized = GeneratedColumn<bool>(
+    'is_memorized',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_memorized" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isRestrictedMeta = const VerificationMeta(
+    'isRestricted',
+  );
+  @override
+  late final GeneratedColumn<bool> isRestricted = GeneratedColumn<bool>(
+    'is_restricted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_restricted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _correctCountMeta = const VerificationMeta(
+    'correctCount',
+  );
+  @override
+  late final GeneratedColumn<int> correctCount = GeneratedColumn<int>(
+    'correct_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _wrongCountMeta = const VerificationMeta(
+    'wrongCount',
+  );
+  @override
+  late final GeneratedColumn<int> wrongCount = GeneratedColumn<int>(
+    'wrong_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _lastStudiedAtMeta = const VerificationMeta(
     'lastStudiedAt',
   );
@@ -120,6 +174,17 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
   late final GeneratedColumn<DateTime> lastStudiedAt =
       GeneratedColumn<DateTime>(
         'last_studied_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastRestrictedDateMeta =
+      const VerificationMeta('lastRestrictedDate');
+  @override
+  late final GeneratedColumn<DateTime> lastRestrictedDate =
+      GeneratedColumn<DateTime>(
+        'last_restricted_date',
         aliasedName,
         true,
         type: DriftSqlType.dateTime,
@@ -136,7 +201,12 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     phonetic,
     isFavorite,
     retentionPoint,
+    isMemorized,
+    isRestricted,
+    correctCount,
+    wrongCount,
     lastStudiedAt,
+    lastRestrictedDate,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -208,12 +278,54 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         ),
       );
     }
+    if (data.containsKey('is_memorized')) {
+      context.handle(
+        _isMemorizedMeta,
+        isMemorized.isAcceptableOrUnknown(
+          data['is_memorized']!,
+          _isMemorizedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_restricted')) {
+      context.handle(
+        _isRestrictedMeta,
+        isRestricted.isAcceptableOrUnknown(
+          data['is_restricted']!,
+          _isRestrictedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('correct_count')) {
+      context.handle(
+        _correctCountMeta,
+        correctCount.isAcceptableOrUnknown(
+          data['correct_count']!,
+          _correctCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('wrong_count')) {
+      context.handle(
+        _wrongCountMeta,
+        wrongCount.isAcceptableOrUnknown(data['wrong_count']!, _wrongCountMeta),
+      );
+    }
     if (data.containsKey('last_studied_at')) {
       context.handle(
         _lastStudiedAtMeta,
         lastStudiedAt.isAcceptableOrUnknown(
           data['last_studied_at']!,
           _lastStudiedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_restricted_date')) {
+      context.handle(
+        _lastRestrictedDateMeta,
+        lastRestrictedDate.isAcceptableOrUnknown(
+          data['last_restricted_date']!,
+          _lastRestrictedDateMeta,
         ),
       );
     }
@@ -262,9 +374,29 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         DriftSqlType.int,
         data['${effectivePrefix}retention_point'],
       )!,
+      isMemorized: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_memorized'],
+      )!,
+      isRestricted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_restricted'],
+      )!,
+      correctCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}correct_count'],
+      )!,
+      wrongCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}wrong_count'],
+      )!,
       lastStudiedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_studied_at'],
+      ),
+      lastRestrictedDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_restricted_date'],
       ),
     );
   }
@@ -285,7 +417,12 @@ class Word extends DataClass implements Insertable<Word> {
   final String? phonetic;
   final bool isFavorite;
   final int retentionPoint;
+  final bool isMemorized;
+  final bool isRestricted;
+  final int correctCount;
+  final int wrongCount;
   final DateTime? lastStudiedAt;
+  final DateTime? lastRestrictedDate;
   const Word({
     required this.id,
     required this.english,
@@ -296,7 +433,12 @@ class Word extends DataClass implements Insertable<Word> {
     this.phonetic,
     required this.isFavorite,
     required this.retentionPoint,
+    required this.isMemorized,
+    required this.isRestricted,
+    required this.correctCount,
+    required this.wrongCount,
     this.lastStudiedAt,
+    this.lastRestrictedDate,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -312,8 +454,15 @@ class Word extends DataClass implements Insertable<Word> {
     }
     map['is_favorite'] = Variable<bool>(isFavorite);
     map['retention_point'] = Variable<int>(retentionPoint);
+    map['is_memorized'] = Variable<bool>(isMemorized);
+    map['is_restricted'] = Variable<bool>(isRestricted);
+    map['correct_count'] = Variable<int>(correctCount);
+    map['wrong_count'] = Variable<int>(wrongCount);
     if (!nullToAbsent || lastStudiedAt != null) {
       map['last_studied_at'] = Variable<DateTime>(lastStudiedAt);
+    }
+    if (!nullToAbsent || lastRestrictedDate != null) {
+      map['last_restricted_date'] = Variable<DateTime>(lastRestrictedDate);
     }
     return map;
   }
@@ -331,9 +480,16 @@ class Word extends DataClass implements Insertable<Word> {
           : Value(phonetic),
       isFavorite: Value(isFavorite),
       retentionPoint: Value(retentionPoint),
+      isMemorized: Value(isMemorized),
+      isRestricted: Value(isRestricted),
+      correctCount: Value(correctCount),
+      wrongCount: Value(wrongCount),
       lastStudiedAt: lastStudiedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastStudiedAt),
+      lastRestrictedDate: lastRestrictedDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastRestrictedDate),
     );
   }
 
@@ -352,7 +508,14 @@ class Word extends DataClass implements Insertable<Word> {
       phonetic: serializer.fromJson<String?>(json['phonetic']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       retentionPoint: serializer.fromJson<int>(json['retentionPoint']),
+      isMemorized: serializer.fromJson<bool>(json['isMemorized']),
+      isRestricted: serializer.fromJson<bool>(json['isRestricted']),
+      correctCount: serializer.fromJson<int>(json['correctCount']),
+      wrongCount: serializer.fromJson<int>(json['wrongCount']),
       lastStudiedAt: serializer.fromJson<DateTime?>(json['lastStudiedAt']),
+      lastRestrictedDate: serializer.fromJson<DateTime?>(
+        json['lastRestrictedDate'],
+      ),
     );
   }
   @override
@@ -368,7 +531,12 @@ class Word extends DataClass implements Insertable<Word> {
       'phonetic': serializer.toJson<String?>(phonetic),
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'retentionPoint': serializer.toJson<int>(retentionPoint),
+      'isMemorized': serializer.toJson<bool>(isMemorized),
+      'isRestricted': serializer.toJson<bool>(isRestricted),
+      'correctCount': serializer.toJson<int>(correctCount),
+      'wrongCount': serializer.toJson<int>(wrongCount),
       'lastStudiedAt': serializer.toJson<DateTime?>(lastStudiedAt),
+      'lastRestrictedDate': serializer.toJson<DateTime?>(lastRestrictedDate),
     };
   }
 
@@ -382,7 +550,12 @@ class Word extends DataClass implements Insertable<Word> {
     Value<String?> phonetic = const Value.absent(),
     bool? isFavorite,
     int? retentionPoint,
+    bool? isMemorized,
+    bool? isRestricted,
+    int? correctCount,
+    int? wrongCount,
     Value<DateTime?> lastStudiedAt = const Value.absent(),
+    Value<DateTime?> lastRestrictedDate = const Value.absent(),
   }) => Word(
     id: id ?? this.id,
     english: english ?? this.english,
@@ -393,9 +566,16 @@ class Word extends DataClass implements Insertable<Word> {
     phonetic: phonetic.present ? phonetic.value : this.phonetic,
     isFavorite: isFavorite ?? this.isFavorite,
     retentionPoint: retentionPoint ?? this.retentionPoint,
+    isMemorized: isMemorized ?? this.isMemorized,
+    isRestricted: isRestricted ?? this.isRestricted,
+    correctCount: correctCount ?? this.correctCount,
+    wrongCount: wrongCount ?? this.wrongCount,
     lastStudiedAt: lastStudiedAt.present
         ? lastStudiedAt.value
         : this.lastStudiedAt,
+    lastRestrictedDate: lastRestrictedDate.present
+        ? lastRestrictedDate.value
+        : this.lastRestrictedDate,
   );
   Word copyWithCompanion(WordsCompanion data) {
     return Word(
@@ -412,9 +592,24 @@ class Word extends DataClass implements Insertable<Word> {
       retentionPoint: data.retentionPoint.present
           ? data.retentionPoint.value
           : this.retentionPoint,
+      isMemorized: data.isMemorized.present
+          ? data.isMemorized.value
+          : this.isMemorized,
+      isRestricted: data.isRestricted.present
+          ? data.isRestricted.value
+          : this.isRestricted,
+      correctCount: data.correctCount.present
+          ? data.correctCount.value
+          : this.correctCount,
+      wrongCount: data.wrongCount.present
+          ? data.wrongCount.value
+          : this.wrongCount,
       lastStudiedAt: data.lastStudiedAt.present
           ? data.lastStudiedAt.value
           : this.lastStudiedAt,
+      lastRestrictedDate: data.lastRestrictedDate.present
+          ? data.lastRestrictedDate.value
+          : this.lastRestrictedDate,
     );
   }
 
@@ -430,7 +625,12 @@ class Word extends DataClass implements Insertable<Word> {
           ..write('phonetic: $phonetic, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('retentionPoint: $retentionPoint, ')
-          ..write('lastStudiedAt: $lastStudiedAt')
+          ..write('isMemorized: $isMemorized, ')
+          ..write('isRestricted: $isRestricted, ')
+          ..write('correctCount: $correctCount, ')
+          ..write('wrongCount: $wrongCount, ')
+          ..write('lastStudiedAt: $lastStudiedAt, ')
+          ..write('lastRestrictedDate: $lastRestrictedDate')
           ..write(')'))
         .toString();
   }
@@ -446,7 +646,12 @@ class Word extends DataClass implements Insertable<Word> {
     phonetic,
     isFavorite,
     retentionPoint,
+    isMemorized,
+    isRestricted,
+    correctCount,
+    wrongCount,
     lastStudiedAt,
+    lastRestrictedDate,
   );
   @override
   bool operator ==(Object other) =>
@@ -461,7 +666,12 @@ class Word extends DataClass implements Insertable<Word> {
           other.phonetic == this.phonetic &&
           other.isFavorite == this.isFavorite &&
           other.retentionPoint == this.retentionPoint &&
-          other.lastStudiedAt == this.lastStudiedAt);
+          other.isMemorized == this.isMemorized &&
+          other.isRestricted == this.isRestricted &&
+          other.correctCount == this.correctCount &&
+          other.wrongCount == this.wrongCount &&
+          other.lastStudiedAt == this.lastStudiedAt &&
+          other.lastRestrictedDate == this.lastRestrictedDate);
 }
 
 class WordsCompanion extends UpdateCompanion<Word> {
@@ -474,7 +684,12 @@ class WordsCompanion extends UpdateCompanion<Word> {
   final Value<String?> phonetic;
   final Value<bool> isFavorite;
   final Value<int> retentionPoint;
+  final Value<bool> isMemorized;
+  final Value<bool> isRestricted;
+  final Value<int> correctCount;
+  final Value<int> wrongCount;
   final Value<DateTime?> lastStudiedAt;
+  final Value<DateTime?> lastRestrictedDate;
   const WordsCompanion({
     this.id = const Value.absent(),
     this.english = const Value.absent(),
@@ -485,7 +700,12 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.phonetic = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.retentionPoint = const Value.absent(),
+    this.isMemorized = const Value.absent(),
+    this.isRestricted = const Value.absent(),
+    this.correctCount = const Value.absent(),
+    this.wrongCount = const Value.absent(),
     this.lastStudiedAt = const Value.absent(),
+    this.lastRestrictedDate = const Value.absent(),
   });
   WordsCompanion.insert({
     this.id = const Value.absent(),
@@ -497,7 +717,12 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.phonetic = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.retentionPoint = const Value.absent(),
+    this.isMemorized = const Value.absent(),
+    this.isRestricted = const Value.absent(),
+    this.correctCount = const Value.absent(),
+    this.wrongCount = const Value.absent(),
     this.lastStudiedAt = const Value.absent(),
+    this.lastRestrictedDate = const Value.absent(),
   }) : english = Value(english),
        japanese = Value(japanese);
   static Insertable<Word> custom({
@@ -510,7 +735,12 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Expression<String>? phonetic,
     Expression<bool>? isFavorite,
     Expression<int>? retentionPoint,
+    Expression<bool>? isMemorized,
+    Expression<bool>? isRestricted,
+    Expression<int>? correctCount,
+    Expression<int>? wrongCount,
     Expression<DateTime>? lastStudiedAt,
+    Expression<DateTime>? lastRestrictedDate,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -522,7 +752,13 @@ class WordsCompanion extends UpdateCompanion<Word> {
       if (phonetic != null) 'phonetic': phonetic,
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (retentionPoint != null) 'retention_point': retentionPoint,
+      if (isMemorized != null) 'is_memorized': isMemorized,
+      if (isRestricted != null) 'is_restricted': isRestricted,
+      if (correctCount != null) 'correct_count': correctCount,
+      if (wrongCount != null) 'wrong_count': wrongCount,
       if (lastStudiedAt != null) 'last_studied_at': lastStudiedAt,
+      if (lastRestrictedDate != null)
+        'last_restricted_date': lastRestrictedDate,
     });
   }
 
@@ -536,7 +772,12 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Value<String?>? phonetic,
     Value<bool>? isFavorite,
     Value<int>? retentionPoint,
+    Value<bool>? isMemorized,
+    Value<bool>? isRestricted,
+    Value<int>? correctCount,
+    Value<int>? wrongCount,
     Value<DateTime?>? lastStudiedAt,
+    Value<DateTime?>? lastRestrictedDate,
   }) {
     return WordsCompanion(
       id: id ?? this.id,
@@ -548,7 +789,12 @@ class WordsCompanion extends UpdateCompanion<Word> {
       phonetic: phonetic ?? this.phonetic,
       isFavorite: isFavorite ?? this.isFavorite,
       retentionPoint: retentionPoint ?? this.retentionPoint,
+      isMemorized: isMemorized ?? this.isMemorized,
+      isRestricted: isRestricted ?? this.isRestricted,
+      correctCount: correctCount ?? this.correctCount,
+      wrongCount: wrongCount ?? this.wrongCount,
       lastStudiedAt: lastStudiedAt ?? this.lastStudiedAt,
+      lastRestrictedDate: lastRestrictedDate ?? this.lastRestrictedDate,
     );
   }
 
@@ -582,8 +828,25 @@ class WordsCompanion extends UpdateCompanion<Word> {
     if (retentionPoint.present) {
       map['retention_point'] = Variable<int>(retentionPoint.value);
     }
+    if (isMemorized.present) {
+      map['is_memorized'] = Variable<bool>(isMemorized.value);
+    }
+    if (isRestricted.present) {
+      map['is_restricted'] = Variable<bool>(isRestricted.value);
+    }
+    if (correctCount.present) {
+      map['correct_count'] = Variable<int>(correctCount.value);
+    }
+    if (wrongCount.present) {
+      map['wrong_count'] = Variable<int>(wrongCount.value);
+    }
     if (lastStudiedAt.present) {
       map['last_studied_at'] = Variable<DateTime>(lastStudiedAt.value);
+    }
+    if (lastRestrictedDate.present) {
+      map['last_restricted_date'] = Variable<DateTime>(
+        lastRestrictedDate.value,
+      );
     }
     return map;
   }
@@ -600,7 +863,12 @@ class WordsCompanion extends UpdateCompanion<Word> {
           ..write('phonetic: $phonetic, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('retentionPoint: $retentionPoint, ')
-          ..write('lastStudiedAt: $lastStudiedAt')
+          ..write('isMemorized: $isMemorized, ')
+          ..write('isRestricted: $isRestricted, ')
+          ..write('correctCount: $correctCount, ')
+          ..write('wrongCount: $wrongCount, ')
+          ..write('lastStudiedAt: $lastStudiedAt, ')
+          ..write('lastRestrictedDate: $lastRestrictedDate')
           ..write(')'))
         .toString();
   }
@@ -1760,7 +2028,12 @@ typedef $$WordsTableCreateCompanionBuilder = WordsCompanion Function({
   Value<String?> phonetic,
   Value<bool> isFavorite,
   Value<int> retentionPoint,
+  Value<bool> isMemorized,
+  Value<bool> isRestricted,
+  Value<int> correctCount,
+  Value<int> wrongCount,
   Value<DateTime?> lastStudiedAt,
+  Value<DateTime?> lastRestrictedDate,
 });
 typedef $$WordsTableUpdateCompanionBuilder = WordsCompanion Function({
   Value<int> id,
@@ -1772,7 +2045,12 @@ typedef $$WordsTableUpdateCompanionBuilder = WordsCompanion Function({
   Value<String?> phonetic,
   Value<bool> isFavorite,
   Value<int> retentionPoint,
+  Value<bool> isMemorized,
+  Value<bool> isRestricted,
+  Value<int> correctCount,
+  Value<int> wrongCount,
   Value<DateTime?> lastStudiedAt,
+  Value<DateTime?> lastRestrictedDate,
 });
 
 class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
@@ -1828,8 +2106,33 @@ class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get isMemorized => $composableBuilder(
+    column: $table.isMemorized,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isRestricted => $composableBuilder(
+    column: $table.isRestricted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get correctCount => $composableBuilder(
+    column: $table.correctCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get wrongCount => $composableBuilder(
+    column: $table.wrongCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get lastStudiedAt => $composableBuilder(
     column: $table.lastStudiedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastRestrictedDate => $composableBuilder(
+    column: $table.lastRestrictedDate,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1888,8 +2191,33 @@ class $$WordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isMemorized => $composableBuilder(
+    column: $table.isMemorized,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isRestricted => $composableBuilder(
+    column: $table.isRestricted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get correctCount => $composableBuilder(
+    column: $table.correctCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get wrongCount => $composableBuilder(
+    column: $table.wrongCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get lastStudiedAt => $composableBuilder(
     column: $table.lastStudiedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastRestrictedDate => $composableBuilder(
+    column: $table.lastRestrictedDate,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -1934,8 +2262,33 @@ class $$WordsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get isMemorized => $composableBuilder(
+    column: $table.isMemorized,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isRestricted => $composableBuilder(
+    column: $table.isRestricted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get correctCount => $composableBuilder(
+    column: $table.correctCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get wrongCount => $composableBuilder(
+    column: $table.wrongCount,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get lastStudiedAt => $composableBuilder(
     column: $table.lastStudiedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastRestrictedDate => $composableBuilder(
+    column: $table.lastRestrictedDate,
     builder: (column) => column,
   );
 }
@@ -1977,7 +2330,12 @@ class $$WordsTableTableManager
                 Value<String?> phonetic = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<int> retentionPoint = const Value.absent(),
+                Value<bool> isMemorized = const Value.absent(),
+                Value<bool> isRestricted = const Value.absent(),
+                Value<int> correctCount = const Value.absent(),
+                Value<int> wrongCount = const Value.absent(),
                 Value<DateTime?> lastStudiedAt = const Value.absent(),
+                Value<DateTime?> lastRestrictedDate = const Value.absent(),
               }) => WordsCompanion(
                 id: id,
                 english: english,
@@ -1988,7 +2346,12 @@ class $$WordsTableTableManager
                 phonetic: phonetic,
                 isFavorite: isFavorite,
                 retentionPoint: retentionPoint,
+                isMemorized: isMemorized,
+                isRestricted: isRestricted,
+                correctCount: correctCount,
+                wrongCount: wrongCount,
                 lastStudiedAt: lastStudiedAt,
+                lastRestrictedDate: lastRestrictedDate,
               ),
           createCompanionCallback:
               ({
@@ -2001,7 +2364,12 @@ class $$WordsTableTableManager
                 Value<String?> phonetic = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<int> retentionPoint = const Value.absent(),
+                Value<bool> isMemorized = const Value.absent(),
+                Value<bool> isRestricted = const Value.absent(),
+                Value<int> correctCount = const Value.absent(),
+                Value<int> wrongCount = const Value.absent(),
                 Value<DateTime?> lastStudiedAt = const Value.absent(),
+                Value<DateTime?> lastRestrictedDate = const Value.absent(),
               }) => WordsCompanion.insert(
                 id: id,
                 english: english,
@@ -2012,7 +2380,12 @@ class $$WordsTableTableManager
                 phonetic: phonetic,
                 isFavorite: isFavorite,
                 retentionPoint: retentionPoint,
+                isMemorized: isMemorized,
+                isRestricted: isRestricted,
+                correctCount: correctCount,
+                wrongCount: wrongCount,
                 lastStudiedAt: lastStudiedAt,
+                lastRestrictedDate: lastRestrictedDate,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
