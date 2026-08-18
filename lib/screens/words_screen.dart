@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260818-06
+// コード管理番号: VER-20260818-21
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -22,10 +22,14 @@ class _WordsScreenState extends State<WordsScreen> {
   List<Word> _allWords = [];
   List<Word> _filteredWords = [];
 
+  // パフォーマンス向上のためのキャッシュ変数
+  List<int> _cachedAvailableChapters = [];
+  Map<int, List<Word>> _cachedGroupedWords = {};
+
   int _selectedLevel = 0;
   int _selectedChapter = 0;
   bool _onlyFavorite = false;
-  bool _showJapanese = true; // F-07: 和訳表示スイッチ（デフォルトON）
+  bool _showJapanese = true;
   String _searchQuery = '';
 
   bool _isLoading = true;
@@ -52,38 +56,37 @@ class _WordsScreenState extends State<WordsScreen> {
   Future<void> _loadWords() async {
     setState(() => _isLoading = true);
     final words = await widget.database.getAllWords();
-    setState(() {
-      _allWords = words;
-      _isLoading = false;
-    });
-    _applyFilter();
+    _allWords = words;
+    _applyFilterAndCache();
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
-  void _applyFilter() {
-    setState(() {
-      _filteredWords = _allWords.where((word) {
-        if (_onlyFavorite && !word.isFavorite) {
-          return false;
-        }
-        if (_selectedLevel != 0 && word.level != _selectedLevel) {
-          return false;
-        }
-        if (_selectedChapter != 0 && word.chapter != _selectedChapter) {
-          return false;
-        }
-        if (_searchQuery.isNotEmpty) {
-          final query = _searchQuery.toLowerCase();
-          final matchesEnglish = word.english.toLowerCase().contains(query);
-          final matchesJapanese = word.japanese.contains(query);
-          return matchesEnglish || matchesJapanese;
-        }
-        return true;
-      }).toList();
-    });
-  }
+  /// フィルター処理とグループ化キャッシュの更新を一括で行う
+  void _applyFilterAndCache() {
+    // 1. 絞り込み処理
+    final query = _searchQuery.toLowerCase().trim();
+    _filteredWords = _allWords.where((word) {
+      if (_onlyFavorite && !word.isFavorite) {
+        return false;
+      }
+      if (_selectedLevel != 0 && word.level != _selectedLevel) {
+        return false;
+      }
+      if (_selectedChapter != 0 && word.chapter != _selectedChapter) {
+        return false;
+      }
+      if (query.isNotEmpty) {
+        final matchesEnglish = word.english.toLowerCase().contains(query);
+        final matchesJapanese = word.japanese.contains(query);
+        return matchesEnglish || matchesJapanese;
+      }
+      return true;
+    }).toList();
 
-  List<int> _getAvailableChapters() {
-    final targetWords = _allWords.where((w) {
+    // 2. 利用可能な章の抽出（キャッシュ化）
+    final targetWordsForChapter = _allWords.where((w) {
       if (_onlyFavorite && !w.isFavorite) {
         return false;
       }
@@ -91,35 +94,39 @@ class _WordsScreenState extends State<WordsScreen> {
         return false;
       }
       return true;
-    }).toList();
+    });
+    final chaptersSet = targetWordsForChapter
+        .map((w) => w.chapter)
+        .toSet()
+        .toList();
+    chaptersSet.sort();
+    _cachedAvailableChapters = chaptersSet;
 
-    final chapters = targetWords.map((w) => w.chapter).toSet().toList();
-    chapters.sort();
-    return chapters;
-  }
-
-  /// フィルタリングされた単語を章（chapter）ごとにグループ化するヘルパー
-  Map<int, List<Word>> _groupWordsByChapter() {
+    // 3. 章（chapter）ごとのグループ化（キャッシュ化）
     final Map<int, List<Word>> grouped = {};
     for (final word in _filteredWords) {
       grouped.putIfAbsent(word.chapter, () => []).add(word);
     }
-    return Map.fromEntries(
-      grouped.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
-    );
+
+    final sortedKeys = grouped.keys.toList()..sort();
+    _cachedGroupedWords = {for (var k in sortedKeys) k: grouped[k]!};
+  }
+
+  void _onFilterChanged() {
+    setState(() {
+      _applyFilterAndCache();
+    });
   }
 
   Future<void> _toggleFavoriteFast(Word targetWord) async {
     final newStatus = !targetWord.isFavorite;
 
-    setState(() {
-      final index = _allWords.indexWhere((w) => w.id == targetWord.id);
-      if (index != -1) {
-        _allWords[index] = _allWords[index].copyWith(isFavorite: newStatus);
-      }
-    });
+    final index = _allWords.indexWhere((w) => w.id == targetWord.id);
+    if (index != -1) {
+      _allWords[index] = _allWords[index].copyWith(isFavorite: newStatus);
+    }
 
-    _applyFilter();
+    _onFilterChanged();
     await widget.database.toggleFavorite(targetWord.id, newStatus);
   }
 
@@ -200,9 +207,6 @@ class _WordsScreenState extends State<WordsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final availableChapters = _getAvailableChapters();
-    final groupedWords = _groupWordsByChapter();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('単語帳'),
@@ -231,7 +235,7 @@ class _WordsScreenState extends State<WordsScreen> {
                         ),
                         onChanged: (value) {
                           _searchQuery = value;
-                          _applyFilter();
+                          _onFilterChanged();
                         },
                       ),
                       const SizedBox(height: 8),
@@ -280,11 +284,9 @@ class _WordsScreenState extends State<WordsScreen> {
                               ],
                               onChanged: (val) {
                                 if (val != null) {
-                                  setState(() {
-                                    _selectedLevel = val;
-                                    _selectedChapter = 0;
-                                  });
-                                  _applyFilter();
+                                  _selectedLevel = val;
+                                  _selectedChapter = 0;
+                                  _onFilterChanged();
                                 }
                               },
                             ),
@@ -293,7 +295,9 @@ class _WordsScreenState extends State<WordsScreen> {
                           Expanded(
                             child: DropdownButtonFormField<int>(
                               initialValue:
-                                  availableChapters.contains(_selectedChapter)
+                                  _cachedAvailableChapters.contains(
+                                    _selectedChapter,
+                                  )
                                   ? _selectedChapter
                                   : 0,
                               decoration: const InputDecoration(
@@ -309,7 +313,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                   value: 0,
                                   child: Text('すべての章'),
                                 ),
-                                ...availableChapters.map(
+                                ..._cachedAvailableChapters.map(
                                   (ch) => DropdownMenuItem(
                                     value: ch,
                                     child: Text('Ch. $ch'),
@@ -318,8 +322,8 @@ class _WordsScreenState extends State<WordsScreen> {
                               ],
                               onChanged: (val) {
                                 if (val != null) {
-                                  setState(() => _selectedChapter = val);
-                                  _applyFilter();
+                                  _selectedChapter = val;
+                                  _onFilterChanged();
                                 }
                               },
                             ),
@@ -339,14 +343,11 @@ class _WordsScreenState extends State<WordsScreen> {
                             label: const Text('お気に入りのみ表示'),
                             selected: _onlyFavorite,
                             onSelected: (bool selected) {
-                              setState(() {
-                                _onlyFavorite = selected;
-                                _selectedChapter = 0;
-                              });
-                              _applyFilter();
+                              _onlyFavorite = selected;
+                              _selectedChapter = 0;
+                              _onFilterChanged();
                             },
                           ),
-                          // F-07: 和訳ON/OFF表示切り替えスイッチ
                           Row(
                             children: [
                               const Text(
@@ -357,6 +358,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                 value: _showJapanese,
                                 activeThumbColor: Colors.indigo,
                                 onChanged: (val) {
+                                  // 和訳切替はフィルター再計算を行わず、描画のみ行う（高速化）
                                   setState(() {
                                     _showJapanese = val;
                                   });
@@ -389,7 +391,7 @@ class _WordsScreenState extends State<WordsScreen> {
                   child: _filteredWords.isEmpty
                       ? const Center(child: Text('該当する単語が見つかりません'))
                       : CustomScrollView(
-                          slivers: groupedWords.entries.map((entry) {
+                          slivers: _cachedGroupedWords.entries.map((entry) {
                             final chapter = entry.key;
                             final wordsInChapter = entry.value;
 
@@ -416,10 +418,21 @@ class _WordsScreenState extends State<WordsScreen> {
                                       onSpeak: () => _speak(word.english),
                                       onToggleFavorite: () =>
                                           _toggleFavoriteFast(word),
-                                      // F-08: 👉 右スワイプ（暗記済み化 / 定着度100pt）
                                       onSwipeRight: () async {
                                         await widget.database
                                             .markAsMemorizedManual(word.id);
+                                        // メモリ上の値をローカル更新して再描画
+                                        final idx = _allWords.indexWhere(
+                                          (w) => w.id == word.id,
+                                        );
+                                        if (idx != -1) {
+                                          _allWords[idx] = _allWords[idx]
+                                              .copyWith(
+                                                retentionPoint: 80,
+                                                isMemorized: true,
+                                              );
+                                          _onFilterChanged();
+                                        }
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(context)
                                               .clearSnackBars();
@@ -437,10 +450,21 @@ class _WordsScreenState extends State<WordsScreen> {
                                           );
                                         }
                                       },
-                                      // F-08: 👈 左スワイプ（0ptリセット）
                                       onSwipeLeft: () async {
                                         await widget.database
                                             .resetRetentionManual(word.id);
+                                        final idx = _allWords.indexWhere(
+                                          (w) => w.id == word.id,
+                                        );
+                                        if (idx != -1) {
+                                          _allWords[idx] = _allWords[idx]
+                                              .copyWith(
+                                                retentionPoint: 0,
+                                                isMemorized: false,
+                                                isRestricted: true,
+                                              );
+                                          _onFilterChanged();
+                                        }
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(context)
                                               .clearSnackBars();
@@ -472,7 +496,6 @@ class _WordsScreenState extends State<WordsScreen> {
   }
 }
 
-/// Flutter標準の CustomScrollView 用の粘着ヘッダーデリゲート
 class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
 
