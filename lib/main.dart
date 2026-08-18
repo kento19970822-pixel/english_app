@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'db/app_database.dart';
-import 'screens/game_screen.dart';
+import 'screens/mode_select_screen.dart';
 import 'screens/words_screen.dart';
 
 void main() {
@@ -57,7 +57,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      GameScreen(database: _database, onGameStateChanged: _onGameStateChanged),
+      ModeSelectScreen(
+        database: _database,
+        onGameStateChanged: _onGameStateChanged,
+      ),
       WordsScreen(database: _database),
     ];
 

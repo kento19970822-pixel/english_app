@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260817-127
+// コード管理番号: VER-20260818-04
 import 'dart:async';
 import 'dart:math';
 
@@ -14,6 +14,7 @@ class WordModel {
   final String english;
   final String japanese;
   final int level;
+  final int chapter;
   bool isFavorite;
 
   WordModel({
@@ -21,6 +22,7 @@ class WordModel {
     required this.english,
     required this.japanese,
     required this.level,
+    required this.chapter,
     this.isFavorite = false,
   });
 
@@ -52,6 +54,7 @@ class WordModel {
       english: driftWord.english,
       japanese: driftWord.japanese,
       level: parsedLevel,
+      chapter: driftWord.chapter,
       isFavorite: driftWord.isFavorite,
     );
   }
@@ -60,11 +63,19 @@ class WordModel {
 class GameScreen extends StatefulWidget {
   final AppDatabase database;
   final Function(bool isStarted)? onGameStateChanged;
+  final String mode; // 'challenge' or 'learning'
+  final int initialLevel;
+  final int initialChapter;
+  final bool autoStart;
 
   const GameScreen({
     super.key,
     required this.database,
     this.onGameStateChanged,
+    this.mode = 'challenge',
+    this.initialLevel = 1,
+    this.initialChapter = 1,
+    this.autoStart = true,
   });
 
   @override
@@ -83,7 +94,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   bool isPaused = false;
   bool isLoading = true;
 
-  int selectedLevel = 1;
+  late int selectedLevel;
+  late int selectedChapter;
+  late String currentMode;
 
   Timer? gameTimer;
   final FlutterTts flutterTts = FlutterTts();
@@ -116,8 +129,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    selectedLevel = widget.initialLevel;
+    selectedChapter = widget.initialChapter;
+    currentMode = widget.mode;
+
     _seAudioPlayer = AudioPlayer();
-    _loadWordsFromDb();
     _initTts();
 
     _leftDropController = AnimationController(
@@ -137,6 +153,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _rightDropController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _handleTimeOut(isLeft: false);
+      }
+    });
+
+    _loadWordsFromDb().then((_) {
+      if (mounted) {
+        _startGame();
       }
     });
   }
@@ -213,16 +235,23 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   void _startGame() async {
     _resetAndStopAll();
-    await _loadWordsFromDb();
 
-    List<WordModel> levelWords = allWords
-        .where((w) => w.level == selectedLevel)
-        .toList();
-    if (levelWords.length < 5) {
-      levelWords = List.from(allWords);
+    List<WordModel> targetWords = [];
+    if (currentMode == 'learning') {
+      targetWords = allWords
+          .where(
+            (w) => w.level == selectedLevel && w.chapter == selectedChapter,
+          )
+          .toList();
+    } else {
+      targetWords = allWords.where((w) => w.level == selectedLevel).toList();
     }
 
-    if (levelWords.isEmpty) {
+    if (targetWords.length < 5) {
+      targetWords = List.from(allWords);
+    }
+
+    if (targetWords.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('単語データが取得できませんでした。')));
@@ -238,7 +267,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       isGameOver = false;
       isPaused = false;
       isLeftStarted = false;
-      questionQueue = List.from(levelWords)..shuffle();
+      questionQueue = List.from(targetWords)..shuffle();
       mistakenWords.clear();
 
       leftWord = null;
@@ -489,16 +518,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   void _cancelGame() {
     _resetAndStopAll();
-    setState(() {
-      isGameStarted = false;
-      isGameOver = false;
-      isPaused = false;
-      leftWord = null;
-      rightWord = null;
-      leftChoices = [];
-      rightChoices = [];
-    });
     widget.onGameStateChanged?.call(false);
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
   }
 
   void _endGame() {
@@ -546,10 +569,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    final modeTitle = currentMode == 'learning'
+        ? '学習モード (Ch.$selectedChapter)'
+        : 'チャレンジモード';
+
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
-        title: const Text('2レーン英単語クイズ'),
+        title: Text(modeTitle),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -565,136 +592,79 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         ],
       ),
       body: SafeArea(
-        child: !isGameStarted
-            ? _buildStartScreen()
-            : Column(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+                  Text(
+                    '残り時間: ${max(0, remainingTime).toStringAsFixed(1)}s',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: remainingTime <= 10 ? Colors.red : Colors.black,
                     ),
-                    color: Colors.white,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  ),
+                  if (combo > 1)
+                    Text(
+                      '$combo COMBO!',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                  Text(
+                    'スコア: $score',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.indigo,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: isGameOver
+                  ? _buildResultScreen()
+                  : Row(
                       children: [
-                        Text(
-                          '残り時間: ${max(0, remainingTime).toStringAsFixed(1)}s',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: remainingTime <= 10
-                                ? Colors.red
-                                : Colors.black,
+                        Expanded(
+                          child: _buildLane(
+                            isLeft: true,
+                            word: leftWord,
+                            choices: leftChoices,
+                            disabledChoices: leftDisabledChoices,
+                            controller: _leftDropController,
+                            feedback: leftFeedback,
+                            laneColor: Colors.blue.shade50,
+                            cardColor: Colors.blue.shade600,
                           ),
                         ),
-                        if (combo > 1)
-                          Text(
-                            '$combo COMBO!',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange,
-                            ),
-                          ),
-                        Text(
-                          'スコア: $score',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.indigo,
+                        const VerticalDivider(
+                          width: 2,
+                          thickness: 2,
+                          color: Colors.grey,
+                        ),
+                        Expanded(
+                          child: _buildLane(
+                            isLeft: false,
+                            word: rightWord,
+                            choices: rightChoices,
+                            disabledChoices: rightDisabledChoices,
+                            controller: _rightDropController,
+                            feedback: rightFeedback,
+                            laneColor: Colors.indigo.shade50,
+                            cardColor: Colors.indigo.shade600,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const Divider(height: 1),
-                  Expanded(
-                    child: isGameOver
-                        ? _buildResultScreen()
-                        : Row(
-                            children: [
-                              Expanded(
-                                child: _buildLane(
-                                  isLeft: true,
-                                  word: leftWord,
-                                  choices: leftChoices,
-                                  disabledChoices: leftDisabledChoices,
-                                  controller: _leftDropController,
-                                  feedback: leftFeedback,
-                                  laneColor: Colors.blue.shade50,
-                                  cardColor: Colors.blue.shade600,
-                                ),
-                              ),
-                              const VerticalDivider(
-                                width: 2,
-                                thickness: 2,
-                                color: Colors.grey,
-                              ),
-                              Expanded(
-                                child: _buildLane(
-                                  isLeft: false,
-                                  word: rightWord,
-                                  choices: rightChoices,
-                                  disabledChoices: rightDisabledChoices,
-                                  controller: _rightDropController,
-                                  feedback: rightFeedback,
-                                  laneColor: Colors.indigo.shade50,
-                                  cardColor: Colors.indigo.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-
-  Widget _buildStartScreen() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              '難易度を選択してください',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 1, label: Text('初級')),
-                ButtonSegment(value: 2, label: Text('中級')),
-                ButtonSegment(value: 3, label: Text('上級')),
-              ],
-              selected: {selectedLevel},
-              onSelectionChanged: (newSelection) {
-                setState(() {
-                  selectedLevel = newSelection.first;
-                });
-              },
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 48,
-                  vertical: 18,
-                ),
-                backgroundColor: Colors.indigo,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              onPressed: _startGame,
-              child: const Text(
-                'ゲームスタート',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
             ),
           ],
         ),
@@ -816,13 +786,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 ),
               ),
               onPressed: () {
-                setState(() {
-                  isGameStarted = false;
-                });
                 widget.onGameStateChanged?.call(false);
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
               },
               child: const Text(
-                'スタート画面へ戻る',
+                'モード選択へ戻る',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
@@ -842,7 +812,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     required Color laneColor,
     required Color cardColor,
   }) {
-    // 選択肢がない場合（待機状態）でも4つのプレースホルダー枠を固定描画
     final displayChoices = choices.isNotEmpty ? choices : List.filled(4, '');
 
     return Container(
