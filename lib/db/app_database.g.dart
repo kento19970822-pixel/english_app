@@ -1997,6 +1997,431 @@ class StampsCompanion extends UpdateCompanion<Stamp> {
   }
 }
 
+class $ChapterProgressesTable extends ChapterProgresses
+    with TableInfo<$ChapterProgressesTable, ChapterProgressesData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ChapterProgressesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _chapterMeta = const VerificationMeta(
+    'chapter',
+  );
+  @override
+  late final GeneratedColumn<int> chapter = GeneratedColumn<int>(
+    'chapter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<int> level = GeneratedColumn<int>(
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _isUnlockedMeta = const VerificationMeta(
+    'isUnlocked',
+  );
+  @override
+  late final GeneratedColumn<bool> isUnlocked = GeneratedColumn<bool>(
+    'is_unlocked',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_unlocked" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isClearedMeta = const VerificationMeta(
+    'isCleared',
+  );
+  @override
+  late final GeneratedColumn<bool> isCleared = GeneratedColumn<bool>(
+    'is_cleared',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_cleared" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _memorizedRateMeta = const VerificationMeta(
+    'memorizedRate',
+  );
+  @override
+  late final GeneratedColumn<double> memorizedRate = GeneratedColumn<double>(
+    'memorized_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _clearedAtMeta = const VerificationMeta(
+    'clearedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> clearedAt = GeneratedColumn<DateTime>(
+    'cleared_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    chapter,
+    level,
+    isUnlocked,
+    isCleared,
+    memorizedRate,
+    clearedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'chapter_progresses';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ChapterProgressesData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('chapter')) {
+      context.handle(
+        _chapterMeta,
+        chapter.isAcceptableOrUnknown(data['chapter']!, _chapterMeta),
+      );
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    }
+    if (data.containsKey('is_unlocked')) {
+      context.handle(
+        _isUnlockedMeta,
+        isUnlocked.isAcceptableOrUnknown(data['is_unlocked']!, _isUnlockedMeta),
+      );
+    }
+    if (data.containsKey('is_cleared')) {
+      context.handle(
+        _isClearedMeta,
+        isCleared.isAcceptableOrUnknown(data['is_cleared']!, _isClearedMeta),
+      );
+    }
+    if (data.containsKey('memorized_rate')) {
+      context.handle(
+        _memorizedRateMeta,
+        memorizedRate.isAcceptableOrUnknown(
+          data['memorized_rate']!,
+          _memorizedRateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cleared_at')) {
+      context.handle(
+        _clearedAtMeta,
+        clearedAt.isAcceptableOrUnknown(data['cleared_at']!, _clearedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {chapter};
+  @override
+  ChapterProgressesData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ChapterProgressesData(
+      chapter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}chapter'],
+      )!,
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}level'],
+      )!,
+      isUnlocked: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_unlocked'],
+      )!,
+      isCleared: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_cleared'],
+      )!,
+      memorizedRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}memorized_rate'],
+      )!,
+      clearedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cleared_at'],
+      ),
+    );
+  }
+
+  @override
+  $ChapterProgressesTable createAlias(String alias) {
+    return $ChapterProgressesTable(attachedDatabase, alias);
+  }
+}
+
+class ChapterProgressesData extends DataClass
+    implements Insertable<ChapterProgressesData> {
+  /// 通しチャプター番号 (1〜)
+  final int chapter;
+
+  /// 所属難易度レベル (1: 初級A1, 2: 初級A2, 3: 中級B1, 4: 中級B2, 5: 上級C1, 6: 上級C2)
+  final int level;
+
+  /// 解放フラグ (選択可能か)
+  final bool isUnlocked;
+
+  /// クリア済みフラグ (学習モードで暗記率90%超達成)
+  final bool isCleared;
+
+  /// 最新のチャプター内暗記フラグ率 (0.0〜100.0)
+  final double memorizedRate;
+
+  /// クリア達成日時
+  final DateTime? clearedAt;
+  const ChapterProgressesData({
+    required this.chapter,
+    required this.level,
+    required this.isUnlocked,
+    required this.isCleared,
+    required this.memorizedRate,
+    this.clearedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['chapter'] = Variable<int>(chapter);
+    map['level'] = Variable<int>(level);
+    map['is_unlocked'] = Variable<bool>(isUnlocked);
+    map['is_cleared'] = Variable<bool>(isCleared);
+    map['memorized_rate'] = Variable<double>(memorizedRate);
+    if (!nullToAbsent || clearedAt != null) {
+      map['cleared_at'] = Variable<DateTime>(clearedAt);
+    }
+    return map;
+  }
+
+  ChapterProgressesCompanion toCompanion(bool nullToAbsent) {
+    return ChapterProgressesCompanion(
+      chapter: Value(chapter),
+      level: Value(level),
+      isUnlocked: Value(isUnlocked),
+      isCleared: Value(isCleared),
+      memorizedRate: Value(memorizedRate),
+      clearedAt: clearedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(clearedAt),
+    );
+  }
+
+  factory ChapterProgressesData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ChapterProgressesData(
+      chapter: serializer.fromJson<int>(json['chapter']),
+      level: serializer.fromJson<int>(json['level']),
+      isUnlocked: serializer.fromJson<bool>(json['isUnlocked']),
+      isCleared: serializer.fromJson<bool>(json['isCleared']),
+      memorizedRate: serializer.fromJson<double>(json['memorizedRate']),
+      clearedAt: serializer.fromJson<DateTime?>(json['clearedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'chapter': serializer.toJson<int>(chapter),
+      'level': serializer.toJson<int>(level),
+      'isUnlocked': serializer.toJson<bool>(isUnlocked),
+      'isCleared': serializer.toJson<bool>(isCleared),
+      'memorizedRate': serializer.toJson<double>(memorizedRate),
+      'clearedAt': serializer.toJson<DateTime?>(clearedAt),
+    };
+  }
+
+  ChapterProgressesData copyWith({
+    int? chapter,
+    int? level,
+    bool? isUnlocked,
+    bool? isCleared,
+    double? memorizedRate,
+    Value<DateTime?> clearedAt = const Value.absent(),
+  }) => ChapterProgressesData(
+    chapter: chapter ?? this.chapter,
+    level: level ?? this.level,
+    isUnlocked: isUnlocked ?? this.isUnlocked,
+    isCleared: isCleared ?? this.isCleared,
+    memorizedRate: memorizedRate ?? this.memorizedRate,
+    clearedAt: clearedAt.present ? clearedAt.value : this.clearedAt,
+  );
+  ChapterProgressesData copyWithCompanion(ChapterProgressesCompanion data) {
+    return ChapterProgressesData(
+      chapter: data.chapter.present ? data.chapter.value : this.chapter,
+      level: data.level.present ? data.level.value : this.level,
+      isUnlocked: data.isUnlocked.present
+          ? data.isUnlocked.value
+          : this.isUnlocked,
+      isCleared: data.isCleared.present ? data.isCleared.value : this.isCleared,
+      memorizedRate: data.memorizedRate.present
+          ? data.memorizedRate.value
+          : this.memorizedRate,
+      clearedAt: data.clearedAt.present ? data.clearedAt.value : this.clearedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ChapterProgressesData(')
+          ..write('chapter: $chapter, ')
+          ..write('level: $level, ')
+          ..write('isUnlocked: $isUnlocked, ')
+          ..write('isCleared: $isCleared, ')
+          ..write('memorizedRate: $memorizedRate, ')
+          ..write('clearedAt: $clearedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    chapter,
+    level,
+    isUnlocked,
+    isCleared,
+    memorizedRate,
+    clearedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ChapterProgressesData &&
+          other.chapter == this.chapter &&
+          other.level == this.level &&
+          other.isUnlocked == this.isUnlocked &&
+          other.isCleared == this.isCleared &&
+          other.memorizedRate == this.memorizedRate &&
+          other.clearedAt == this.clearedAt);
+}
+
+class ChapterProgressesCompanion
+    extends UpdateCompanion<ChapterProgressesData> {
+  final Value<int> chapter;
+  final Value<int> level;
+  final Value<bool> isUnlocked;
+  final Value<bool> isCleared;
+  final Value<double> memorizedRate;
+  final Value<DateTime?> clearedAt;
+  const ChapterProgressesCompanion({
+    this.chapter = const Value.absent(),
+    this.level = const Value.absent(),
+    this.isUnlocked = const Value.absent(),
+    this.isCleared = const Value.absent(),
+    this.memorizedRate = const Value.absent(),
+    this.clearedAt = const Value.absent(),
+  });
+  ChapterProgressesCompanion.insert({
+    this.chapter = const Value.absent(),
+    this.level = const Value.absent(),
+    this.isUnlocked = const Value.absent(),
+    this.isCleared = const Value.absent(),
+    this.memorizedRate = const Value.absent(),
+    this.clearedAt = const Value.absent(),
+  });
+  static Insertable<ChapterProgressesData> custom({
+    Expression<int>? chapter,
+    Expression<int>? level,
+    Expression<bool>? isUnlocked,
+    Expression<bool>? isCleared,
+    Expression<double>? memorizedRate,
+    Expression<DateTime>? clearedAt,
+  }) {
+    return RawValuesInsertable({
+      if (chapter != null) 'chapter': chapter,
+      if (level != null) 'level': level,
+      if (isUnlocked != null) 'is_unlocked': isUnlocked,
+      if (isCleared != null) 'is_cleared': isCleared,
+      if (memorizedRate != null) 'memorized_rate': memorizedRate,
+      if (clearedAt != null) 'cleared_at': clearedAt,
+    });
+  }
+
+  ChapterProgressesCompanion copyWith({
+    Value<int>? chapter,
+    Value<int>? level,
+    Value<bool>? isUnlocked,
+    Value<bool>? isCleared,
+    Value<double>? memorizedRate,
+    Value<DateTime?>? clearedAt,
+  }) {
+    return ChapterProgressesCompanion(
+      chapter: chapter ?? this.chapter,
+      level: level ?? this.level,
+      isUnlocked: isUnlocked ?? this.isUnlocked,
+      isCleared: isCleared ?? this.isCleared,
+      memorizedRate: memorizedRate ?? this.memorizedRate,
+      clearedAt: clearedAt ?? this.clearedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (chapter.present) {
+      map['chapter'] = Variable<int>(chapter.value);
+    }
+    if (level.present) {
+      map['level'] = Variable<int>(level.value);
+    }
+    if (isUnlocked.present) {
+      map['is_unlocked'] = Variable<bool>(isUnlocked.value);
+    }
+    if (isCleared.present) {
+      map['is_cleared'] = Variable<bool>(isCleared.value);
+    }
+    if (memorizedRate.present) {
+      map['memorized_rate'] = Variable<double>(memorizedRate.value);
+    }
+    if (clearedAt.present) {
+      map['cleared_at'] = Variable<DateTime>(clearedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ChapterProgressesCompanion(')
+          ..write('chapter: $chapter, ')
+          ..write('level: $level, ')
+          ..write('isUnlocked: $isUnlocked, ')
+          ..write('isCleared: $isCleared, ')
+          ..write('memorizedRate: $memorizedRate, ')
+          ..write('clearedAt: $clearedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2006,6 +2431,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $DailyRecordsTable dailyRecords = $DailyRecordsTable(this);
   late final $StampsTable stamps = $StampsTable(this);
+  late final $ChapterProgressesTable chapterProgresses =
+      $ChapterProgressesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2015,6 +2442,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     learningHistory,
     dailyRecords,
     stamps,
+    chapterProgresses,
   ];
 }
 
@@ -3019,6 +3447,236 @@ typedef $$StampsTableProcessedTableManager =
       Stamp,
       PrefetchHooks Function()
     >;
+typedef $$ChapterProgressesTableCreateCompanionBuilder =
+    ChapterProgressesCompanion Function({
+      Value<int> chapter,
+      Value<int> level,
+      Value<bool> isUnlocked,
+      Value<bool> isCleared,
+      Value<double> memorizedRate,
+      Value<DateTime?> clearedAt,
+    });
+typedef $$ChapterProgressesTableUpdateCompanionBuilder =
+    ChapterProgressesCompanion Function({
+      Value<int> chapter,
+      Value<int> level,
+      Value<bool> isUnlocked,
+      Value<bool> isCleared,
+      Value<double> memorizedRate,
+      Value<DateTime?> clearedAt,
+    });
+
+class $$ChapterProgressesTableFilterComposer
+    extends Composer<_$AppDatabase, $ChapterProgressesTable> {
+  $$ChapterProgressesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get chapter => $composableBuilder(
+    column: $table.chapter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isUnlocked => $composableBuilder(
+    column: $table.isUnlocked,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCleared => $composableBuilder(
+    column: $table.isCleared,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get memorizedRate => $composableBuilder(
+    column: $table.memorizedRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get clearedAt => $composableBuilder(
+    column: $table.clearedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ChapterProgressesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ChapterProgressesTable> {
+  $$ChapterProgressesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get chapter => $composableBuilder(
+    column: $table.chapter,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isUnlocked => $composableBuilder(
+    column: $table.isUnlocked,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCleared => $composableBuilder(
+    column: $table.isCleared,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get memorizedRate => $composableBuilder(
+    column: $table.memorizedRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get clearedAt => $composableBuilder(
+    column: $table.clearedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ChapterProgressesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ChapterProgressesTable> {
+  $$ChapterProgressesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get chapter =>
+      $composableBuilder(column: $table.chapter, builder: (column) => column);
+
+  GeneratedColumn<int> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<bool> get isUnlocked => $composableBuilder(
+    column: $table.isUnlocked,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isCleared =>
+      $composableBuilder(column: $table.isCleared, builder: (column) => column);
+
+  GeneratedColumn<double> get memorizedRate => $composableBuilder(
+    column: $table.memorizedRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get clearedAt =>
+      $composableBuilder(column: $table.clearedAt, builder: (column) => column);
+}
+
+class $$ChapterProgressesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ChapterProgressesTable,
+          ChapterProgressesData,
+          $$ChapterProgressesTableFilterComposer,
+          $$ChapterProgressesTableOrderingComposer,
+          $$ChapterProgressesTableAnnotationComposer,
+          $$ChapterProgressesTableCreateCompanionBuilder,
+          $$ChapterProgressesTableUpdateCompanionBuilder,
+          (
+            ChapterProgressesData,
+            BaseReferences<
+              _$AppDatabase,
+              $ChapterProgressesTable,
+              ChapterProgressesData
+            >,
+          ),
+          ChapterProgressesData,
+          PrefetchHooks Function()
+        > {
+  $$ChapterProgressesTableTableManager(
+    _$AppDatabase db,
+    $ChapterProgressesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ChapterProgressesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ChapterProgressesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ChapterProgressesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> chapter = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<bool> isUnlocked = const Value.absent(),
+                Value<bool> isCleared = const Value.absent(),
+                Value<double> memorizedRate = const Value.absent(),
+                Value<DateTime?> clearedAt = const Value.absent(),
+              }) => ChapterProgressesCompanion(
+                chapter: chapter,
+                level: level,
+                isUnlocked: isUnlocked,
+                isCleared: isCleared,
+                memorizedRate: memorizedRate,
+                clearedAt: clearedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> chapter = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<bool> isUnlocked = const Value.absent(),
+                Value<bool> isCleared = const Value.absent(),
+                Value<double> memorizedRate = const Value.absent(),
+                Value<DateTime?> clearedAt = const Value.absent(),
+              }) => ChapterProgressesCompanion.insert(
+                chapter: chapter,
+                level: level,
+                isUnlocked: isUnlocked,
+                isCleared: isCleared,
+                memorizedRate: memorizedRate,
+                clearedAt: clearedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ChapterProgressesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ChapterProgressesTable,
+      ChapterProgressesData,
+      $$ChapterProgressesTableFilterComposer,
+      $$ChapterProgressesTableOrderingComposer,
+      $$ChapterProgressesTableAnnotationComposer,
+      $$ChapterProgressesTableCreateCompanionBuilder,
+      $$ChapterProgressesTableUpdateCompanionBuilder,
+      (
+        ChapterProgressesData,
+        BaseReferences<
+          _$AppDatabase,
+          $ChapterProgressesTable,
+          ChapterProgressesData
+        >,
+      ),
+      ChapterProgressesData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3031,4 +3689,6 @@ class $AppDatabaseManager {
       $$DailyRecordsTableTableManager(_db, _db.dailyRecords);
   $$StampsTableTableManager get stamps =>
       $$StampsTableTableManager(_db, _db.stamps);
+  $$ChapterProgressesTableTableManager get chapterProgresses =>
+      $$ChapterProgressesTableTableManager(_db, _db.chapterProgresses);
 }

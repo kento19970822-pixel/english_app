@@ -10,16 +10,17 @@ import 'tables/words.dart';
 import 'tables/learning_history.dart';
 import 'tables/daily_records.dart';
 import 'tables/stamps.dart';
+import 'tables/chapter_progress.dart';
 import '../services/retention_service.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Words, LearningHistory, DailyRecords, Stamps])
+@DriftDatabase(tables: [Words, LearningHistory, DailyRecords, Stamps, ChapterProgresses])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -193,10 +194,17 @@ class AppDatabase extends _$AppDatabase {
         );
       }
     });
+
+    // チャプター進行状況テーブルも再生成
+    await delete(chapterProgresses).go();
+    await initChapterProgresses();
   }
 
   /// 全単語データの削除
-  Future<void> clearAllWords() => delete(words).go();
+  Future<void> clearAllWords() async {
+    await delete(words).go();
+    await delete(chapterProgresses).go();
+  }
 
   /// お気に入りフラグの更新
   Future<void> toggleFavorite(int id, bool isFavorite) {
@@ -451,6 +459,148 @@ class AppDatabase extends _$AppDatabase {
           (t) => OrderingTerm(expression: t.playedAt, mode: OrderingMode.desc),
         ]))
         .get();
+  }
+
+  // --- チャプター進行状況 & 解放制御 (F-15) ---
+
+  /// チャプター進行状況テーブルの初期化（単語データに基づいて作成）
+  Future<void> initChapterProgresses() async {
+    final existing = await select(chapterProgresses).get();
+    if (existing.isNotEmpty) return;
+
+    final allWordsList = await select(words).get();
+    if (allWordsList.isEmpty) return;
+
+    // チャプターごとのレベルと単語情報を集計
+    final Map<int, int> chapterLevelMap = {};
+    for (final w in allWordsList) {
+      chapterLevelMap.putIfAbsent(w.chapter, () => w.level);
+    }
+
+    final sortedChapters = chapterLevelMap.keys.toList()..sort();
+    if (sortedChapters.isEmpty) return;
+
+    await batch((batch) {
+      for (final ch in sortedChapters) {
+        final lvl = chapterLevelMap[ch]!;
+        // 初期状態: 通しチャプター1、または各難易度系列の最初のチャプターを解放
+        final isFirstOfAnyLevel = (ch == 1);
+
+        batch.insert(
+          chapterProgresses,
+          ChapterProgressesCompanion.insert(
+            chapter: Value(ch),
+            level: Value(lvl),
+            isUnlocked: Value(isFirstOfAnyLevel),
+            isCleared: const Value(false),
+            memorizedRate: const Value(0.0),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
+      }
+    });
+  }
+
+  /// 全チャプターの進行状況を取得
+  Future<List<ChapterProgressesData>> getAllChapterProgresses() async {
+    await initChapterProgresses();
+    return (select(chapterProgresses)..orderBy([
+          (t) => OrderingTerm(expression: t.chapter, mode: OrderingMode.asc),
+        ]))
+        .get();
+  }
+
+  /// 指定難易度レベルに属するチャプター進行状況一覧を取得
+  Future<List<ChapterProgressesData>> getChapterProgressesForLevel(int level) async {
+    await initChapterProgresses();
+    return (select(chapterProgresses)
+          ..where((t) => t.level.equals(level))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.chapter, mode: OrderingMode.asc),
+          ]))
+        .get();
+  }
+
+  /// 指定難易度レベルで選択可能な最新チャプター番号を取得（初期表示用）
+  Future<int> getLatestUnlockedChapterForLevel(int level) async {
+    await initChapterProgresses();
+    final list = await (select(chapterProgresses)
+          ..where((t) => t.level.equals(level) & t.isUnlocked.equals(true))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.chapter, mode: OrderingMode.desc),
+          ]))
+        .get();
+
+    if (list.isNotEmpty) {
+      return list.first.chapter;
+    }
+    // 解放されているものがない場合、そのレベルの最小チャプターまたは1
+    final anyChapter = await (select(chapterProgresses)
+          ..where((t) => t.level.equals(level))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.chapter, mode: OrderingMode.asc),
+          ]))
+        .get();
+    return anyChapter.isNotEmpty ? anyChapter.first.chapter : 1;
+  }
+
+  /// チャプター内の暗記フラグ率（0.0〜100.0%）を計算
+  Future<double> calculateChapterMemorizedRate(int chapter) async {
+    final wordsInChapter = await (select(words)
+          ..where((t) => t.chapter.equals(chapter)))
+        .get();
+    if (wordsInChapter.isEmpty) return 0.0;
+
+    final memorizedCount = wordsInChapter.where((w) => w.isMemorized).length;
+    return (memorizedCount / wordsInChapter.length) * 100.0;
+  }
+
+  /// 【学習モードクリア時】暗記フラグ率が90%超の場合にクリア判定・次チャプター解放 (F-15)
+  Future<Map<String, dynamic>> checkAndUnlockNextChapter(int currentChapter) async {
+    final rate = await calculateChapterMemorizedRate(currentChapter);
+    final isCleared = rate > 90.0; // 90%超（90%ちょうどは含まない）
+
+    // 現在のチャプター進捗を更新
+    final currentProgress = await (select(chapterProgresses)
+          ..where((t) => t.chapter.equals(currentChapter)))
+        .getSingleOrNull();
+
+    await (update(chapterProgresses)..where((t) => t.chapter.equals(currentChapter))).write(
+      ChapterProgressesCompanion(
+        memorizedRate: Value(rate),
+        isCleared: Value(isCleared || (currentProgress?.isCleared ?? false)),
+        clearedAt: isCleared ? Value(DateTime.now()) : const Value.absent(),
+      ),
+    );
+
+    int? nextUnlockedChapter;
+    bool isNewUnlock = false;
+
+    if (isCleared) {
+      final nextChapterNum = currentChapter + 1;
+      final nextProgress = await (select(chapterProgresses)
+            ..where((t) => t.chapter.equals(nextChapterNum)))
+          .getSingleOrNull();
+
+      if (nextProgress != null) {
+        if (!nextProgress.isUnlocked) {
+          isNewUnlock = true;
+          await (update(chapterProgresses)..where((t) => t.chapter.equals(nextChapterNum))).write(
+            const ChapterProgressesCompanion(
+              isUnlocked: Value(true),
+            ),
+          );
+        }
+        nextUnlockedChapter = nextChapterNum;
+      }
+    }
+
+    return {
+      'isCleared': isCleared,
+      'memorizedRate': rate,
+      'nextChapterUnlocked': nextUnlockedChapter,
+      'isNewUnlock': isNewUnlock,
+    };
   }
 }
 

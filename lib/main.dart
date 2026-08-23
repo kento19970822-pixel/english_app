@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'db/app_database.dart';
 import 'screens/mode_select_screen.dart';
 import 'screens/words_screen.dart';
-import 'screens/calendar_screen.dart';
+import 'screens/records_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +19,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '英単語ゲーム',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.indigo, useMaterial3: true),
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFFBF7EE),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF5F9E98),
+          primary: const Color(0xFF5F9E98),
+          secondary: const Color(0xFFECA882),
+          surface: const Color(0xFFFFFDF9),
+        ),
+      ),
       home: const MainHomeScreen(),
     );
   }
@@ -44,8 +53,9 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     _checkAndRunDailySync();
   }
 
-  /// 1日1回のみ日跨ぎ一括同期（忘却減算・制限解除）を実行
+  /// 1日1回のみ日跨ぎ一括同期（忘却減算・制限解除）を実行 ＆ チャプター進捗初期化
   Future<void> _checkAndRunDailySync() async {
+    await _database.initChapterProgresses();
     final prefs = await SharedPreferences.getInstance();
     final todayStr = DateTime.now().toIso8601String().split('T')[0];
     final lastSyncDate = prefs.getString('last_daily_sync_date');
@@ -77,7 +87,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         onGameStateChanged: _onGameStateChanged,
       ),
       WordsScreen(database: _database),
-      CalendarScreen(database: _database),
+      RecordsScreen(database: _database),
     ];
 
     return Scaffold(
@@ -86,6 +96,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
           ? null
           : NavigationBar(
               selectedIndex: _selectedIndex,
+              backgroundColor: const Color(0xFFFFFDF9),
+              indicatorColor: const Color(0xFF5F9E98).withAlpha(50),
               onDestinationSelected: (int index) {
                 setState(() {
                   _selectedIndex = index;
@@ -93,16 +105,19 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
               },
               destinations: const [
                 NavigationDestination(
-                  icon: Icon(Icons.sports_esports),
+                  icon: Icon(Icons.sports_esports_outlined),
+                  selectedIcon: Icon(Icons.sports_esports),
                   label: 'ゲーム',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.list_alt),
+                  icon: Icon(Icons.menu_book_outlined),
+                  selectedIcon: Icon(Icons.menu_book),
                   label: '単語一覧',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.calendar_month),
-                  label: 'カレンダー',
+                  icon: Icon(Icons.insights_outlined),
+                  selectedIcon: Icon(Icons.insights),
+                  label: '記録',
                 ),
               ],
             ),

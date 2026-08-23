@@ -562,14 +562,23 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
   }
 
+  Map<String, dynamic>? _unlockResult;
+
   void _endGame() async {
     _resetAndStopAll();
 
     // F-10: 本日のプレイ回数加算と学習履歴の保存
     await widget.database.addGameHistory(score, selectedLevel);
 
+    // F-15: 学習モードの場合、チャプター暗記率判定および次チャプター解放処理を実行
+    Map<String, dynamic>? unlockResult;
+    if (currentMode == 'learning') {
+      unlockResult = await widget.database.checkAndUnlockNextChapter(selectedChapter);
+    }
+
     if (mounted) {
       setState(() {
+        _unlockResult = unlockResult;
         isGameOver = true;
         isPaused = false;
       });
@@ -722,33 +731,100 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildResultScreen() {
+    final isLearning = currentMode == 'learning';
+    final rate = (_unlockResult?['memorizedRate'] as double?) ?? 0.0;
+    final isCleared = (_unlockResult?['isCleared'] as bool?) ?? false;
+    final nextChapter = _unlockResult?['nextChapterUnlocked'] as int?;
+    final isNewUnlock = (_unlockResult?['isNewUnlock'] as bool?) ?? false;
+
     return Container(
-      color: Colors.grey[100],
+      color: const Color(0xFFFBF7EE),
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
           Card(
-            elevation: 2,
+            elevation: 1,
+            color: const Color(0xFFFFFDF9),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: Color(0xFFE5DEC9)),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(18.0),
               child: Column(
                 children: [
                   const Text(
                     'ゲーム終了！',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C302E),
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     '最終スコア: $score',
                     style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.indigo,
+                      fontSize: 22,
+                      color: Color(0xFF5F9E98),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  if (isLearning) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isCleared
+                            ? const Color(0xFFE8F5E9)
+                            : const Color(0xFFFFF3E0),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isCleared
+                              ? Colors.green.shade300
+                              : Colors.orange.shade200,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                isCleared ? Icons.stars_rounded : Icons.info_outline_rounded,
+                                color: isCleared ? Colors.amber.shade700 : Colors.orange,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                isCleared
+                                    ? 'Ch.$selectedChapter MASTER! (${rate.toInt()}%) 🎉'
+                                    : 'Ch.$selectedChapter 暗記率: ${rate.toInt()}% (目標: >90%)',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: isCleared
+                                      ? Colors.green.shade900
+                                      : Colors.brown.shade800,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (isNewUnlock && nextChapter != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              '✨ 次の Chapter $nextChapter が解放されました！ ✨',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade800,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -761,7 +837,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Color(0xFF2C302E),
               ),
             ),
           ),
@@ -828,7 +904,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             height: 50,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
+                backgroundColor: const Color(0xFF5F9E98),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
