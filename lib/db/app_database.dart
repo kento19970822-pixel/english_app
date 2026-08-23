@@ -20,7 +20,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -180,6 +180,7 @@ class AppDatabase extends _$AppDatabase {
         final japaneseStr = item['japanese']?.toString() ?? '';
         final cefrStr = item['cefr']?.toString() ?? 'A1';
         final phoneticStr = item['phonetic']?.toString();
+        final categoryStr = item['category']?.toString() ?? 'General';
 
         batch.insert(
           words,
@@ -190,6 +191,7 @@ class AppDatabase extends _$AppDatabase {
             level: Value(level),
             chapter: Value(globalChapter),
             phonetic: Value(phoneticStr),
+            category: Value(categoryStr),
           ),
         );
       }

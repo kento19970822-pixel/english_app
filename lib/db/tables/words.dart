@@ -10,6 +10,7 @@ class Words extends Table {
   IntColumn get level => integer().withDefault(const Constant(1))();
   IntColumn get chapter => integer().withDefault(const Constant(1))();
   TextColumn get phonetic => text().nullable()();
+  TextColumn get category => text().withDefault(const Constant('General'))();
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
 
   // F-05 / F-08用拡張カラム
