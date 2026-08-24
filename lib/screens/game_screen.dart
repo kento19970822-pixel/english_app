@@ -1,14 +1,14 @@
-// コード管理番号: VER-20260824-34
+// コード管理番号: VER-20260824-42
 import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 import '../db/app_database.dart';
 import '../services/retention_service.dart';
 import '../services/stamp_service.dart';
+import '../services/tts_service.dart';
 import '../widgets/stamp_reward_dialog.dart';
 
 class WordModel {
@@ -101,10 +101,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late String currentMode;
 
   Timer? gameTimer;
-  final FlutterTts flutterTts = FlutterTts();
   late AudioPlayer _seAudioPlayer;
-
-  bool _isTtsInitialized = false;
 
   List<WordModel> allWords = [];
   List<WordModel> questionQueue = [];
@@ -208,25 +205,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _initTts() async {
-    try {
-      await flutterTts.setLanguage("en-US");
-      await flutterTts.setSpeechRate(0.5);
-    } catch (e) {
-      debugPrint("TTS Init Error: $e");
-    } finally {
-      _isTtsInitialized = true;
-    }
+    await TtsService.instance.initialize();
   }
 
   Future<void> _playAudio(WordModel word) async {
-    try {
-      if (_isTtsInitialized) {
-        await flutterTts.stop();
-        await flutterTts.speak(word.english);
-      }
-    } catch (e) {
-      debugPrint("TTS Play Error: $e");
-    }
+    await TtsService.instance.speak(word.english);
   }
 
   void _playSE(String type) async {
@@ -785,7 +768,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _leftDropController.dispose();
     _rightDropController.dispose();
     _seAudioPlayer.dispose();
-    flutterTts.stop();
+    TtsService.instance.stop();
     super.dispose();
   }
 

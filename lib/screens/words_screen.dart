@@ -1,9 +1,9 @@
-// コード管理番号: VER-20260824-16
+// コード管理番号: VER-20260824-43
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 
 import '../db/app_database.dart';
+import '../services/tts_service.dart';
 import '../widgets/sticky_section_header.dart';
 import '../widgets/word_card_tile.dart';
 
@@ -34,8 +34,6 @@ class WordsScreen extends StatefulWidget {
 }
 
 class _WordsScreenState extends State<WordsScreen> {
-  final FlutterTts _flutterTts = FlutterTts();
-
   List<Word> _allWords = [];
   List<WordSection> _groupedSections = [];
   int _totalFilteredCount = 0;
@@ -78,15 +76,11 @@ class _WordsScreenState extends State<WordsScreen> {
   }
 
   Future<void> _initTts() async {
-    await _flutterTts.setLanguage('en-US');
-    await _flutterTts.setSpeechRate(0.5);
+    await TtsService.instance.initialize();
   }
 
   Future<void> _speak(String text) async {
-    if (text.isNotEmpty) {
-      await _flutterTts.stop();
-      await _flutterTts.speak(text);
-    }
+    await TtsService.instance.speak(text);
   }
 
   Future<void> _loadWords() async {
@@ -296,7 +290,7 @@ class _WordsScreenState extends State<WordsScreen> {
 
   @override
   void dispose() {
-    _flutterTts.stop();
+    TtsService.instance.stop();
     super.dispose();
   }
 
