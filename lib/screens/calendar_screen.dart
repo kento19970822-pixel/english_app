@@ -1,3 +1,4 @@
+// コード管理番号: VER-20260824-17
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
@@ -16,6 +17,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Map<String, DailyRecord> _dailyRecordsMap = {};
   int _streakCount = 0;
   bool _isLoading = true;
+
+  // 定数パステルカラー
+  static const Color _bgColor = Color(0xFFFBF7EE);
+  static const Color _cardColor = Color(0xFFFFFDF9);
+  static const Color _primaryAccent = Color(0xFF5F9E98);
+  static const Color _secondaryAccent = Color(0xFFECA882);
+  static const Color _textPrimary = Color(0xFF2C302E);
+  static const Color _textSecondary = Color(0xFF6B726E);
+  static const Color _borderColor = Color(0xFFE5DEC9);
 
   @override
   void initState() {
@@ -60,26 +70,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: _bgColor,
       appBar: AppBar(
-        title: const Text('学習カレンダー'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        title: const Text(
+          '学習カレンダー',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: _textPrimary,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        foregroundColor: _textPrimary,
         elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: _primaryAccent))
           : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12.0,
-                  vertical: 8.0,
-                ),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildStreakHeader(),
-                    const SizedBox(height: 8),
-                    Expanded(child: _buildCalendarCard()),
+                    const SizedBox(height: 12),
+                    _buildCalendarCard(),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -89,66 +105,72 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   /// ストリーク（連続プレイ日数）ヘッダーカード
   Widget _buildStreakHeader() {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: Colors.orange.shade50,
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade100,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.local_fire_department,
-                color: Colors.deepOrange,
-                size: 24,
-              ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _borderColor),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: _secondaryAccent.withAlpha(40),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '連続学習日数',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black54,
+            child: const Icon(
+              Icons.local_fire_department_rounded,
+              color: _secondaryAccent,
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '連続学習日数',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: _textSecondary,
+                ),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '$_streakCount',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: _secondaryAccent,
+                    ),
                   ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '$_streakCount',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepOrange,
-                      ),
+                  const SizedBox(width: 4),
+                  const Text(
+                    '日連続',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: _textPrimary,
                     ),
-                    const SizedBox(width: 4),
-                    const Text(
-                      '日連続',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -164,153 +186,150 @@ class _CalendarScreenState extends State<CalendarScreen> {
         7; // 日曜起算
 
     final totalItems = daysInMonth + firstDayOfWeek;
-    // 最大6行（42マス）として行数を計算
-    final rowCount = (totalItems / 7).ceil();
 
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-        child: Column(
-          children: [
-            // 月切替ヘッダー
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left, size: 20),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () => _changeMonth(-1),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _borderColor),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // 月切替ヘッダー
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left, size: 22, color: _textPrimary),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                onPressed: () => _changeMonth(-1),
+              ),
+              Text(
+                '${_focusedMonth.year}年 ${_focusedMonth.month}月',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _textPrimary,
                 ),
-                Text(
-                  '${_focusedMonth.year}年 ${_focusedMonth.month}月',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right, size: 22, color: _textPrimary),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                onPressed: () => _changeMonth(1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // 曜日ヘッダー
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: const [
+              _WeekdayLabel('日', isSunday: true),
+              _WeekdayLabel('月'),
+              _WeekdayLabel('火'),
+              _WeekdayLabel('水'),
+              _WeekdayLabel('木'),
+              _WeekdayLabel('金'),
+              _WeekdayLabel('土', isSaturday: true),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Divider(height: 1, color: _borderColor),
+          const SizedBox(height: 8),
+
+          // カレンダーグリッド（固定childAspectRatio ＋ FittedBoxで確実にオーバーフロー防止）
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              mainAxisSpacing: 5.0,
+              crossAxisSpacing: 5.0,
+              childAspectRatio: 1.0,
+            ),
+            itemCount: totalItems,
+            itemBuilder: (context, index) {
+              if (index < firstDayOfWeek) {
+                return const SizedBox.shrink();
+              }
+
+              final day = index - firstDayOfWeek + 1;
+              final dateStr =
+                  '${_focusedMonth.year}-${_focusedMonth.month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+              final record = _dailyRecordsMap[dateStr];
+
+              final hasActivity =
+                  record != null &&
+                  (record.playedCount > 0 || record.memorizedCount > 0);
+              final memorizedCount = record?.memorizedCount ?? 0;
+
+              return Container(
+                decoration: BoxDecoration(
+                  color: hasActivity
+                      ? _primaryAccent.withAlpha(30)
+                      : const Color(0xFFF7F4EB),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: hasActivity
+                        ? _primaryAccent
+                        : Colors.transparent,
+                    width: hasActivity ? 1.5 : 1.0,
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right, size: 20),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () => _changeMonth(1),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            // 曜日ヘッダー
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: const [
-                _WeekdayLabel('日', isSunday: true),
-                _WeekdayLabel('月'),
-                _WeekdayLabel('火'),
-                _WeekdayLabel('水'),
-                _WeekdayLabel('木'),
-                _WeekdayLabel('金'),
-                _WeekdayLabel('土', isSaturday: true),
-              ],
-            ),
-            const Divider(height: 8),
-            // カレンダーグリッド（LayoutBuilderで高さを動的計算）
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  const mainAxisSpacing = 4.0;
-                  const crossAxisSpacing = 4.0;
-
-                  // 利用可能な高さ・幅からマスの縦横比をレスポンシブ計算
-                  final cellWidth =
-                      (constraints.maxWidth - (crossAxisSpacing * 6)) / 7;
-                  final cellHeight =
-                      (constraints.maxHeight -
-                          (mainAxisSpacing * (rowCount - 1))) /
-                      rowCount;
-
-                  // 万が一計算値が異常な場合のセーフティ
-                  final calculatedRatio = (cellWidth > 0 && cellHeight > 0)
-                      ? (cellWidth / cellHeight)
-                      : 1.0;
-
-                  return GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 7,
-                      mainAxisSpacing: mainAxisSpacing,
-                      crossAxisSpacing: crossAxisSpacing,
-                      childAspectRatio: calculatedRatio,
-                    ),
-                    itemCount: totalItems,
-                    itemBuilder: (context, index) {
-                      if (index < firstDayOfWeek) {
-                        return const SizedBox.shrink();
-                      }
-
-                      final day = index - firstDayOfWeek + 1;
-                      final dateStr =
-                          '${_focusedMonth.year}-${_focusedMonth.month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
-                      final record = _dailyRecordsMap[dateStr];
-
-                      final hasActivity =
-                          record != null &&
-                          (record.playedCount > 0 || record.memorizedCount > 0);
-                      final memorizedCount = record?.memorizedCount ?? 0;
-
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: hasActivity
-                              ? Colors.indigo.shade50
-                              : Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
+                child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$day',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
                             color: hasActivity
-                                ? Colors.indigo.shade200
-                                : Colors.transparent,
+                                ? _primaryAccent
+                                : _textPrimary,
                           ),
                         ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
+                        if (hasActivity) ...[
+                          const SizedBox(height: 1),
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            size: 13,
+                            color: Color(0xFF4CAF50),
+                          ),
+                          if (memorizedCount > 0)
                             Text(
-                              '$day',
-                              style: TextStyle(
-                                fontSize: 11,
+                              '+$memorizedCount',
+                              style: const TextStyle(
+                                fontSize: 9,
                                 fontWeight: FontWeight.bold,
-                                color: hasActivity
-                                    ? Colors.indigo
-                                    : Colors.black87,
+                                color: _primaryAccent,
                               ),
                             ),
-                            if (hasActivity) ...[
-                              const SizedBox(height: 1),
-                              Icon(
-                                Icons.check_circle,
-                                size: 11,
-                                color: Colors.green.shade600,
-                              ),
-                              if (memorizedCount > 0)
-                                Text(
-                                  '+$memorizedCount',
-                                  style: TextStyle(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.indigo.shade700,
-                                  ),
-                                ),
-                            ],
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -329,13 +348,21 @@ class _WeekdayLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color color = Colors.black87;
-    if (isSunday) color = Colors.red;
-    if (isSaturday) color = Colors.blue;
+    Color color = const Color(0xFF6B726E);
+    if (isSunday) color = Colors.red.shade400;
+    if (isSaturday) color = Colors.blue.shade400;
 
-    return Text(
-      label,
-      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
+    return Expanded(
+      child: Center(
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ),
     );
   }
 }

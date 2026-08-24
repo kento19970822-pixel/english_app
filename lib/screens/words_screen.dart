@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260824-15
+// コード管理番号: VER-20260824-16
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -312,149 +312,166 @@ class _WordsScreenState extends State<WordsScreen> {
                   // 1. スクロールで出入りする可変ヘッダー
                   SliverAppBar(
                     floating: true,
-                    snap: true,
+                    snap: false,
                     pinned: false,
                     backgroundColor: _bgColor,
                     elevation: 0,
                     toolbarHeight: 0,
                     collapsedHeight: 0,
-                    expandedHeight: 185,
+                    expandedHeight: 154,
                     flexibleSpace: FlexibleSpaceBar(
-                      background: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // 検索バー ＆ DBリフレッシュ
-                            Row(
+                      collapseMode: CollapseMode.pin,
+                      background: ClipRect(
+                        child: OverflowBox(
+                          alignment: Alignment.topCenter,
+                          minHeight: 0,
+                          maxHeight: 154,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 6.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 38,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFEFEAE0),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: _borderColor),
-                                    ),
-                                    child: TextField(
-                                      decoration: const InputDecoration(
-                                        hintText: '英単語または和訳で検索...',
-                                        hintStyle: TextStyle(fontSize: 13, color: _textSecondary),
-                                        prefixIcon: Icon(Icons.search_rounded, size: 20, color: _textSecondary),
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                // 検索バー ＆ DBリフレッシュ
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEFEAE0),
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: _borderColor),
+                                        ),
+                                        child: TextField(
+                                          textAlignVertical: TextAlignVertical.center,
+                                          decoration: const InputDecoration(
+                                            hintText: '英単語または和訳で検索...',
+                                            hintStyle: TextStyle(fontSize: 13, color: _textSecondary),
+                                            prefixIcon: Icon(Icons.search_rounded, size: 20, color: _textSecondary),
+                                            border: InputBorder.none,
+                                            isDense: true,
+                                            contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                                          ),
+                                          style: const TextStyle(fontSize: 14, color: _textPrimary),
+                                          onChanged: (val) {
+                                            _searchQuery = val;
+                                            _onFilterChanged();
+                                          },
+                                        ),
                                       ),
-                                      style: const TextStyle(fontSize: 14, color: _textPrimary),
-                                      onChanged: (val) {
-                                        _searchQuery = val;
-                                        _onFilterChanged();
+                                    ),
+                                    const SizedBox(width: 8),
+                                    IconButton(
+                                      icon: const Icon(Icons.sync_rounded, color: _primaryAccent),
+                                      tooltip: 'DB完全再構築',
+                                      onPressed: _isLoading ? null : _rebuildDatabase,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+
+                                // ソート切替（Chap / A-Z / Cat.） ＆ 和訳常時トグルボタン
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        height: 32,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEFEAE0),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            _buildSortButton('Chap', 'chap'),
+                                            _buildSortButton('A-Z', 'az'),
+                                            _buildSortButton('Cat.', 'category'),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // 和訳トグルボタン（常時アクセス可能・スクロール不要）
+                                    _buildToggleChip(
+                                      label: _showJapanese ? '和訳: ON' : '和訳: OFF',
+                                      isSelected: _showJapanese,
+                                      accentColor: _primaryAccent,
+                                      height: 32,
+                                      onTap: () {
+                                        setState(() => _showJapanese = !_showJapanese);
                                       },
                                     ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+
+                                // フィルタータグ（横スクロール対応）
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      // 未暗記トグル
+                                      _buildToggleChip(
+                                        label: '未暗記',
+                                        isSelected: _filterUnlearned,
+                                        onTap: () {
+                                          setState(() {
+                                            _filterUnlearned = !_filterUnlearned;
+                                            _applyFilterAndGrouping();
+                                          });
+                                        },
+                                      ),
+                                      const SizedBox(width: 6),
+
+                                      // お気に入りトグル
+                                      _buildToggleChip(
+                                        label: 'お気に入り ★',
+                                        isSelected: _filterFavorite,
+                                        onTap: () {
+                                          setState(() {
+                                            _filterFavorite = !_filterFavorite;
+                                            _applyFilterAndGrouping();
+                                          });
+                                        },
+                                      ),
+                                      const SizedBox(width: 6),
+
+                                      // CEFRドロップダウン（現在条件に連動）
+                                      _buildCefrDropdown(),
+                                      const SizedBox(width: 6),
+
+                                      // Chapドロップダウン（現在条件に連動）
+                                      _buildChapDropdown(),
+                                      const SizedBox(width: 6),
+
+                                      // A-Zドロップダウン（現在条件に連動）
+                                      _buildAzDropdown(),
+                                      const SizedBox(width: 6),
+
+                                      // Categoryドロップダウン（現在条件に連動）
+                                      _buildCategoryDropdown(),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(Icons.sync_rounded, color: _primaryAccent),
-                                  tooltip: 'DB完全再構築',
-                                  onPressed: _isLoading ? null : _rebuildDatabase,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                const SizedBox(height: 4),
+
+                                // 表示件数
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    '表示中: $_totalFilteredCount 件',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: _textSecondary,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-
-                            // ソート切替（Chap / A-Z / Category）
-                            Container(
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEFEAE0),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  _buildSortButton('Chap', 'chap'),
-                                  _buildSortButton('A-Z', 'az'),
-                                  _buildSortButton('Category', 'category'),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-
-                            // フィルタータグ（横スクロール対応） ＆ 和訳トグルボタン
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: [
-                                  // 未暗記トグル
-                                  _buildToggleChip(
-                                    label: '未暗記',
-                                    isSelected: _filterUnlearned,
-                                    onTap: () {
-                                      setState(() {
-                                        _filterUnlearned = !_filterUnlearned;
-                                        _applyFilterAndGrouping();
-                                      });
-                                    },
-                                  ),
-                                  const SizedBox(width: 6),
-
-                                  // お気に入りトグル
-                                  _buildToggleChip(
-                                    label: 'お気に入り ★',
-                                    isSelected: _filterFavorite,
-                                    onTap: () {
-                                      setState(() {
-                                        _filterFavorite = !_filterFavorite;
-                                        _applyFilterAndGrouping();
-                                      });
-                                    },
-                                  ),
-                                  const SizedBox(width: 6),
-
-                                  // CEFRドロップダウン（現在条件に連動）
-                                  _buildCefrDropdown(),
-                                  const SizedBox(width: 6),
-
-                                  // Chapドロップダウン（現在条件に連動）
-                                  _buildChapDropdown(),
-                                  const SizedBox(width: 6),
-
-                                  // A-Zドロップダウン（現在条件に連動）
-                                  _buildAzDropdown(),
-                                  const SizedBox(width: 6),
-
-                                  // Categoryドロップダウン（現在条件に連動）
-                                  _buildCategoryDropdown(),
-                                  const SizedBox(width: 8),
-
-                                  // 和訳トグルボタン（他ボタンと完全に高さを一致）
-                                  _buildToggleChip(
-                                    label: _showJapanese ? '和訳: ON' : '和訳: OFF',
-                                    isSelected: _showJapanese,
-                                    accentColor: _primaryAccent,
-                                    onTap: () {
-                                      setState(() => _showJapanese = !_showJapanese);
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-
-                            // 表示件数
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                '表示中: $_totalFilteredCount 件',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: _textSecondary,
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -584,6 +601,7 @@ class _WordsScreenState extends State<WordsScreen> {
     required String label,
     required bool isSelected,
     Color? accentColor,
+    double height = 30,
     required VoidCallback onTap,
   }) {
     final color = accentColor ?? _secondaryAccent;
@@ -592,7 +610,7 @@ class _WordsScreenState extends State<WordsScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        height: 28,
+        height: height,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         alignment: Alignment.center,
         decoration: BoxDecoration(
@@ -605,7 +623,7 @@ class _WordsScreenState extends State<WordsScreen> {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: height > 30 ? 12 : 11,
             fontWeight: FontWeight.bold,
             color: isSelected ? Colors.white : _textSecondary,
           ),
@@ -630,7 +648,7 @@ class _WordsScreenState extends State<WordsScreen> {
     final totalCandidates = candidateWords.length;
 
     return Container(
-      height: 28,
+      height: 30,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: isActive ? _secondaryAccent.withAlpha(40) : _cardColor,
@@ -698,7 +716,7 @@ class _WordsScreenState extends State<WordsScreen> {
     final totalCandidates = candidateWords.length;
 
     return Container(
-      height: 28,
+      height: 30,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: isActive ? _secondaryAccent.withAlpha(40) : _cardColor,
@@ -768,7 +786,7 @@ class _WordsScreenState extends State<WordsScreen> {
     final totalCandidates = candidateWords.length;
 
     return Container(
-      height: 28,
+      height: 30,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: isActive ? _secondaryAccent.withAlpha(40) : _cardColor,
@@ -836,7 +854,7 @@ class _WordsScreenState extends State<WordsScreen> {
     final totalCandidates = candidateWords.length;
 
     return Container(
-      height: 28,
+      height: 30,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: isActive ? _secondaryAccent.withAlpha(40) : _cardColor,

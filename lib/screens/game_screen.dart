@@ -1,3 +1,4 @@
+// コード管理番号: VER-20260824-25
 import 'dart:async';
 import 'dart:math';
 
@@ -128,6 +129,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   Timer? _leftStartTimer;
 
+  // カウントダウン演出用
+  late AnimationController _countdownAnimController;
+  late Animation<double> _countdownScaleAnimation;
+  late Animation<double> _countdownOpacityAnimation;
+  String? _countdownText;
+  int _countdownSessionId = 0;
+
   @override
   void initState() {
     super.initState();
@@ -137,6 +145,23 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     _seAudioPlayer = AudioPlayer();
     _initTts();
+
+    _countdownAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 650),
+    );
+    _countdownScaleAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _countdownAnimController,
+        curve: Curves.elasticOut,
+      ),
+    );
+    _countdownOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _countdownAnimController,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
+      ),
+    );
 
     _leftDropController = AnimationController(
       vsync: this,
@@ -160,7 +185,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     _loadWordsFromDb().then((_) {
       if (mounted) {
-        _startGame();
+        _startCountdownSequence();
       }
     });
   }
@@ -168,7 +193,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   Future<void> _loadWordsFromDb() async {
     final dbWords = await widget.database.getAllWords();
     setState(() {
-      allWords = dbWords.map((w) => WordModel.fromDrift(w)).toList();
+      allWords = dbWords
+          .map((w) => WordModel.fromDrift(w))
+          .where((w) => w.english.trim().isNotEmpty && w.japanese.trim().isNotEmpty)
+          .toList();
       favoriteWordIds = dbWords
           .where((w) => w.isFavorite == true)
           .map((w) => w.id)
@@ -224,6 +252,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _resetAndStopAll() {
+    _countdownSessionId++;
+    _countdownAnimController.stop();
+    _countdownAnimController.reset();
+    _countdownText = null;
+
     gameTimer?.cancel();
     gameTimer = null;
     _leftStartTimer?.cancel();
@@ -235,7 +268,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _rightDropController.reset();
   }
 
-  void _startGame() async {
+  void _startCountdownSequence() async {
     _resetAndStopAll();
 
     List<WordModel> targetWords = [];
@@ -261,6 +294,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       return;
     }
 
+    final currentSession = ++_countdownSessionId;
+
     setState(() {
       isGameStarted = true;
       remainingTime = totalGameDuration;
@@ -285,13 +320,47 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     widget.onGameStateChanged?.call(true);
 
+    // 画面遷移アニメーション完了を待ってからカウントダウンを開始
+    await Future.delayed(const Duration(milliseconds: 350));
+    if (!mounted || _countdownSessionId != currentSession || !isGameStarted || isGameOver) return;
+
+    final steps = ['3', '2', '1', 'スタート!'];
+    for (int i = 0; i < steps.length; i++) {
+      if (!mounted || _countdownSessionId != currentSession || !isGameStarted || isGameOver) return;
+      setState(() {
+        _countdownText = steps[i];
+      });
+      _countdownAnimController.forward(from: 0.0);
+      if (steps[i] == 'スタート!') {
+        _playSE('correct');
+        await Future.delayed(const Duration(milliseconds: 700));
+      } else {
+        await Future.delayed(const Duration(milliseconds: 850));
+      }
+    }
+
+    if (!mounted || _countdownSessionId != currentSession || !isGameStarted || isGameOver) return;
+
+    setState(() {
+      _countdownText = null;
+    });
+
+    _startGameActual();
+  }
+
+  void _startGameActual() {
+    if (!mounted || !isGameStarted || isGameOver || isPaused) return;
+
     gameTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (isPaused) return;
-      if (remainingTime > 0.1) {
+      if (remainingTime > 0.15) {
         setState(() {
           remainingTime -= 0.1;
         });
       } else {
+        setState(() {
+          remainingTime = 0.0;
+        });
         _endGame();
       }
     });
@@ -312,19 +381,32 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   List<String> _generateChoices(WordModel correctWord) {
-    List<WordModel> candidateWords = allWords
-        .where(
-          (w) => w.id != correctWord.id && w.japanese != correctWord.japanese,
-        )
-        .toList();
-    candidateWords.shuffle();
+    final correctJapanese = correctWord.japanese.trim();
 
-    List<String> choices = candidateWords
-        .take(3)
-        .map((w) => w.japanese)
+    // 1. 全単語から空文字・正解と重複しないユニークな日本語訳候補を抽出
+    final uniqueCandidateMeanings = allWords
+        .map((w) => w.japanese.trim())
+        .where((j) => j.isNotEmpty && j != correctJapanese)
+        .toSet()
         .toList();
-    choices.add(correctWord.japanese);
-    choices.shuffle();
+    uniqueCandidateMeanings.shuffle();
+
+    // 2. 誤答候補を必ず3つ取得
+    final wrongChoices = uniqueCandidateMeanings.take(3).toList();
+
+    // 3. 万が一候補が3つに満たない場合の安全なフォールバック
+    const fallbackList = [
+      '走る', '話す', '歩く', '食べる', '本', '水', '空', '時間', '友達', '家', '学校', '音楽'
+    ];
+    for (final fb in fallbackList) {
+      if (wrongChoices.length >= 3) break;
+      if (fb != correctJapanese && !wrongChoices.contains(fb)) {
+        wrongChoices.add(fb);
+      }
+    }
+
+    // 4. 正解を含めて4つの選択肢をシャッフル
+    final choices = [...wrongChoices, correctJapanese]..shuffle();
     return choices;
   }
 
@@ -527,29 +609,104 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('一時停止中', textAlign: TextAlign.center),
-        content: const Text('ゲームが停止しています。', textAlign: TextAlign.center),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _togglePause();
-            },
-            child: const Text('再開する', style: TextStyle(fontSize: 16)),
+        backgroundColor: const Color(0xFFFFFDF9),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFFE5DEC9)),
+        ),
+        title: const Text(
+          '一時停止中',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2C302E),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              'ゲームが一時停止しています。',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Color(0xFF6B726E)),
             ),
-            onPressed: () {
-              Navigator.pop(context);
-              _cancelGame();
-            },
-            child: const Text('ゲーム中止'),
-          ),
-        ],
+            const SizedBox(height: 20),
+            // 再開するボタン（中央揃え）
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                label: const Text(
+                  'ゲームを再開する',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF5F9E98),
+                  foregroundColor: Colors.white,
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _togglePause();
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            // リスタートボタン（中央揃え・最初からやり直す）
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text(
+                  '最初からやり直す (リスタート)',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF5F9E98),
+                  side: const BorderSide(color: Color(0xFF5F9E98), width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _startCountdownSequence();
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            // 中止するボタン（中央揃え）
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.close_rounded, size: 18),
+                label: const Text(
+                  'ゲームを中止する',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red.shade600,
+                  side: BorderSide(color: Colors.red.shade300, width: 1.2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _cancelGame();
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -578,6 +735,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     if (mounted) {
       setState(() {
+        remainingTime = 0.0;
         _unlockResult = unlockResult;
         isGameOver = true;
         isPaused = false;
@@ -604,6 +762,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _resetAndStopAll();
+    _countdownAnimController.dispose();
     _leftDropController.dispose();
     _rightDropController.dispose();
     _seAudioPlayer.dispose();
@@ -614,7 +773,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Color(0xFF5F9E98))));
     }
 
     final modeTitle = currentMode == 'learning'
@@ -630,17 +789,28 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       child: Scaffold(
         backgroundColor: Colors.grey[200],
         appBar: AppBar(
-          title: Text(modeTitle),
+          automaticallyImplyLeading: false,
+          toolbarHeight: 40,
+          title: Text(
+            modeTitle,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C302E),
+            ),
+          ),
           backgroundColor: Colors.white,
           elevation: 0,
           actions: [
-            if (isGameStarted && !isGameOver)
+            if (isGameStarted && !isGameOver && _countdownText == null)
               IconButton(
                 icon: Icon(
-                  isPaused ? Icons.play_arrow : Icons.pause,
-                  size: 28,
-                  color: Colors.indigo,
+                  isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                  size: 22,
+                  color: const Color(0xFF5F9E98),
                 ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 onPressed: _togglePause,
               ),
           ],
@@ -649,83 +819,183 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           child: Column(
             children: [
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                  horizontal: 14,
+                  vertical: 6,
                 ),
-                color: Colors.white,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFE5DEC9), width: 1),
+                  ),
+                ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '残り時間: ${max(0, remainingTime).toStringAsFixed(1)}s',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: remainingTime <= 10 ? Colors.red : Colors.black,
-                      ),
-                    ),
-                    if (combo > 1)
-                      Text(
-                        '$combo COMBO!',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
+                    // 残り時間: 左端
+                    Expanded(
+                      flex: 4,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '残り時間: ${isGameOver ? '0s' : '${max(0.0, remainingTime).toStringAsFixed(1)}s'}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: (isGameOver || remainingTime <= 10)
+                                  ? Colors.red
+                                  : const Color(0xFF2C302E),
+                            ),
+                          ),
                         ),
                       ),
-                    Text(
-                      'スコア: $score',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.indigo,
+                    ),
+                    // コンボ: 中央
+                    Expanded(
+                      flex: 3,
+                      child: Center(
+                        child: combo > 1
+                            ? FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  '$combo COMBO!',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFECA882),
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
+                    // スコア: 右端
+                    Expanded(
+                      flex: 4,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'スコア: $score',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF5F9E98),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1),
               Expanded(
                 child: isGameOver
                     ? _buildResultScreen()
-                    : Row(
+                    : Stack(
                         children: [
-                          Expanded(
-                            child: _buildLane(
-                              isLeft: true,
-                              word: leftWord,
-                              choices: leftChoices,
-                              disabledChoices: leftDisabledChoices,
-                              controller: _leftDropController,
-                              feedback: leftFeedback,
-                              laneColor: Colors.blue.shade50,
-                              cardColor: Colors.blue.shade600,
-                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildLane(
+                                  isLeft: true,
+                                  word: leftWord,
+                                  choices: leftChoices,
+                                  disabledChoices: leftDisabledChoices,
+                                  controller: _leftDropController,
+                                  feedback: leftFeedback,
+                                  laneColor: Colors.blue.shade50,
+                                  cardColor: const Color(0xFF4A90E2),
+                                ),
+                              ),
+                              const VerticalDivider(
+                                width: 1,
+                                thickness: 1,
+                                color: Color(0xFFD0D7DE),
+                              ),
+                              Expanded(
+                                child: _buildLane(
+                                  isLeft: false,
+                                  word: rightWord,
+                                  choices: rightChoices,
+                                  disabledChoices: rightDisabledChoices,
+                                  controller: _rightDropController,
+                                  feedback: rightFeedback,
+                                  laneColor: Colors.indigo.shade50,
+                                  cardColor: const Color(0xFF5C6BC0),
+                                ),
+                              ),
+                            ],
                           ),
-                          const VerticalDivider(
-                            width: 2,
-                            thickness: 2,
-                            color: Colors.grey,
-                          ),
-                          Expanded(
-                            child: _buildLane(
-                              isLeft: false,
-                              word: rightWord,
-                              choices: rightChoices,
-                              disabledChoices: rightDisabledChoices,
-                              controller: _rightDropController,
-                              feedback: rightFeedback,
-                              laneColor: Colors.indigo.shade50,
-                              cardColor: Colors.indigo.shade600,
-                            ),
-                          ),
+                          if (_countdownText != null)
+                            _buildCountdownOverlay(),
                         ],
                       ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCountdownOverlay() {
+    final isStart = _countdownText == 'スタート!';
+
+    return Container(
+      color: const Color(0xFFFBF7EE).withValues(alpha: 0.72),
+      alignment: Alignment.center,
+      child: AnimatedBuilder(
+        animation: _countdownAnimController,
+        builder: (context, child) {
+          return Opacity(
+            opacity: _countdownOpacityAnimation.value.clamp(0.0, 1.0),
+            child: Transform.scale(
+              scale: _countdownScaleAnimation.value,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isStart ? 32 : 28,
+                  vertical: isStart ? 16 : 22,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFDF9),
+                  borderRadius: BorderRadius.circular(isStart ? 24 : 50),
+                  border: Border.all(
+                    color: isStart ? const Color(0xFFECA882) : const Color(0xFF5F9E98),
+                    width: 3.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isStart ? const Color(0xFFECA882) : const Color(0xFF5F9E98))
+                          .withValues(alpha: 0.35),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    _countdownText ?? '',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: isStart ? 32 : 56,
+                      fontWeight: FontWeight.w900,
+                      color: isStart ? const Color(0xFFECA882) : const Color(0xFF5F9E98),
+                      letterSpacing: isStart ? 2.0 : 0,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -739,187 +1009,275 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     return Container(
       color: const Color(0xFFFBF7EE),
-      padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          Card(
-            elevation: 1,
-            color: const Color(0xFFFFFDF9),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: const BorderSide(color: Color(0xFFE5DEC9)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(18.0),
+          // スクロール可能なリザルトカード ＆ 要復習単語リスト
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(14.0, 10.0, 14.0, 6.0),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'ゲーム終了！',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C302E),
+                  Card(
+                    elevation: 1,
+                    color: const Color(0xFFFFFDF9),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: const BorderSide(color: Color(0xFFE5DEC9)),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '最終スコア: $score',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      color: Color(0xFF5F9E98),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (isLearning) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isCleared
-                            ? const Color(0xFFE8F5E9)
-                            : const Color(0xFFFFF3E0),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isCleared
-                              ? Colors.green.shade300
-                              : Colors.orange.shade200,
-                        ),
-                      ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14.0),
                       child: Column(
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                isCleared ? Icons.stars_rounded : Icons.info_outline_rounded,
-                                color: isCleared ? Colors.amber.shade700 : Colors.orange,
-                                size: 20,
+                          const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'ゲーム終了！',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2C302E),
                               ),
-                              const SizedBox(width: 6),
-                              Text(
-                                isCleared
-                                    ? 'Ch.$selectedChapter MASTER! (${rate.toInt()}%) 🎉'
-                                    : 'Ch.$selectedChapter 暗記率: ${rate.toInt()}% (目標: >90%)',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              '最終スコア: $score',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Color(0xFF5F9E98),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          if (isLearning) ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isCleared
+                                    ? const Color(0xFFE8F5E9)
+                                    : const Color(0xFFFFF3E0),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
                                   color: isCleared
-                                      ? Colors.green.shade900
-                                      : Colors.brown.shade800,
+                                      ? Colors.green.shade300
+                                      : Colors.orange.shade200,
                                 ),
                               ),
-                            ],
-                          ),
-                          if (isNewUnlock && nextChapter != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              '✨ 次の Chapter $nextChapter が解放されました！ ✨',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green.shade800,
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        isCleared ? Icons.stars_rounded : Icons.info_outline_rounded,
+                                        color: isCleared ? Colors.amber.shade700 : Colors.orange,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            isCleared
+                                                ? 'Ch.$selectedChapter MASTER! (${rate.toInt()}%) 🎉'
+                                                : 'Ch.$selectedChapter 暗記率: ${rate.toInt()}% (目標: >90%)',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: isCleared
+                                                  ? Colors.green.shade900
+                                                  : Colors.brown.shade800,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (isNewUnlock && nextChapter != null) ...[
+                                    const SizedBox(height: 2),
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        '✨ 次の Chapter $nextChapter が解放されました！ ✨',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green.shade800,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                           ],
                         ],
                       ),
                     ),
-                  ],
+                  ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '要復習単語（${mistakenWords.length}件）',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2C302E),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  mistakenWords.isEmpty
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          alignment: Alignment.center,
+                          child: const Text(
+                            'パーフェクト！間違えた単語はありません 🎉',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B726E),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: mistakenWords.length,
+                          itemBuilder: (context, index) {
+                            final word = mistakenWords[index];
+                            final isFav = favoriteWordIds.contains(word.id);
+
+                            return Card(
+                              margin: const EdgeInsets.symmetric(vertical: 3),
+                              elevation: 0.5,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: const BorderSide(color: Color(0xFFE5DEC9)),
+                              ),
+                              child: ListTile(
+                                dense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                title: Text(
+                                  word.english,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  word.japanese,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.volume_up_rounded,
+                                        color: Color(0xFF5F9E98),
+                                        size: 20,
+                                      ),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                      onPressed: () => _playAudio(word),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                        isFav ? Icons.star_rounded : Icons.star_border_rounded,
+                                        color: isFav ? Colors.amber : Colors.grey,
+                                        size: 20,
+                                      ),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                      onPressed: () => _toggleFavorite(word),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                  const SizedBox(height: 6),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '要復習単語（${mistakenWords.length}件）',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2C302E),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: mistakenWords.isEmpty
-                ? const Center(
-                    child: Text(
-                      'パーフェクト！間違えた単語はありません 🎉',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: mistakenWords.length,
-                    itemBuilder: (context, index) {
-                      final word = mistakenWords[index];
-                      final isFav = favoriteWordIds.contains(word.id);
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
+          // 常に画面最下部に固定表示されるボトムアクションバー（左: 選択画面へ, 右: 再挑戦）
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFBF7EE),
+              border: Border(top: BorderSide(color: Color(0xFFE5DEC9), width: 1)),
+            ),
+            child: Row(
+              children: [
+                // 左: 選択画面へ
+                Expanded(
+                  child: SizedBox(
+                    height: 44,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                      label: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('選択画面へ', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF5F9E98),
+                        side: const BorderSide(color: Color(0xFF5F9E98), width: 1.5),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: ListTile(
-                          title: Text(
-                            word.english,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          subtitle: Text(word.japanese),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.volume_up,
-                                  color: Colors.indigo,
-                                ),
-                                onPressed: () => _playAudio(word),
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  isFav ? Icons.star : Icons.star_border,
-                                  color: isFav ? Colors.amber : Colors.grey,
-                                ),
-                                onPressed: () => _toggleFavorite(word),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                      ),
+                      onPressed: () {
+                        widget.onGameStateChanged?.call(false);
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        }
+                      },
+                    ),
                   ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5F9E98),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
                 ),
-              ),
-              onPressed: () {
-                widget.onGameStateChanged?.call(false);
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text(
-                'モード選択へ戻る',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+                const SizedBox(width: 10),
+                // 右: 再挑戦
+                Expanded(
+                  child: SizedBox(
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.refresh_rounded, size: 18),
+                      label: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('再挑戦', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5F9E98),
+                        foregroundColor: Colors.white,
+                        elevation: 1,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          isGameOver = false;
+                          isGameStarted = true;
+                          remainingTime = totalGameDuration;
+                        });
+                        _startCountdownSequence();
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -943,10 +1301,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       color: laneColor,
       child: Column(
         children: [
+          // 単語が落ちてくるエリア（広々スペース）
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final maxY = constraints.maxHeight - 60;
+                final maxY = constraints.maxHeight - 44;
                 return Stack(
                   children: [
                     Column(
@@ -954,7 +1313,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         Expanded(
                           child: Container(
                             alignment: Alignment.topRight,
-                            padding: const EdgeInsets.only(top: 4, right: 6),
+                            padding: const EdgeInsets.only(top: 2, right: 4),
                             decoration: BoxDecoration(
                               border: Border(
                                 bottom: BorderSide(
@@ -963,12 +1322,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                             ),
-                            child: Text(
-                              'Fast (+50)',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green.withValues(alpha: 0.4),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Fast (+50)',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.withValues(alpha: 0.45),
+                                ),
                               ),
                             ),
                           ),
@@ -976,7 +1338,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         Expanded(
                           child: Container(
                             alignment: Alignment.topRight,
-                            padding: const EdgeInsets.only(top: 4, right: 6),
+                            padding: const EdgeInsets.only(top: 2, right: 4),
                             decoration: BoxDecoration(
                               border: Border(
                                 bottom: BorderSide(
@@ -985,12 +1347,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                             ),
-                            child: Text(
-                              'Normal (+30)',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue.withValues(alpha: 0.4),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Normal (+30)',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.withValues(alpha: 0.45),
+                                ),
                               ),
                             ),
                           ),
@@ -998,14 +1363,17 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                         Expanded(
                           child: Container(
                             alignment: Alignment.topRight,
-                            padding: const EdgeInsets.only(top: 4, right: 6),
-                            child: Text(
-                              'Slow (+10)',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.amber.shade800.withValues(
-                                  alpha: 0.4,
+                            padding: const EdgeInsets.only(top: 2, right: 4),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Slow (+10)',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amber.shade800.withValues(
+                                    alpha: 0.45,
+                                  ),
                                 ),
                               ),
                             ),
@@ -1020,13 +1388,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           final currentY = controller.value * maxY;
                           return Positioned(
                             top: currentY,
-                            left: 8,
-                            right: 8,
+                            left: 4,
+                            right: 4,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                               decoration: BoxDecoration(
                                 color: cardColor,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(10),
                                 boxShadow: const [
                                   BoxShadow(
                                     color: Colors.black26,
@@ -1038,22 +1406,27 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    word.english,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                  Flexible(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        word.english,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: 4),
                                   GestureDetector(
                                     onTap: () => _playAudio(word),
                                     child: const Icon(
                                       Icons.volume_up,
                                       color: Colors.white70,
-                                      size: 20,
+                                      size: 16,
                                     ),
                                   ),
                                 ],
@@ -1066,19 +1439,19 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       Center(
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                            horizontal: 10,
+                            vertical: 4,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.75),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
                             feedback,
                             style: const TextStyle(
                               color: Colors.yellowAccent,
                               fontWeight: FontWeight.bold,
-                              fontSize: 13,
+                              fontSize: 12,
                             ),
                           ),
                         ),
@@ -1088,8 +1461,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               },
             ),
           ),
+
+          // 4択選択肢エリア（スリム化して単語落下エリアを広く確保）
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             color: Colors.white,
             child: Column(
               children: List.generate(displayChoices.length, (index) {
@@ -1099,10 +1474,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     isPlaceholder || disabledChoices.contains(choice);
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  padding: const EdgeInsets.symmetric(vertical: 2),
                   child: SizedBox(
                     width: double.infinity,
-                    height: 40,
+                    height: 30,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         disabledBackgroundColor: isPlaceholder
@@ -1128,9 +1503,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               : Colors.transparent,
                           width: 1,
                         ),
-                        padding: EdgeInsets.zero,
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                       ),
                       onPressed: isDisabled
@@ -1139,14 +1514,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               isLeft: isLeft,
                               selectedChoice: choice,
                             ),
-                      child: Text(
-                        choice,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          decoration: (!isPlaceholder && isDisabled)
-                              ? TextDecoration.lineThrough
-                              : null,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            choice,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              decoration: (!isPlaceholder && isDisabled)
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
                         ),
                       ),
                     ),

@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260824-03
+// コード管理番号: VER-20260824-18
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
@@ -119,281 +119,335 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
     return Container(
       color: _bgColor,
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'ゲーム選択',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: _textPrimary,
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // 1. プレイモード選択
-              const Text(
-                'プレイモード',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: _textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildModeCard(
-                      title: '学習モード',
-                      subtitle: '章ごと集中学習\n(暗記90%超で次章解放)',
-                      icon: Icons.school_rounded,
-                      modeKey: 'learning',
-                      accentColor: _primaryAccent,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildModeCard(
-                      title: 'チャレンジ',
-                      subtitle: '1分間/100問連続\n全単語ランダム出題',
-                      icon: Icons.bolt_rounded,
-                      modeKey: 'challenge',
-                      accentColor: _secondaryAccent,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // 2. 難易度（レベル）選択
-              const Text(
-                '難易度レベル',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: _textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              SegmentedButton<int>(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return _primaryAccent.withAlpha(40);
-                    }
-                    return _cardColor;
-                  }),
-                  foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return _primaryAccent;
-                    }
-                    return _textSecondary;
-                  }),
-                  side: WidgetStateProperty.all(
-                    const BorderSide(color: _borderColor),
-                  ),
-                ),
-                segments: const [
-                  ButtonSegment(value: 1, label: Text('初級 (A1/A2)')),
-                  ButtonSegment(value: 2, label: Text('中級 (B1/B2)')),
-                  ButtonSegment(value: 3, label: Text('上級 (C1/C2)')),
-                ],
-                selected: {selectedLevel},
-                onSelectionChanged: (newSelection) {
-                  final lvl = newSelection.first;
-                  setState(() {
-                    selectedLevel = lvl;
-                  });
-                  _loadChaptersForLevel(lvl);
-                },
-              ),
-
-              // 3. チャプター選択（学習モード時のみ表示）
-              if (selectedMode == 'learning') ...[
-                const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16.0, 10.0, 16.0, 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      'チャプター選択',
+                      'ゲーム選択',
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: _textPrimary,
                       ),
                     ),
-                    Text(
-                      'クリア条件: 暗記率 > 90%',
+                    const SizedBox(height: 10),
+
+                    // 1. プレイモード選択
+                    const Text(
+                      'プレイモード',
                       style: TextStyle(
-                        fontSize: 11,
-                        color: _textSecondary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: _textPrimary,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: _isLoadingChapters
-                      ? const Center(child: CircularProgressIndicator(color: _primaryAccent))
-                      : _currentLevelChapters.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'チャプター情報がありません。単語帳からDBを再構築してください。',
-                                style: TextStyle(color: _textSecondary, fontSize: 12),
-                                textAlign: TextAlign.center,
-                              ),
-                            )
-                          : ListView.separated(
-                              itemCount: _currentLevelChapters.length,
-                              separatorBuilder: (_, _) => const SizedBox(height: 8),
-                              itemBuilder: (context, index) {
-                                final cp = _currentLevelChapters[index];
-                                final isSelected = selectedChapter == cp.chapter;
-                                final isUnlocked = cp.isUnlocked;
-                                final isCleared = cp.isCleared;
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildModeCard(
+                            title: '学習モード',
+                            subtitle: '章ごと集中学習\n(暗記90%超で次章解放)',
+                            icon: Icons.school_rounded,
+                            modeKey: 'learning',
+                            accentColor: _primaryAccent,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildModeCard(
+                            title: 'チャレンジ',
+                            subtitle: '1分間/100問連続\n全単語ランダム出題',
+                            icon: Icons.bolt_rounded,
+                            modeKey: 'challenge',
+                            accentColor: _secondaryAccent,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
 
-                                return InkWell(
-                                  onTap: isUnlocked
-                                      ? () {
-                                          setState(() {
-                                            selectedChapter = cp.chapter;
-                                          });
-                                        }
-                                      : null,
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? _primaryAccent.withAlpha(25)
-                                          : (isUnlocked ? _cardColor : Colors.grey.shade200),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: isSelected
-                                            ? _primaryAccent
-                                            : (isUnlocked ? _borderColor : Colors.transparent),
-                                        width: isSelected ? 2 : 1,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          isUnlocked
-                                              ? (isSelected
-                                                  ? Icons.radio_button_checked
-                                                  : Icons.radio_button_unchecked)
-                                              : Icons.lock_outline_rounded,
-                                          color: isUnlocked
-                                              ? (isSelected ? _primaryAccent : _textSecondary)
-                                              : Colors.grey,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          'Chapter ${cp.chapter}',
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                            color: isUnlocked ? _textPrimary : Colors.grey,
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        if (isCleared)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFE8F5E9),
-                                              borderRadius: BorderRadius.circular(6),
-                                              border: Border.all(color: Colors.green.shade300),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
-                                                const SizedBox(width: 2),
-                                                Text(
-                                                  'クリア (${cp.memorizedRate.toInt()}%)',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.green.shade800,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        else if (isUnlocked && cp.memorizedRate > 0)
-                                          Text(
-                                            '暗記率: ${cp.memorizedRate.toInt()}%',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: _textSecondary,
-                                            ),
-                                          )
-                                        else if (!isUnlocked)
-                                          const Text(
-                                            '未解放',
-                                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                                          ),
-                                      ],
+                    // 2. 難易度（レベル）選択
+                    const Text(
+                      '難易度レベル',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: _textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(child: _buildLevelTab(1, '初級', 'A1/A2')),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildLevelTab(2, '中級', 'B1/B2')),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildLevelTab(3, '上級', 'C1/C2')),
+                      ],
+                    ),
+
+                    // 3. チャプター選択（学習モード時のみ表示）
+                    if (selectedMode == 'learning') ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'チャプター選択',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: _textPrimary,
+                            ),
+                          ),
+                          Text(
+                            'クリア条件: 暗記率 > 90%',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: _textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      _isLoadingChapters
+                          ? const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20.0),
+                              child: Center(child: CircularProgressIndicator(color: _primaryAccent)),
+                            )
+                          : _currentLevelChapters.isEmpty
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                                  child: Center(
+                                    child: Text(
+                                      'チャプター情報がありません。単語帳からDBを再構築してください。',
+                                      style: TextStyle(color: _textSecondary, fontSize: 12),
+                                      textAlign: TextAlign.center,
                                     ),
                                   ),
-                                );
-                              },
+                                )
+                              : ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: _currentLevelChapters.length,
+                                  separatorBuilder: (_, _) => const SizedBox(height: 6),
+                                  itemBuilder: (context, index) {
+                                    final cp = _currentLevelChapters[index];
+                                    final isSelected = selectedChapter == cp.chapter;
+                                    final isUnlocked = cp.isUnlocked;
+                                    final isCleared = cp.isCleared;
+
+                                    return InkWell(
+                                      onTap: isUnlocked
+                                          ? () {
+                                              setState(() {
+                                                selectedChapter = cp.chapter;
+                                              });
+                                            }
+                                          : null,
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? _primaryAccent.withAlpha(25)
+                                              : (isUnlocked ? _cardColor : Colors.grey.shade200),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? _primaryAccent
+                                                : (isUnlocked ? _borderColor : Colors.transparent),
+                                            width: isSelected ? 2 : 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              isUnlocked
+                                                  ? (isSelected
+                                                      ? Icons.radio_button_checked
+                                                      : Icons.radio_button_unchecked)
+                                                  : Icons.lock_outline_rounded,
+                                              color: isUnlocked
+                                                  ? (isSelected ? _primaryAccent : _textSecondary)
+                                                  : Colors.grey,
+                                              size: 18,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                'Chapter ${cp.chapter}',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                  color: isUnlocked ? _textPrimary : Colors.grey,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            if (isCleared)
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFE8F5E9),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                  border: Border.all(color: Colors.green.shade300),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.star_rounded, color: Colors.amber, size: 13),
+                                                    const SizedBox(width: 2),
+                                                    Text(
+                                                      'クリア (${cp.memorizedRate.toInt()}%)',
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Colors.green.shade800,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              )
+                                            else if (isUnlocked && cp.memorizedRate > 0)
+                                              Text(
+                                                '暗記率: ${cp.memorizedRate.toInt()}%',
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  color: _textSecondary,
+                                                ),
+                                              )
+                                            else if (!isUnlocked)
+                                              const Text(
+                                                '未解放',
+                                                style: TextStyle(fontSize: 11, color: Colors.grey),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                    ] else ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: _cardColor,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: _borderColor),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.info_outline_rounded, color: _secondaryAccent, size: 20),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'チャレンジモードは、全レベル・全単語から100問連続でランダム出題されます（制限時間1分間）。',
+                                style: TextStyle(fontSize: 12, color: _textSecondary),
+                              ),
                             ),
-                ),
-              ] else ...[
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: _cardColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: _borderColor),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline_rounded, color: _secondaryAccent),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'チャレンジモードは、全レベル・全単語から100問連続でランダム出題されます（制限時間1分間）。',
-                          style: TextStyle(fontSize: 12, color: _textSecondary),
+                          ],
                         ),
                       ),
                     ],
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+
+            // 常時下部に固定配置された開始ボタン（スクロール不要で即座に押せる）
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              decoration: const BoxDecoration(
+                color: _bgColor,
+                border: Border(top: BorderSide(color: _borderColor)),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    backgroundColor: selectedMode == 'learning' ? _primaryAccent : _secondaryAccent,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _startGame,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      selectedMode == 'learning'
+                          ? 'Chapter $selectedChapter を学習開始'
+                          : 'チャレンジを開始',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ),
                 ),
-                const Spacer(),
-              ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-              const SizedBox(height: 12),
+  Widget _buildLevelTab(int level, String title, String subtitle) {
+    final isSelected = selectedLevel == level;
 
-              // 4. ゲーム開始ボタン
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: selectedMode == 'learning' ? _primaryAccent : _secondaryAccent,
-                  foregroundColor: Colors.white,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+    return InkWell(
+      onTap: () {
+        setState(() {
+          selectedLevel = level;
+        });
+        _loadChaptersForLevel(level);
+      },
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? _primaryAccent.withAlpha(35) : _cardColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? _primaryAccent : _borderColor,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? _primaryAccent : _textPrimary,
                 ),
-                onPressed: _startGame,
-                child: Text(
-                  selectedMode == 'learning'
-                      ? 'Chapter $selectedChapter を学習開始'
-                      : 'チャレンジを開始',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isSelected ? _primaryAccent : _textSecondary,
                 ),
               ),
             ],
@@ -420,10 +474,10 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: isSelected ? accentColor.withAlpha(20) : _cardColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? accentColor : _borderColor,
             width: isSelected ? 2 : 1,
@@ -438,21 +492,21 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
         ),
         child: Column(
           children: [
-            Icon(icon, size: 32, color: isSelected ? accentColor : _textSecondary),
-            const SizedBox(height: 6),
+            Icon(icon, size: 28, color: isSelected ? accentColor : _textSecondary),
+            const SizedBox(height: 4),
             Text(
               title,
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
                 color: isSelected ? accentColor : _textPrimary,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 10, color: _textSecondary),
+              style: const TextStyle(fontSize: 9, color: _textSecondary),
             ),
           ],
         ),

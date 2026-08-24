@@ -130,8 +130,9 @@ class AppDatabase extends _$AppDatabase {
 
     for (var i = 0; i < rawWords.length; i++) {
       final row = rawWords[i];
-      final english = row['word'] ?? row['english'] ?? '';
-      final japanese = row['Japanese'] ?? row['japanese'] ?? '';
+      final english = (row['word'] ?? row['english'] ?? '').trim();
+      final japanese = (row['Japanese'] ?? row['japanese'] ?? '').trim();
+      if (english.isEmpty || japanese.isEmpty) continue; // 空データは除外
       final cefr = row['CEFR'] ?? row['cefr'] ?? 'A1';
       final phonetic = row['Phonetic'] ?? row['phonetic'];
       final level = _cefrToLevel(cefr);
