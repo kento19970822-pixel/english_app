@@ -1,9 +1,5 @@
-import 'dart:io';
-
+// コード管理番号: VER-20260825-05
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
 
 // テーブル定義ファイルの読み込み
 import 'tables/words.dart';
@@ -12,12 +8,13 @@ import 'tables/daily_records.dart';
 import 'tables/stamps.dart';
 import 'tables/chapter_progress.dart';
 import '../services/retention_service.dart';
+import 'connection/connection.dart' as impl;
 
 part 'app_database.g.dart';
 
 @DriftDatabase(tables: [Words, LearningHistory, DailyRecords, Stamps, ChapterProgresses])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase() : super(impl.connect());
   AppDatabase.forTesting(super.e);
 
   @override
@@ -724,12 +721,4 @@ class AppDatabase extends _$AppDatabase {
       await initChapterProgresses();
     });
   }
-}
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'app.sqlite'));
-    return NativeDatabase.createInBackground(file);
-  });
 }
