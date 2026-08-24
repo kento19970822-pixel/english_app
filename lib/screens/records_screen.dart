@@ -1,8 +1,9 @@
-// コード管理番号: VER-20260824-33
+// コード管理番号: VER-20260824-50
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
 import 'calendar_screen.dart';
+import 'character_gallery_screen.dart';
 import 'stamp_gallery_screen.dart';
 
 /// 「記録」タブ画面 (F-15)
@@ -123,10 +124,14 @@ class _RecordsScreenState extends State<RecordsScreen> {
                     accentColor: const Color(0xFF88A0A8),
                     badgeText: 'F-12/F-14',
                     onTap: () {
-                      _showComingSoonDialog(
-                        title: 'キャラクター図鑑',
-                        message: '相棒ドットキャラクター図鑑機能は近日公開予定です！',
-                      );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CharacterGalleryScreen(
+                            database: widget.database,
+                          ),
+                        ),
+                      ).then((_) => _loadSummary());
                     },
                   ),
                   const SizedBox(height: 24),
@@ -355,48 +360,6 @@ class _RecordsScreenState extends State<RecordsScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showComingSoonDialog({
-    required String title,
-    required String message,
-  }) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFFFFDF9),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.auto_awesome, color: Color(0xFF5F9E98)),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2C302E),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          message,
-          style: const TextStyle(color: Color(0xFF6B726E)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              '閉じる',
-              style: TextStyle(
-                color: Color(0xFF5F9E98),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,7 +1,9 @@
-// コード管理番号: VER-20260824-18
+// コード管理番号: VER-20260824-51
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
+import '../services/buddy_service.dart';
+import '../widgets/pixel_character_widget.dart';
 import 'game_screen.dart';
 
 class ModeSelectScreen extends StatefulWidget {
@@ -25,6 +27,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
 
   List<ChapterProgressesData> _currentLevelChapters = [];
   bool _isLoadingChapters = true;
+  Stamp? _favoriteStamp;
 
   // 定数カラーパレット
   static const Color _bgColor = Color(0xFFFBF7EE);
@@ -52,6 +55,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
   Future<void> _loadChaptersForLevel(int level, {bool preserveSelection = false}) async {
     setState(() => _isLoadingChapters = true);
 
+    final favStamp = await widget.database.getFavoriteStamp();
     // level 1: A1(1), A2(2) / level 2: B1(3), B2(4) / level 3: C1(5), C2(6)
     final allProgresses = await widget.database.getAllChapterProgresses();
     
@@ -72,6 +76,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
 
     if (mounted) {
       setState(() {
+        _favoriteStamp = favStamp;
         _currentLevelChapters = filtered;
         if (!preserveSelection || !filtered.any((cp) => cp.chapter == selectedChapter)) {
           selectedChapter = latestUnlocked;
@@ -281,6 +286,19 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                                               size: 18,
                                             ),
                                             const SizedBox(width: 8),
+                                            // F-13: 章ドットキャラクター（定着率連動）
+                                            PixelCharacterWidget(
+                                              speciesIndex: (cp.chapter - 1) % 12,
+                                              growthState: PixelCharacterWidget.stateFromRate(
+                                                cp.memorizedRate,
+                                                isUnlocked,
+                                              ),
+                                              actionState: isUnlocked && isCleared
+                                                  ? CharacterActionState.walk
+                                                  : CharacterActionState.idle,
+                                              size: 28,
+                                            ),
+                                            const SizedBox(width: 8),
                                             Expanded(
                                               child: Text(
                                                 'Chapter ${cp.chapter}',
@@ -363,6 +381,69 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                     const SizedBox(height: 8),
                   ],
                 ),
+              ),
+            ),
+
+            // F-14: 相棒ふれあいスペース（待機・歩行・タップでハミング・胸バッジ合成）
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _cardColor,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: _borderColor),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x08000000),
+                    blurRadius: 4,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  PixelCharacterWidget(
+                    speciesIndex: BuddyService.instance.selectedSpeciesId,
+                    growthState: CharacterGrowthState.healthy,
+                    actionState: CharacterActionState.idle,
+                    favoriteStamp: _favoriteStamp,
+                    size: 38,
+                    isInteractive: true,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '相棒: ${kCharacterSpeciesList[BuddyService.instance.selectedSpeciesId].japaneseName}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: _textPrimary,
+                              ),
+                            ),
+                            const Spacer(),
+                            const Text(
+                              'タップでハミング♪',
+                              style: TextStyle(fontSize: 10, color: _primaryAccent, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          selectedMode == 'learning'
+                              ? 'Ch.$selectedChapter の暗記クリアを目指そう！'
+                              : '制限時間1分間でスコアアタックに挑戦！',
+                          style: const TextStyle(fontSize: 11, color: _textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
 

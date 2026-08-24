@@ -689,6 +689,11 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  /// お気に入り設定されているスタンプを取得 (未設定または未解放の場合はnull)
+  Future<Stamp?> getFavoriteStamp() async {
+    return (select(stamps)..where((t) => t.isFavorite.equals(true) & t.isUnlocked.equals(true))).getSingleOrNull();
+  }
+
   /// 日別記録に獲得スタンプIDを設定
   Future<void> setDailyAppliedStamp(String dateStr, String stampId) async {
     await (update(dailyRecords)..where((t) => t.dateStr.equals(dateStr))).write(
