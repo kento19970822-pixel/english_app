@@ -21,7 +21,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -132,6 +132,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// 単語データの括挿入（CSV取り込み用）
+  /// 単語データの括挿入（CSV取り込み用）
   Future<void> insertRawWords(List<Map<String, String>> rawWords) async {
     final List<Map<String, dynamic>> processedList = [];
 
@@ -142,6 +143,9 @@ class AppDatabase extends _$AppDatabase {
       if (english.isEmpty || japanese.isEmpty) continue; // 空データは除外
       final cefr = row['CEFR'] ?? row['cefr'] ?? 'A1';
       final phonetic = row['Phonetic'] ?? row['phonetic'];
+      final category = row['Category'] ?? row['category'] ?? 'General';
+      final example = row['Example'] ?? row['example'];
+      final exampleJp = row['Example_JP'] ?? row['Example_Jp'] ?? row['example_jp'] ?? row['exampleJp'];
       final level = _cefrToLevel(cefr);
 
       processedList.add({
@@ -151,6 +155,9 @@ class AppDatabase extends _$AppDatabase {
         'cefr': cefr,
         'level': level,
         'phonetic': phonetic,
+        'category': category,
+        'example': example,
+        'exampleJp': exampleJp,
       });
     }
 
@@ -189,6 +196,8 @@ class AppDatabase extends _$AppDatabase {
         final cefrStr = item['cefr']?.toString() ?? 'A1';
         final phoneticStr = item['phonetic']?.toString();
         final categoryStr = item['category']?.toString() ?? 'General';
+        final exampleStr = item['example']?.toString();
+        final exampleJpStr = item['exampleJp']?.toString();
 
         batch.insert(
           words,
@@ -200,6 +209,8 @@ class AppDatabase extends _$AppDatabase {
             chapter: Value(globalChapter),
             phonetic: Value(phoneticStr),
             category: Value(categoryStr),
+            example: Value(exampleStr),
+            exampleJp: Value(exampleJpStr),
           ),
         );
       }

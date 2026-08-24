@@ -212,6 +212,30 @@ class _WordCardTileState extends State<WordCardTile> {
                               : FontStyle.italic,
                         ),
                       ),
+                      if (widget.word.example != null &&
+                          widget.word.example!.trim().isNotEmpty) ...[
+                        const SizedBox(height: 5),
+                        Text(
+                          widget.word.example!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                            color: Color(0xFF6B726E),
+                            height: 1.2,
+                          ),
+                        ),
+                        if (isJapaneseVisible &&
+                            widget.word.exampleJp != null &&
+                            widget.word.exampleJp!.trim().isNotEmpty)
+                          Text(
+                            widget.word.exampleJp!,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF888F8C),
+                              height: 1.2,
+                            ),
+                          ),
+                      ],
                     ],
                   ),
                 ),

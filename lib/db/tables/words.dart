@@ -1,7 +1,7 @@
-// コード管理番号: VER-20260818-15
+// コード管理番号: VER-20260824-45
 import 'package:drift/drift.dart';
 
-/// 単語マスターテーブル (F-05/F-08拡張版)
+/// 単語マスターテーブル (F-05/F-08/例文拡張版)
 class Words extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get english => text()();
@@ -12,6 +12,10 @@ class Words extends Table {
   TextColumn get phonetic => text().nullable()();
   TextColumn get category => text().withDefault(const Constant('General'))();
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
+
+  // 例文・例文和訳
+  TextColumn get example => text().nullable()();
+  TextColumn get exampleJp => text().nullable()();
 
   // F-05 / F-08用拡張カラム
   IntColumn get retentionPoint => integer().withDefault(const Constant(0))();

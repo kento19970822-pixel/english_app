@@ -18,7 +18,8 @@
 >     - 🎶 **ハミング・喜び (Humming/Joy)**: スイングジャンプ・ポップアップ音符 `♪` `♫`
 >     - ★ **胸バッジ (Chest Badge)**: お気に入りスタンプのミニチュア合成描画
 > - **取り込み単語データ（CSV）フォーマット仕様の明文化**:
->   - 必須列（`word`/`english`, `japanese`）、推奨列（`cefr` による自動レベル・20単語/章のチャプター割り振り）、任意列（`phonetic`, `category`, `example`, `example_jp`）。
+>   - 必須列（`word`/`english`, `japanese`）、推奨列（`cefr` による自動レベル・100単語/章のチャプター割り振り・レベル境界即時改章）、任意列（`phonetic`, `category`, `example`, `example_jp`）。
+>   - 例文（`example`）・例文和訳（`example_jp`）のDB保持および単語帳カードでの表示サポート。
 > - **ネイティブ音声見直し仕様の明文化**:
 >   - OS内蔵Neural/Naturalボイス自動検出・最適化、再生速度・ピッチ調整、将来的な高品質AI音声MP3キャッシュ対応。
 > - **記録リセット・スタンプ抽選厳格除外・UI改善の反映**:
@@ -583,14 +584,14 @@ Chapter 1〜7解放済み → Chapter 7
 | :--- | :---: | :--- | :--- |
 | `word` (または `english`) | **必須** | `apple`, `abandon` | 英単語。空文字・nullは取り込み時に自動スキップ |
 | `japanese` (または `Japanese`) | **必須** | `りんご`, `捨てる、断念する` | 日本語訳。カンマを含む場合は `""` で囲む |
-| `cefr` (または `CEFR`) | **推奨** | `A1`, `A2`, `B1`, `B2`, `C1`, `C2` | CEFR難易度。未指定時は `A1`。自動でLevel 1〜6に変換され、各20単語/章のチャプター番号（1〜通し連番）を割り当て |
+| `cefr` (または `CEFR`) | **推奨** | `A1`, `A2`, `B1`, `B2`, `C1`, `C2` | CEFR難易度。未指定時は `A1`。自動でLevel 1〜6に変換され、各100単語/章のチャプター番号（1〜通し連番・レベル境界即時改章）を割り当て |
 | `phonetic` (または `Phonetic`) | 任意 | `/ˈæp.əl/` | 発音記号。単語帳詳細表示用 |
 | `category` (または `Category`) | 任意 | `Daily`, `Business`, `Science` | カテゴリ。単語帳のカテゴリフィルター・ソート（Cat.）に利用 |
-| `example` (または `Example`) | 任意 | `She ate a red apple.` | 例文（今後の単語帳詳細・学習画面拡張用） |
-| `example_jp` (または `Example_JP`) | 任意 | `彼女は赤いリンゴを食べた。` | 例文の日本語訳 |
+| `example` (または `Example`) | 任意 | `She ate a red apple.` | 例文（単語カードでのイタリック例文表示用） |
+| `example_jp` (または `Example_JP`) | 任意 | `彼女は赤いリンゴを食べた。` | 例文の日本語訳（単語カードでの和訳表示用） |
 
 - **パース規則**: Dart標準の正規表現・文字列分割で堅牢にパース（外部CSVパッケージ非依存）。
-- **ソート規則**: CEFRレベル順 ➔ CSV元データ順にソートし、20単語ごとにチャプター連番（Ch.1, Ch.2...）を自動生成。
+- **ソート・チャプター規則**: CEFRレベル順 ➔ CSV元データ順にソートし、100単語ごとにチャプター連番（Ch.1, Ch.2...）を自動生成。レベル境界では100単語未満でも即座に次チャプターへ移行する。
 
 #### 🔊 ⑭ 英単語ネイティブ音声再生・TTS品質改善仕様
 
@@ -617,8 +618,10 @@ Chapter 1〜7解放済み → Chapter 7
 | `phonetic` | TEXT | NULL | 発音記号 |
 | `cefr` | TEXT | NOT NULL | CEFRレベル（A1〜C2） |
 | `level` | INTEGER | NOT NULL | 難易度レベル（1〜6） |
-| `chapter` | INTEGER | NOT NULL | 全レベル通しチャプター番号 |
+| `chapter` | INTEGER | NOT NULL | 全レベル通しチャプター番号（100単語/章） |
 | `category` | TEXT | NOT NULL | カテゴリ名（Fruits, Jobs 等） |
+| `example` | TEXT | NULL | 英語例文 |
+| `example_jp` | TEXT | NULL | 例文日本語訳 |
 | `is_favorite` | BOOLEAN | NOT NULL DEFAULT FALSE | お気に入りフラグ |
 | `is_memorized` | BOOLEAN | NOT NULL DEFAULT FALSE | 暗記済みフラグ |
 | `retention_point` | INTEGER | NOT NULL DEFAULT 0 | 定着度ポイント（0〜100） |

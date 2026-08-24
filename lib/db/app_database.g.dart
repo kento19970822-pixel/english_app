@@ -113,6 +113,28 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _exampleMeta = const VerificationMeta(
+    'example',
+  );
+  @override
+  late final GeneratedColumn<String> example = GeneratedColumn<String>(
+    'example',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _exampleJpMeta = const VerificationMeta(
+    'exampleJp',
+  );
+  @override
+  late final GeneratedColumn<String> exampleJp = GeneratedColumn<String>(
+    'example_jp',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _retentionPointMeta = const VerificationMeta(
     'retentionPoint',
   );
@@ -213,6 +235,8 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     phonetic,
     category,
     isFavorite,
+    example,
+    exampleJp,
     retentionPoint,
     isMemorized,
     isRestricted,
@@ -286,6 +310,18 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
       context.handle(
         _isFavoriteMeta,
         isFavorite.isAcceptableOrUnknown(data['is_favorite']!, _isFavoriteMeta),
+      );
+    }
+    if (data.containsKey('example')) {
+      context.handle(
+        _exampleMeta,
+        example.isAcceptableOrUnknown(data['example']!, _exampleMeta),
+      );
+    }
+    if (data.containsKey('example_jp')) {
+      context.handle(
+        _exampleJpMeta,
+        exampleJp.isAcceptableOrUnknown(data['example_jp']!, _exampleJpMeta),
       );
     }
     if (data.containsKey('retention_point')) {
@@ -393,6 +429,14 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_favorite'],
       )!,
+      example: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}example'],
+      ),
+      exampleJp: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}example_jp'],
+      ),
       retentionPoint: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}retention_point'],
@@ -440,6 +484,8 @@ class Word extends DataClass implements Insertable<Word> {
   final String? phonetic;
   final String category;
   final bool isFavorite;
+  final String? example;
+  final String? exampleJp;
   final int retentionPoint;
   final bool isMemorized;
   final bool isRestricted;
@@ -457,6 +503,8 @@ class Word extends DataClass implements Insertable<Word> {
     this.phonetic,
     required this.category,
     required this.isFavorite,
+    this.example,
+    this.exampleJp,
     required this.retentionPoint,
     required this.isMemorized,
     required this.isRestricted,
@@ -479,6 +527,12 @@ class Word extends DataClass implements Insertable<Word> {
     }
     map['category'] = Variable<String>(category);
     map['is_favorite'] = Variable<bool>(isFavorite);
+    if (!nullToAbsent || example != null) {
+      map['example'] = Variable<String>(example);
+    }
+    if (!nullToAbsent || exampleJp != null) {
+      map['example_jp'] = Variable<String>(exampleJp);
+    }
     map['retention_point'] = Variable<int>(retentionPoint);
     map['is_memorized'] = Variable<bool>(isMemorized);
     map['is_restricted'] = Variable<bool>(isRestricted);
@@ -506,6 +560,12 @@ class Word extends DataClass implements Insertable<Word> {
           : Value(phonetic),
       category: Value(category),
       isFavorite: Value(isFavorite),
+      example: example == null && nullToAbsent
+          ? const Value.absent()
+          : Value(example),
+      exampleJp: exampleJp == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exampleJp),
       retentionPoint: Value(retentionPoint),
       isMemorized: Value(isMemorized),
       isRestricted: Value(isRestricted),
@@ -535,6 +595,8 @@ class Word extends DataClass implements Insertable<Word> {
       phonetic: serializer.fromJson<String?>(json['phonetic']),
       category: serializer.fromJson<String>(json['category']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
+      example: serializer.fromJson<String?>(json['example']),
+      exampleJp: serializer.fromJson<String?>(json['exampleJp']),
       retentionPoint: serializer.fromJson<int>(json['retentionPoint']),
       isMemorized: serializer.fromJson<bool>(json['isMemorized']),
       isRestricted: serializer.fromJson<bool>(json['isRestricted']),
@@ -559,6 +621,8 @@ class Word extends DataClass implements Insertable<Word> {
       'phonetic': serializer.toJson<String?>(phonetic),
       'category': serializer.toJson<String>(category),
       'isFavorite': serializer.toJson<bool>(isFavorite),
+      'example': serializer.toJson<String?>(example),
+      'exampleJp': serializer.toJson<String?>(exampleJp),
       'retentionPoint': serializer.toJson<int>(retentionPoint),
       'isMemorized': serializer.toJson<bool>(isMemorized),
       'isRestricted': serializer.toJson<bool>(isRestricted),
@@ -579,6 +643,8 @@ class Word extends DataClass implements Insertable<Word> {
     Value<String?> phonetic = const Value.absent(),
     String? category,
     bool? isFavorite,
+    Value<String?> example = const Value.absent(),
+    Value<String?> exampleJp = const Value.absent(),
     int? retentionPoint,
     bool? isMemorized,
     bool? isRestricted,
@@ -596,6 +662,8 @@ class Word extends DataClass implements Insertable<Word> {
     phonetic: phonetic.present ? phonetic.value : this.phonetic,
     category: category ?? this.category,
     isFavorite: isFavorite ?? this.isFavorite,
+    example: example.present ? example.value : this.example,
+    exampleJp: exampleJp.present ? exampleJp.value : this.exampleJp,
     retentionPoint: retentionPoint ?? this.retentionPoint,
     isMemorized: isMemorized ?? this.isMemorized,
     isRestricted: isRestricted ?? this.isRestricted,
@@ -621,6 +689,8 @@ class Word extends DataClass implements Insertable<Word> {
       isFavorite: data.isFavorite.present
           ? data.isFavorite.value
           : this.isFavorite,
+      example: data.example.present ? data.example.value : this.example,
+      exampleJp: data.exampleJp.present ? data.exampleJp.value : this.exampleJp,
       retentionPoint: data.retentionPoint.present
           ? data.retentionPoint.value
           : this.retentionPoint,
@@ -657,6 +727,8 @@ class Word extends DataClass implements Insertable<Word> {
           ..write('phonetic: $phonetic, ')
           ..write('category: $category, ')
           ..write('isFavorite: $isFavorite, ')
+          ..write('example: $example, ')
+          ..write('exampleJp: $exampleJp, ')
           ..write('retentionPoint: $retentionPoint, ')
           ..write('isMemorized: $isMemorized, ')
           ..write('isRestricted: $isRestricted, ')
@@ -679,6 +751,8 @@ class Word extends DataClass implements Insertable<Word> {
     phonetic,
     category,
     isFavorite,
+    example,
+    exampleJp,
     retentionPoint,
     isMemorized,
     isRestricted,
@@ -700,6 +774,8 @@ class Word extends DataClass implements Insertable<Word> {
           other.phonetic == this.phonetic &&
           other.category == this.category &&
           other.isFavorite == this.isFavorite &&
+          other.example == this.example &&
+          other.exampleJp == this.exampleJp &&
           other.retentionPoint == this.retentionPoint &&
           other.isMemorized == this.isMemorized &&
           other.isRestricted == this.isRestricted &&
@@ -719,6 +795,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
   final Value<String?> phonetic;
   final Value<String> category;
   final Value<bool> isFavorite;
+  final Value<String?> example;
+  final Value<String?> exampleJp;
   final Value<int> retentionPoint;
   final Value<bool> isMemorized;
   final Value<bool> isRestricted;
@@ -736,6 +814,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.phonetic = const Value.absent(),
     this.category = const Value.absent(),
     this.isFavorite = const Value.absent(),
+    this.example = const Value.absent(),
+    this.exampleJp = const Value.absent(),
     this.retentionPoint = const Value.absent(),
     this.isMemorized = const Value.absent(),
     this.isRestricted = const Value.absent(),
@@ -754,6 +834,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.phonetic = const Value.absent(),
     this.category = const Value.absent(),
     this.isFavorite = const Value.absent(),
+    this.example = const Value.absent(),
+    this.exampleJp = const Value.absent(),
     this.retentionPoint = const Value.absent(),
     this.isMemorized = const Value.absent(),
     this.isRestricted = const Value.absent(),
@@ -773,6 +855,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Expression<String>? phonetic,
     Expression<String>? category,
     Expression<bool>? isFavorite,
+    Expression<String>? example,
+    Expression<String>? exampleJp,
     Expression<int>? retentionPoint,
     Expression<bool>? isMemorized,
     Expression<bool>? isRestricted,
@@ -791,6 +875,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
       if (phonetic != null) 'phonetic': phonetic,
       if (category != null) 'category': category,
       if (isFavorite != null) 'is_favorite': isFavorite,
+      if (example != null) 'example': example,
+      if (exampleJp != null) 'example_jp': exampleJp,
       if (retentionPoint != null) 'retention_point': retentionPoint,
       if (isMemorized != null) 'is_memorized': isMemorized,
       if (isRestricted != null) 'is_restricted': isRestricted,
@@ -812,6 +898,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Value<String?>? phonetic,
     Value<String>? category,
     Value<bool>? isFavorite,
+    Value<String?>? example,
+    Value<String?>? exampleJp,
     Value<int>? retentionPoint,
     Value<bool>? isMemorized,
     Value<bool>? isRestricted,
@@ -830,6 +918,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
       phonetic: phonetic ?? this.phonetic,
       category: category ?? this.category,
       isFavorite: isFavorite ?? this.isFavorite,
+      example: example ?? this.example,
+      exampleJp: exampleJp ?? this.exampleJp,
       retentionPoint: retentionPoint ?? this.retentionPoint,
       isMemorized: isMemorized ?? this.isMemorized,
       isRestricted: isRestricted ?? this.isRestricted,
@@ -870,6 +960,12 @@ class WordsCompanion extends UpdateCompanion<Word> {
     if (isFavorite.present) {
       map['is_favorite'] = Variable<bool>(isFavorite.value);
     }
+    if (example.present) {
+      map['example'] = Variable<String>(example.value);
+    }
+    if (exampleJp.present) {
+      map['example_jp'] = Variable<String>(exampleJp.value);
+    }
     if (retentionPoint.present) {
       map['retention_point'] = Variable<int>(retentionPoint.value);
     }
@@ -908,6 +1004,8 @@ class WordsCompanion extends UpdateCompanion<Word> {
           ..write('phonetic: $phonetic, ')
           ..write('category: $category, ')
           ..write('isFavorite: $isFavorite, ')
+          ..write('example: $example, ')
+          ..write('exampleJp: $exampleJp, ')
           ..write('retentionPoint: $retentionPoint, ')
           ..write('isMemorized: $isMemorized, ')
           ..write('isRestricted: $isRestricted, ')
@@ -2895,6 +2993,8 @@ typedef $$WordsTableCreateCompanionBuilder = WordsCompanion Function({
   Value<String?> phonetic,
   Value<String> category,
   Value<bool> isFavorite,
+  Value<String?> example,
+  Value<String?> exampleJp,
   Value<int> retentionPoint,
   Value<bool> isMemorized,
   Value<bool> isRestricted,
@@ -2913,6 +3013,8 @@ typedef $$WordsTableUpdateCompanionBuilder = WordsCompanion Function({
   Value<String?> phonetic,
   Value<String> category,
   Value<bool> isFavorite,
+  Value<String?> example,
+  Value<String?> exampleJp,
   Value<int> retentionPoint,
   Value<bool> isMemorized,
   Value<bool> isRestricted,
@@ -2972,6 +3074,16 @@ class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
 
   ColumnFilters<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get example => $composableBuilder(
+    column: $table.example,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get exampleJp => $composableBuilder(
+    column: $table.exampleJp,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3065,6 +3177,16 @@ class $$WordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get example => $composableBuilder(
+    column: $table.example,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get exampleJp => $composableBuilder(
+    column: $table.exampleJp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get retentionPoint => $composableBuilder(
     column: $table.retentionPoint,
     builder: (column) => ColumnOrderings(column),
@@ -3139,6 +3261,12 @@ class $$WordsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get example =>
+      $composableBuilder(column: $table.example, builder: (column) => column);
+
+  GeneratedColumn<String> get exampleJp =>
+      $composableBuilder(column: $table.exampleJp, builder: (column) => column);
+
   GeneratedColumn<int> get retentionPoint => $composableBuilder(
     column: $table.retentionPoint,
     builder: (column) => column,
@@ -3212,6 +3340,8 @@ class $$WordsTableTableManager
                 Value<String?> phonetic = const Value.absent(),
                 Value<String> category = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
+                Value<String?> example = const Value.absent(),
+                Value<String?> exampleJp = const Value.absent(),
                 Value<int> retentionPoint = const Value.absent(),
                 Value<bool> isMemorized = const Value.absent(),
                 Value<bool> isRestricted = const Value.absent(),
@@ -3229,6 +3359,8 @@ class $$WordsTableTableManager
                 phonetic: phonetic,
                 category: category,
                 isFavorite: isFavorite,
+                example: example,
+                exampleJp: exampleJp,
                 retentionPoint: retentionPoint,
                 isMemorized: isMemorized,
                 isRestricted: isRestricted,
@@ -3248,6 +3380,8 @@ class $$WordsTableTableManager
                 Value<String?> phonetic = const Value.absent(),
                 Value<String> category = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
+                Value<String?> example = const Value.absent(),
+                Value<String?> exampleJp = const Value.absent(),
                 Value<int> retentionPoint = const Value.absent(),
                 Value<bool> isMemorized = const Value.absent(),
                 Value<bool> isRestricted = const Value.absent(),
@@ -3265,6 +3399,8 @@ class $$WordsTableTableManager
                 phonetic: phonetic,
                 category: category,
                 isFavorite: isFavorite,
+                example: example,
+                exampleJp: exampleJp,
                 retentionPoint: retentionPoint,
                 isMemorized: isMemorized,
                 isRestricted: isRestricted,
