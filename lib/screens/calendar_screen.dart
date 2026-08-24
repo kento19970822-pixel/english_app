@@ -1,7 +1,9 @@
-// コード管理番号: VER-20260824-17
+// コード管理番号: VER-20260824-39
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
+import '../widgets/pixel_stamp_widget.dart';
 
 class CalendarScreen extends StatefulWidget {
   final AppDatabase database;
@@ -15,6 +17,7 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   DateTime _focusedMonth = DateTime.now();
   Map<String, DailyRecord> _dailyRecordsMap = {};
+  Map<String, Stamp> _stampsMap = {};
   int _streakCount = 0;
   bool _isLoading = true;
 
@@ -36,23 +39,36 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Future<void> _loadCalendarData() async {
     setState(() => _isLoading = true);
 
-    final records = await widget.database.getDailyRecordsByMonth(
-      _focusedMonth.year,
-      _focusedMonth.month,
-    );
-    final streak = await widget.database.calculateStreak();
+    try {
+      final records = await widget.database.getDailyRecordsByMonth(
+        _focusedMonth.year,
+        _focusedMonth.month,
+      );
+      final streak = await widget.database.calculateStreak();
+      final allStamps = await widget.database.getAllStamps();
 
-    final Map<String, DailyRecord> map = {};
-    for (final r in records) {
-      map[r.dateStr] = r;
-    }
+      final Map<String, DailyRecord> map = {};
+      for (final r in records) {
+        map[r.dateStr] = r;
+      }
 
-    if (mounted) {
-      setState(() {
-        _dailyRecordsMap = map;
-        _streakCount = streak;
-        _isLoading = false;
-      });
+      final Map<String, Stamp> stampMap = {
+        for (final s in allStamps) s.id: s,
+      };
+
+      if (mounted) {
+        setState(() {
+          _dailyRecordsMap = map;
+          _stampsMap = stampMap;
+          _streakCount = streak;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Calendar data load error: $e");
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -273,59 +289,107 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   (record.playedCount > 0 || record.memorizedCount > 0);
               final memorizedCount = record?.memorizedCount ?? 0;
 
-              return Container(
-                decoration: BoxDecoration(
-                  color: hasActivity
-                      ? _primaryAccent.withAlpha(30)
-                      : const Color(0xFFF7F4EB),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: hasActivity
-                        ? _primaryAccent
-                        : Colors.transparent,
-                    width: hasActivity ? 1.5 : 1.0,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(2.0),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.center,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '$day',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: hasActivity
-                                ? _primaryAccent
-                                : _textPrimary,
-                          ),
-                        ),
-                        if (hasActivity) ...[
-                          const SizedBox(height: 1),
-                          const Icon(
-                            Icons.check_circle_rounded,
-                            size: 13,
-                            color: Color(0xFF4CAF50),
-                          ),
-                          if (memorizedCount > 0)
-                            Text(
-                              '+$memorizedCount',
-                              style: const TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: _primaryAccent,
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final cellSize = min(constraints.maxWidth, constraints.maxHeight);
+                  // セルサイズに応じてスタンプサイズを大きく動的拡大
+                  final stampSize = max(24.0, cellSize * 0.56);
+                  final dayFontSize = max(10.0, cellSize * 0.18);
+                  final badgeFontSize = max(8.0, cellSize * 0.14);
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: hasActivity
+                          ? _primaryAccent.withAlpha(30)
+                          : const Color(0xFFF7F4EB),
+                      borderRadius: BorderRadius.circular(cellSize > 60 ? 12 : 8),
+                      border: Border.all(
+                        color: hasActivity
+                            ? _primaryAccent
+                            : Colors.transparent,
+                        width: hasActivity ? 1.5 : 1.0,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(3.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // 日付番号 (上部左寄せ)
+                          Align(
+                            alignment: Alignment.topLeft,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 3.0, top: 1.0),
+                              child: Text(
+                                '$day',
+                                style: TextStyle(
+                                  fontSize: dayFontSize,
+                                  fontWeight: FontWeight.bold,
+                                  color: hasActivity
+                                      ? _primaryAccent
+                                      : _textPrimary,
+                                ),
                               ),
                             ),
+                          ),
+
+                          // 中央: 堂々と大きく表示されるスタンプ
+                          Expanded(
+                            child: Center(
+                              child: hasActivity
+                                  ? (record.appliedStampId != null && _stampsMap.containsKey(record.appliedStampId!))
+                                      ? Builder(
+                                          builder: (context) {
+                                            final s = _stampsMap[record.appliedStampId]!;
+                                            return PixelStampWidget(
+                                              id: s.id,
+                                              name: s.name,
+                                              rarity: StampRarity.fromString(s.rarity),
+                                              paletteId: s.colorPaletteId,
+                                              patternId: s.patternId,
+                                              frameId: s.frameId,
+                                              effectId: s.effectId,
+                                              isUnlocked: true,
+                                              size: stampSize,
+                                            );
+                                          },
+                                        )
+                                      : Icon(
+                                          Icons.check_circle_rounded,
+                                          size: stampSize * 0.8,
+                                          color: const Color(0xFF4CAF50),
+                                        )
+                                  : const SizedBox.shrink(),
+                            ),
+                          ),
+
+                          // 下部: 暗記数バッジ (あれば)
+                          if (hasActivity && memorizedCount > 0)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 1.0),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: _primaryAccent.withAlpha(40),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '+$memorizedCount',
+                                  style: TextStyle(
+                                    fontSize: badgeFontSize,
+                                    fontWeight: FontWeight.bold,
+                                    color: _primaryAccent,
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            SizedBox(height: badgeFontSize + 2),
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
           ),

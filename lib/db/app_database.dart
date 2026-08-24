@@ -18,17 +18,24 @@ part 'app_database.g.dart';
 @DriftDatabase(tables: [Words, LearningHistory, DailyRecords, Stamps, ChapterProgresses])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
+  AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) async {
+      await m.createAll();
+    },
     onUpgrade: (m, from, to) async {
       for (final table in allTables) {
         await m.deleteTable(table.actualTableName);
         await m.createTable(table);
       }
+    },
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
     },
   );
 
@@ -347,19 +354,23 @@ class AppDatabase extends _$AppDatabase {
 
   /// 今日の日別記録を取得または初期生成
   Future<DailyRecord> getOrCreateTodayRecord() async {
-    final today = _getTodayStr();
+    return getDailyRecord(_getTodayStr());
+  }
+
+  /// 指定日の日別記録を取得または初期生成
+  Future<DailyRecord> getDailyRecord(String dateStr) async {
     final existing = await (select(
       dailyRecords,
-    )..where((t) => t.dateStr.equals(today))).getSingleOrNull();
+    )..where((t) => t.dateStr.equals(dateStr))).getSingleOrNull();
 
     if (existing != null) {
       return existing;
     } else {
       await into(dailyRecords)
-          .insert(DailyRecordsCompanion.insert(dateStr: today));
+          .insert(DailyRecordsCompanion.insert(dateStr: dateStr));
       return (select(
         dailyRecords,
-      )..where((t) => t.dateStr.equals(today))).getSingle();
+      )..where((t) => t.dateStr.equals(dateStr))).getSingle();
     }
   }
 
@@ -604,6 +615,98 @@ class AppDatabase extends _$AppDatabase {
       'nextChapterUnlocked': nextUnlockedChapter,
       'isNewUnlock': isNewUnlock,
     };
+  }
+
+  // --- スタンプ機能 (F-11 / F-12) ---
+
+  /// 全スタンプを取得（Phase昇順、ID昇順）
+  Future<List<Stamp>> getAllStamps() {
+    return (select(stamps)..orderBy([
+          (t) => OrderingTerm(expression: t.phase, mode: OrderingMode.asc),
+          (t) => OrderingTerm(expression: t.id, mode: OrderingMode.asc),
+        ]))
+        .get();
+  }
+
+  /// 指定Phaseのスタンプ一覧を取得
+  Future<List<Stamp>> getStampsByPhase(int phase) {
+    return (select(stamps)
+          ..where((t) => t.phase.equals(phase))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.id, mode: OrderingMode.asc),
+          ]))
+        .get();
+  }
+
+  /// 現在登録されている最大Phase番号を取得
+  Future<int> getMaxStampPhase() async {
+    final all = await select(stamps).get();
+    if (all.isEmpty) return 0;
+    int maxP = 1;
+    for (final s in all) {
+      if (s.phase > maxP) maxP = s.phase;
+    }
+    return maxP;
+  }
+
+  /// スタンプの一括挿入（新規生成用）
+  Future<void> insertStamps(List<StampsCompanion> stampList) async {
+    await batch((batch) {
+      batch.insertAll(stamps, stampList, mode: InsertMode.insertOrReplace);
+    });
+  }
+
+  /// スタンプを獲得（ロック解除）
+  Future<void> unlockStamp(String stampId, DateTime unlockedAt) async {
+    await (update(stamps)..where((t) => t.id.equals(stampId))).write(
+      StampsCompanion(
+        isUnlocked: const Value(true),
+        unlockedAt: Value(unlockedAt),
+      ),
+    );
+  }
+
+  /// お気に入りスタンプを設定（他をfalseにし、指定のスタンプのみtrue）
+  Future<void> setFavoriteStamp(String stampId) async {
+    await transaction(() async {
+      await update(stamps).write(
+        const StampsCompanion(isFavorite: Value(false)),
+      );
+      await (update(stamps)..where((t) => t.id.equals(stampId))).write(
+        const StampsCompanion(isFavorite: Value(true)),
+      );
+    });
+  }
+
+  /// 日別記録に獲得スタンプIDを設定
+  Future<void> setDailyAppliedStamp(String dateStr, String stampId) async {
+    await (update(dailyRecords)..where((t) => t.dateStr.equals(dateStr))).write(
+      DailyRecordsCompanion(
+        appliedStampId: Value(stampId),
+      ),
+    );
+  }
+
+  /// 全学習記録・進捗・スタンプのリセット（初期化）
+  Future<void> resetAllLearningData() async {
+    await transaction(() async {
+      await delete(learningHistory).go();
+      await delete(dailyRecords).go();
+      await update(words).write(
+        const WordsCompanion(
+          retentionPoint: Value(0),
+          isMemorized: Value(false),
+          isRestricted: Value(false),
+          correctCount: Value(0),
+          wrongCount: Value(0),
+          lastStudiedAt: Value(null),
+          lastRestrictedDate: Value(null),
+        ),
+      );
+      await delete(stamps).go();
+      await delete(chapterProgresses).go();
+      await initChapterProgresses();
+    });
   }
 }
 

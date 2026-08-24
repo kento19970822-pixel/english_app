@@ -1,8 +1,9 @@
-// コード管理番号: VER-20260824-02
+// コード管理番号: VER-20260824-33
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
 import 'calendar_screen.dart';
+import 'stamp_gallery_screen.dart';
 
 /// 「記録」タブ画面 (F-15)
 /// カレンダー、スタンプ図鑑、キャラクター図鑑への導線を提供
@@ -18,6 +19,7 @@ class RecordsScreen extends StatefulWidget {
 class _RecordsScreenState extends State<RecordsScreen> {
   int _streakDays = 0;
   bool _isLoading = true;
+
 
   @override
   void initState() {
@@ -101,10 +103,14 @@ class _RecordsScreenState extends State<RecordsScreen> {
                     accentColor: const Color(0xFFD4B86A),
                     badgeText: 'F-11/F-12',
                     onTap: () {
-                      _showComingSoonDialog(
-                        title: 'スタンプ図鑑',
-                        message: 'プロシージャル生成ドット絵スタンプ図鑑機能は近日公開予定です！',
-                      );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StampGalleryScreen(
+                            database: widget.database,
+                          ),
+                        ),
+                      ).then((_) => _loadSummary());
                     },
                   ),
                   const SizedBox(height: 16),
@@ -123,9 +129,75 @@ class _RecordsScreenState extends State<RecordsScreen> {
                       );
                     },
                   ),
+                  const SizedBox(height: 24),
+
+                  // 4. 学習記録のリセット
+                  Center(
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.restart_alt_rounded, size: 16, color: Color(0xFFD9534F)),
+                      label: const Text(
+                        '学習記録・連続日数をリセット',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFFD9534F),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onPressed: _showResetConfirmDialog,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
+    );
+  }
+
+  void _showResetConfirmDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFFFFFDF9),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Color(0xFFD9534F)),
+            SizedBox(width: 8),
+            Text('記録のリセット', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          '学習履歴、カレンダー記録、連続学習日数、スタンプ獲得状況をすべて初期状態（0日）にリセットしますか？\n（単語マスター自体は保持されます）',
+          style: TextStyle(fontSize: 13, color: Color(0xFF6B726E)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('キャンセル', style: TextStyle(color: Color(0xFF888F8C))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD9534F),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await widget.database.resetAllLearningData();
+              await _loadSummary();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    backgroundColor: Color(0xFF5F9E98),
+                    content: Text('学習記録と連続日数をリセットしました（0日）'),
+                  ),
+                );
+              }
+            },
+            child: const Text('リセットする', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
   }
 

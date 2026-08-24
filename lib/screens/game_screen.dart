@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260824-25
+// コード管理番号: VER-20260824-34
 import 'dart:async';
 import 'dart:math';
 
@@ -8,6 +8,8 @@ import 'package:audioplayers/audioplayers.dart';
 
 import '../db/app_database.dart';
 import '../services/retention_service.dart';
+import '../services/stamp_service.dart';
+import '../widgets/stamp_reward_dialog.dart';
 
 class WordModel {
   final int id;
@@ -733,6 +735,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       unlockResult = await widget.database.checkAndUnlockNextChapter(selectedChapter);
     }
 
+    // F-11/F-12: 当日初回クリア時のスタンプ判定 & 獲得演出
+    Stamp? awardedStamp;
+    try {
+      final stampService = StampService(database: widget.database);
+      awardedStamp = await stampService.checkAndAwardDailyStamp();
+    } catch (e) {
+      debugPrint("Daily Stamp Award Error: $e");
+    }
+
     if (mounted) {
       setState(() {
         remainingTime = 0.0;
@@ -740,6 +751,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         isGameOver = true;
         isPaused = false;
       });
+
+      if (awardedStamp != null) {
+        Future.delayed(const Duration(milliseconds: 350), () {
+          if (mounted) {
+            StampRewardDialog.show(context, awardedStamp!, widget.database);
+          }
+        });
+      }
     }
   }
 

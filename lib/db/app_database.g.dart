@@ -1571,6 +1571,16 @@ class $StampsTable extends Stamps with TableInfo<$StampsTable, Stamp> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _phaseMeta = const VerificationMeta('phase');
+  @override
+  late final GeneratedColumn<int> phase = GeneratedColumn<int>(
+    'phase',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -1579,6 +1589,91 @@ class $StampsTable extends Stamps with TableInfo<$StampsTable, Stamp> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rarityMeta = const VerificationMeta('rarity');
+  @override
+  late final GeneratedColumn<String> rarity = GeneratedColumn<String>(
+    'rarity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('normal'),
+  );
+  static const VerificationMeta _isFavoriteMeta = const VerificationMeta(
+    'isFavorite',
+  );
+  @override
+  late final GeneratedColumn<bool> isFavorite = GeneratedColumn<bool>(
+    'is_favorite',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_favorite" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _colorPaletteIdMeta = const VerificationMeta(
+    'colorPaletteId',
+  );
+  @override
+  late final GeneratedColumn<int> colorPaletteId = GeneratedColumn<int>(
+    'color_palette_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _patternIdMeta = const VerificationMeta(
+    'patternId',
+  );
+  @override
+  late final GeneratedColumn<int> patternId = GeneratedColumn<int>(
+    'pattern_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _frameIdMeta = const VerificationMeta(
+    'frameId',
+  );
+  @override
+  late final GeneratedColumn<int> frameId = GeneratedColumn<int>(
+    'frame_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _effectIdMeta = const VerificationMeta(
+    'effectId',
+  );
+  @override
+  late final GeneratedColumn<int> effectId = GeneratedColumn<int>(
+    'effect_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
   );
   static const VerificationMeta _iconCodeMeta = const VerificationMeta(
     'iconCode',
@@ -1589,7 +1684,8 @@ class $StampsTable extends Stamps with TableInfo<$StampsTable, Stamp> {
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
   );
   static const VerificationMeta _conditionTypeMeta = const VerificationMeta(
     'conditionType',
@@ -1644,7 +1740,15 @@ class $StampsTable extends Stamps with TableInfo<$StampsTable, Stamp> {
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    phase,
     name,
+    rarity,
+    isFavorite,
+    colorPaletteId,
+    patternId,
+    frameId,
+    effectId,
+    description,
     iconCode,
     conditionType,
     conditionValue,
@@ -1668,6 +1772,12 @@ class $StampsTable extends Stamps with TableInfo<$StampsTable, Stamp> {
     } else if (isInserting) {
       context.missing(_idMeta);
     }
+    if (data.containsKey('phase')) {
+      context.handle(
+        _phaseMeta,
+        phase.isAcceptableOrUnknown(data['phase']!, _phaseMeta),
+      );
+    }
     if (data.containsKey('name')) {
       context.handle(
         _nameMeta,
@@ -1676,13 +1786,59 @@ class $StampsTable extends Stamps with TableInfo<$StampsTable, Stamp> {
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
+    if (data.containsKey('rarity')) {
+      context.handle(
+        _rarityMeta,
+        rarity.isAcceptableOrUnknown(data['rarity']!, _rarityMeta),
+      );
+    }
+    if (data.containsKey('is_favorite')) {
+      context.handle(
+        _isFavoriteMeta,
+        isFavorite.isAcceptableOrUnknown(data['is_favorite']!, _isFavoriteMeta),
+      );
+    }
+    if (data.containsKey('color_palette_id')) {
+      context.handle(
+        _colorPaletteIdMeta,
+        colorPaletteId.isAcceptableOrUnknown(
+          data['color_palette_id']!,
+          _colorPaletteIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pattern_id')) {
+      context.handle(
+        _patternIdMeta,
+        patternId.isAcceptableOrUnknown(data['pattern_id']!, _patternIdMeta),
+      );
+    }
+    if (data.containsKey('frame_id')) {
+      context.handle(
+        _frameIdMeta,
+        frameId.isAcceptableOrUnknown(data['frame_id']!, _frameIdMeta),
+      );
+    }
+    if (data.containsKey('effect_id')) {
+      context.handle(
+        _effectIdMeta,
+        effectId.isAcceptableOrUnknown(data['effect_id']!, _effectIdMeta),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
     if (data.containsKey('icon_code')) {
       context.handle(
         _iconCodeMeta,
         iconCode.isAcceptableOrUnknown(data['icon_code']!, _iconCodeMeta),
       );
-    } else if (isInserting) {
-      context.missing(_iconCodeMeta);
     }
     if (data.containsKey('condition_type')) {
       context.handle(
@@ -1727,9 +1883,41 @@ class $StampsTable extends Stamps with TableInfo<$StampsTable, Stamp> {
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
+      phase: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}phase'],
+      )!,
       name: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}name'],
+      )!,
+      rarity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rarity'],
+      )!,
+      isFavorite: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_favorite'],
+      )!,
+      colorPaletteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color_palette_id'],
+      )!,
+      patternId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pattern_id'],
+      )!,
+      frameId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}frame_id'],
+      )!,
+      effectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}effect_id'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
       )!,
       iconCode: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -1761,16 +1949,40 @@ class $StampsTable extends Stamps with TableInfo<$StampsTable, Stamp> {
 }
 
 class Stamp extends DataClass implements Insertable<Stamp> {
-  /// スタンプID (例: `stamp_lion`, `stamp_cat`)
+  /// スタンプID (例: `stamp_p1_01`)
   final String id;
 
-  /// スタンプ名 (例: ライオンスタンプ)
+  /// 世代フェーズ (例: 1, 2, ...)
+  final int phase;
+
+  /// スタンプ名 (例: はじまりのフクロウ)
   final String name;
 
-  /// 表示用アイコン識別子 / 画像アセットパス
+  /// レア度 (`normal`, `rare`, `super_rare`)
+  final String rarity;
+
+  /// 相棒胸バッジ用お気に入りフラグ (1つのみTRUE)
+  final bool isFavorite;
+
+  /// ドット絵カラーパレットID
+  final int colorPaletteId;
+
+  /// ドット絵モチーフパターンID
+  final int patternId;
+
+  /// スタンプ外枠フレームID (0:丸枠, 1:角丸四角, 2:切手ギザギザ, 3:二重枠, 4:王冠/エンブレム)
+  final int frameId;
+
+  /// 装飾エフェクトID (0:なし, 1:星粒子, 2:集中線, 3:大星+シャイン, 4:月桂樹)
+  final int effectId;
+
+  /// 説明・獲得条件文面 (例: 連続3日学習を達成する)
+  final String description;
+
+  /// 表示用アイコン識別子 / 互換用コード
   final String iconCode;
 
-  /// 出現条件種別 (`none`, `streak`, `daily_memorized`)
+  /// 出現条件種別 (`none`, `streak_days`, `total_days`, `memorized_count`, `cleared_chapters`)
   final String conditionType;
 
   /// 条件閾値 (例: 連続3日なら 3)
@@ -1783,7 +1995,15 @@ class Stamp extends DataClass implements Insertable<Stamp> {
   final DateTime? unlockedAt;
   const Stamp({
     required this.id,
+    required this.phase,
     required this.name,
+    required this.rarity,
+    required this.isFavorite,
+    required this.colorPaletteId,
+    required this.patternId,
+    required this.frameId,
+    required this.effectId,
+    required this.description,
     required this.iconCode,
     required this.conditionType,
     required this.conditionValue,
@@ -1794,7 +2014,15 @@ class Stamp extends DataClass implements Insertable<Stamp> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    map['phase'] = Variable<int>(phase);
     map['name'] = Variable<String>(name);
+    map['rarity'] = Variable<String>(rarity);
+    map['is_favorite'] = Variable<bool>(isFavorite);
+    map['color_palette_id'] = Variable<int>(colorPaletteId);
+    map['pattern_id'] = Variable<int>(patternId);
+    map['frame_id'] = Variable<int>(frameId);
+    map['effect_id'] = Variable<int>(effectId);
+    map['description'] = Variable<String>(description);
     map['icon_code'] = Variable<String>(iconCode);
     map['condition_type'] = Variable<String>(conditionType);
     map['condition_value'] = Variable<int>(conditionValue);
@@ -1808,7 +2036,15 @@ class Stamp extends DataClass implements Insertable<Stamp> {
   StampsCompanion toCompanion(bool nullToAbsent) {
     return StampsCompanion(
       id: Value(id),
+      phase: Value(phase),
       name: Value(name),
+      rarity: Value(rarity),
+      isFavorite: Value(isFavorite),
+      colorPaletteId: Value(colorPaletteId),
+      patternId: Value(patternId),
+      frameId: Value(frameId),
+      effectId: Value(effectId),
+      description: Value(description),
       iconCode: Value(iconCode),
       conditionType: Value(conditionType),
       conditionValue: Value(conditionValue),
@@ -1826,7 +2062,15 @@ class Stamp extends DataClass implements Insertable<Stamp> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Stamp(
       id: serializer.fromJson<String>(json['id']),
+      phase: serializer.fromJson<int>(json['phase']),
       name: serializer.fromJson<String>(json['name']),
+      rarity: serializer.fromJson<String>(json['rarity']),
+      isFavorite: serializer.fromJson<bool>(json['isFavorite']),
+      colorPaletteId: serializer.fromJson<int>(json['colorPaletteId']),
+      patternId: serializer.fromJson<int>(json['patternId']),
+      frameId: serializer.fromJson<int>(json['frameId']),
+      effectId: serializer.fromJson<int>(json['effectId']),
+      description: serializer.fromJson<String>(json['description']),
       iconCode: serializer.fromJson<String>(json['iconCode']),
       conditionType: serializer.fromJson<String>(json['conditionType']),
       conditionValue: serializer.fromJson<int>(json['conditionValue']),
@@ -1839,7 +2083,15 @@ class Stamp extends DataClass implements Insertable<Stamp> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'phase': serializer.toJson<int>(phase),
       'name': serializer.toJson<String>(name),
+      'rarity': serializer.toJson<String>(rarity),
+      'isFavorite': serializer.toJson<bool>(isFavorite),
+      'colorPaletteId': serializer.toJson<int>(colorPaletteId),
+      'patternId': serializer.toJson<int>(patternId),
+      'frameId': serializer.toJson<int>(frameId),
+      'effectId': serializer.toJson<int>(effectId),
+      'description': serializer.toJson<String>(description),
       'iconCode': serializer.toJson<String>(iconCode),
       'conditionType': serializer.toJson<String>(conditionType),
       'conditionValue': serializer.toJson<int>(conditionValue),
@@ -1850,7 +2102,15 @@ class Stamp extends DataClass implements Insertable<Stamp> {
 
   Stamp copyWith({
     String? id,
+    int? phase,
     String? name,
+    String? rarity,
+    bool? isFavorite,
+    int? colorPaletteId,
+    int? patternId,
+    int? frameId,
+    int? effectId,
+    String? description,
     String? iconCode,
     String? conditionType,
     int? conditionValue,
@@ -1858,7 +2118,15 @@ class Stamp extends DataClass implements Insertable<Stamp> {
     Value<DateTime?> unlockedAt = const Value.absent(),
   }) => Stamp(
     id: id ?? this.id,
+    phase: phase ?? this.phase,
     name: name ?? this.name,
+    rarity: rarity ?? this.rarity,
+    isFavorite: isFavorite ?? this.isFavorite,
+    colorPaletteId: colorPaletteId ?? this.colorPaletteId,
+    patternId: patternId ?? this.patternId,
+    frameId: frameId ?? this.frameId,
+    effectId: effectId ?? this.effectId,
+    description: description ?? this.description,
     iconCode: iconCode ?? this.iconCode,
     conditionType: conditionType ?? this.conditionType,
     conditionValue: conditionValue ?? this.conditionValue,
@@ -1868,7 +2136,21 @@ class Stamp extends DataClass implements Insertable<Stamp> {
   Stamp copyWithCompanion(StampsCompanion data) {
     return Stamp(
       id: data.id.present ? data.id.value : this.id,
+      phase: data.phase.present ? data.phase.value : this.phase,
       name: data.name.present ? data.name.value : this.name,
+      rarity: data.rarity.present ? data.rarity.value : this.rarity,
+      isFavorite: data.isFavorite.present
+          ? data.isFavorite.value
+          : this.isFavorite,
+      colorPaletteId: data.colorPaletteId.present
+          ? data.colorPaletteId.value
+          : this.colorPaletteId,
+      patternId: data.patternId.present ? data.patternId.value : this.patternId,
+      frameId: data.frameId.present ? data.frameId.value : this.frameId,
+      effectId: data.effectId.present ? data.effectId.value : this.effectId,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
       iconCode: data.iconCode.present ? data.iconCode.value : this.iconCode,
       conditionType: data.conditionType.present
           ? data.conditionType.value
@@ -1889,7 +2171,15 @@ class Stamp extends DataClass implements Insertable<Stamp> {
   String toString() {
     return (StringBuffer('Stamp(')
           ..write('id: $id, ')
+          ..write('phase: $phase, ')
           ..write('name: $name, ')
+          ..write('rarity: $rarity, ')
+          ..write('isFavorite: $isFavorite, ')
+          ..write('colorPaletteId: $colorPaletteId, ')
+          ..write('patternId: $patternId, ')
+          ..write('frameId: $frameId, ')
+          ..write('effectId: $effectId, ')
+          ..write('description: $description, ')
           ..write('iconCode: $iconCode, ')
           ..write('conditionType: $conditionType, ')
           ..write('conditionValue: $conditionValue, ')
@@ -1902,7 +2192,15 @@ class Stamp extends DataClass implements Insertable<Stamp> {
   @override
   int get hashCode => Object.hash(
     id,
+    phase,
     name,
+    rarity,
+    isFavorite,
+    colorPaletteId,
+    patternId,
+    frameId,
+    effectId,
+    description,
     iconCode,
     conditionType,
     conditionValue,
@@ -1914,7 +2212,15 @@ class Stamp extends DataClass implements Insertable<Stamp> {
       identical(this, other) ||
       (other is Stamp &&
           other.id == this.id &&
+          other.phase == this.phase &&
           other.name == this.name &&
+          other.rarity == this.rarity &&
+          other.isFavorite == this.isFavorite &&
+          other.colorPaletteId == this.colorPaletteId &&
+          other.patternId == this.patternId &&
+          other.frameId == this.frameId &&
+          other.effectId == this.effectId &&
+          other.description == this.description &&
           other.iconCode == this.iconCode &&
           other.conditionType == this.conditionType &&
           other.conditionValue == this.conditionValue &&
@@ -1924,7 +2230,15 @@ class Stamp extends DataClass implements Insertable<Stamp> {
 
 class StampsCompanion extends UpdateCompanion<Stamp> {
   final Value<String> id;
+  final Value<int> phase;
   final Value<String> name;
+  final Value<String> rarity;
+  final Value<bool> isFavorite;
+  final Value<int> colorPaletteId;
+  final Value<int> patternId;
+  final Value<int> frameId;
+  final Value<int> effectId;
+  final Value<String> description;
   final Value<String> iconCode;
   final Value<String> conditionType;
   final Value<int> conditionValue;
@@ -1933,7 +2247,15 @@ class StampsCompanion extends UpdateCompanion<Stamp> {
   final Value<int> rowid;
   const StampsCompanion({
     this.id = const Value.absent(),
+    this.phase = const Value.absent(),
     this.name = const Value.absent(),
+    this.rarity = const Value.absent(),
+    this.isFavorite = const Value.absent(),
+    this.colorPaletteId = const Value.absent(),
+    this.patternId = const Value.absent(),
+    this.frameId = const Value.absent(),
+    this.effectId = const Value.absent(),
+    this.description = const Value.absent(),
     this.iconCode = const Value.absent(),
     this.conditionType = const Value.absent(),
     this.conditionValue = const Value.absent(),
@@ -1943,19 +2265,34 @@ class StampsCompanion extends UpdateCompanion<Stamp> {
   });
   StampsCompanion.insert({
     required String id,
+    this.phase = const Value.absent(),
     required String name,
-    required String iconCode,
+    this.rarity = const Value.absent(),
+    this.isFavorite = const Value.absent(),
+    this.colorPaletteId = const Value.absent(),
+    this.patternId = const Value.absent(),
+    this.frameId = const Value.absent(),
+    this.effectId = const Value.absent(),
+    this.description = const Value.absent(),
+    this.iconCode = const Value.absent(),
     this.conditionType = const Value.absent(),
     this.conditionValue = const Value.absent(),
     this.isUnlocked = const Value.absent(),
     this.unlockedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       name = Value(name),
-       iconCode = Value(iconCode);
+       name = Value(name);
   static Insertable<Stamp> custom({
     Expression<String>? id,
+    Expression<int>? phase,
     Expression<String>? name,
+    Expression<String>? rarity,
+    Expression<bool>? isFavorite,
+    Expression<int>? colorPaletteId,
+    Expression<int>? patternId,
+    Expression<int>? frameId,
+    Expression<int>? effectId,
+    Expression<String>? description,
     Expression<String>? iconCode,
     Expression<String>? conditionType,
     Expression<int>? conditionValue,
@@ -1965,7 +2302,15 @@ class StampsCompanion extends UpdateCompanion<Stamp> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (phase != null) 'phase': phase,
       if (name != null) 'name': name,
+      if (rarity != null) 'rarity': rarity,
+      if (isFavorite != null) 'is_favorite': isFavorite,
+      if (colorPaletteId != null) 'color_palette_id': colorPaletteId,
+      if (patternId != null) 'pattern_id': patternId,
+      if (frameId != null) 'frame_id': frameId,
+      if (effectId != null) 'effect_id': effectId,
+      if (description != null) 'description': description,
       if (iconCode != null) 'icon_code': iconCode,
       if (conditionType != null) 'condition_type': conditionType,
       if (conditionValue != null) 'condition_value': conditionValue,
@@ -1977,7 +2322,15 @@ class StampsCompanion extends UpdateCompanion<Stamp> {
 
   StampsCompanion copyWith({
     Value<String>? id,
+    Value<int>? phase,
     Value<String>? name,
+    Value<String>? rarity,
+    Value<bool>? isFavorite,
+    Value<int>? colorPaletteId,
+    Value<int>? patternId,
+    Value<int>? frameId,
+    Value<int>? effectId,
+    Value<String>? description,
     Value<String>? iconCode,
     Value<String>? conditionType,
     Value<int>? conditionValue,
@@ -1987,7 +2340,15 @@ class StampsCompanion extends UpdateCompanion<Stamp> {
   }) {
     return StampsCompanion(
       id: id ?? this.id,
+      phase: phase ?? this.phase,
       name: name ?? this.name,
+      rarity: rarity ?? this.rarity,
+      isFavorite: isFavorite ?? this.isFavorite,
+      colorPaletteId: colorPaletteId ?? this.colorPaletteId,
+      patternId: patternId ?? this.patternId,
+      frameId: frameId ?? this.frameId,
+      effectId: effectId ?? this.effectId,
+      description: description ?? this.description,
       iconCode: iconCode ?? this.iconCode,
       conditionType: conditionType ?? this.conditionType,
       conditionValue: conditionValue ?? this.conditionValue,
@@ -2003,8 +2364,32 @@ class StampsCompanion extends UpdateCompanion<Stamp> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
+    if (phase.present) {
+      map['phase'] = Variable<int>(phase.value);
+    }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
+    }
+    if (rarity.present) {
+      map['rarity'] = Variable<String>(rarity.value);
+    }
+    if (isFavorite.present) {
+      map['is_favorite'] = Variable<bool>(isFavorite.value);
+    }
+    if (colorPaletteId.present) {
+      map['color_palette_id'] = Variable<int>(colorPaletteId.value);
+    }
+    if (patternId.present) {
+      map['pattern_id'] = Variable<int>(patternId.value);
+    }
+    if (frameId.present) {
+      map['frame_id'] = Variable<int>(frameId.value);
+    }
+    if (effectId.present) {
+      map['effect_id'] = Variable<int>(effectId.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
     }
     if (iconCode.present) {
       map['icon_code'] = Variable<String>(iconCode.value);
@@ -2031,7 +2416,15 @@ class StampsCompanion extends UpdateCompanion<Stamp> {
   String toString() {
     return (StringBuffer('StampsCompanion(')
           ..write('id: $id, ')
+          ..write('phase: $phase, ')
           ..write('name: $name, ')
+          ..write('rarity: $rarity, ')
+          ..write('isFavorite: $isFavorite, ')
+          ..write('colorPaletteId: $colorPaletteId, ')
+          ..write('patternId: $patternId, ')
+          ..write('frameId: $frameId, ')
+          ..write('effectId: $effectId, ')
+          ..write('description: $description, ')
           ..write('iconCode: $iconCode, ')
           ..write('conditionType: $conditionType, ')
           ..write('conditionValue: $conditionValue, ')
@@ -3276,8 +3669,16 @@ typedef $$DailyRecordsTableProcessedTableManager =
     >;
 typedef $$StampsTableCreateCompanionBuilder = StampsCompanion Function({
   required String id,
+  Value<int> phase,
   required String name,
-  required String iconCode,
+  Value<String> rarity,
+  Value<bool> isFavorite,
+  Value<int> colorPaletteId,
+  Value<int> patternId,
+  Value<int> frameId,
+  Value<int> effectId,
+  Value<String> description,
+  Value<String> iconCode,
   Value<String> conditionType,
   Value<int> conditionValue,
   Value<bool> isUnlocked,
@@ -3286,7 +3687,15 @@ typedef $$StampsTableCreateCompanionBuilder = StampsCompanion Function({
 });
 typedef $$StampsTableUpdateCompanionBuilder = StampsCompanion Function({
   Value<String> id,
+  Value<int> phase,
   Value<String> name,
+  Value<String> rarity,
+  Value<bool> isFavorite,
+  Value<int> colorPaletteId,
+  Value<int> patternId,
+  Value<int> frameId,
+  Value<int> effectId,
+  Value<String> description,
   Value<String> iconCode,
   Value<String> conditionType,
   Value<int> conditionValue,
@@ -3309,8 +3718,48 @@ class $$StampsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get phase => $composableBuilder(
+    column: $table.phase,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get colorPaletteId => $composableBuilder(
+    column: $table.colorPaletteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get patternId => $composableBuilder(
+    column: $table.patternId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get frameId => $composableBuilder(
+    column: $table.frameId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get effectId => $composableBuilder(
+    column: $table.effectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3354,8 +3803,48 @@ class $$StampsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get phase => $composableBuilder(
+    column: $table.phase,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rarity => $composableBuilder(
+    column: $table.rarity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get colorPaletteId => $composableBuilder(
+    column: $table.colorPaletteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get patternId => $composableBuilder(
+    column: $table.patternId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get frameId => $composableBuilder(
+    column: $table.frameId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get effectId => $composableBuilder(
+    column: $table.effectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -3397,8 +3886,38 @@ class $$StampsTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<int> get phase =>
+      $composableBuilder(column: $table.phase, builder: (column) => column);
+
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get rarity =>
+      $composableBuilder(column: $table.rarity, builder: (column) => column);
+
+  GeneratedColumn<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get colorPaletteId => $composableBuilder(
+    column: $table.colorPaletteId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get patternId =>
+      $composableBuilder(column: $table.patternId, builder: (column) => column);
+
+  GeneratedColumn<int> get frameId =>
+      $composableBuilder(column: $table.frameId, builder: (column) => column);
+
+  GeneratedColumn<int> get effectId =>
+      $composableBuilder(column: $table.effectId, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get iconCode =>
       $composableBuilder(column: $table.iconCode, builder: (column) => column);
@@ -3453,7 +3972,15 @@ class $$StampsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
+                Value<int> phase = const Value.absent(),
                 Value<String> name = const Value.absent(),
+                Value<String> rarity = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
+                Value<int> colorPaletteId = const Value.absent(),
+                Value<int> patternId = const Value.absent(),
+                Value<int> frameId = const Value.absent(),
+                Value<int> effectId = const Value.absent(),
+                Value<String> description = const Value.absent(),
                 Value<String> iconCode = const Value.absent(),
                 Value<String> conditionType = const Value.absent(),
                 Value<int> conditionValue = const Value.absent(),
@@ -3462,7 +3989,15 @@ class $$StampsTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => StampsCompanion(
                 id: id,
+                phase: phase,
                 name: name,
+                rarity: rarity,
+                isFavorite: isFavorite,
+                colorPaletteId: colorPaletteId,
+                patternId: patternId,
+                frameId: frameId,
+                effectId: effectId,
+                description: description,
                 iconCode: iconCode,
                 conditionType: conditionType,
                 conditionValue: conditionValue,
@@ -3473,8 +4008,16 @@ class $$StampsTableTableManager
           createCompanionCallback:
               ({
                 required String id,
+                Value<int> phase = const Value.absent(),
                 required String name,
-                required String iconCode,
+                Value<String> rarity = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
+                Value<int> colorPaletteId = const Value.absent(),
+                Value<int> patternId = const Value.absent(),
+                Value<int> frameId = const Value.absent(),
+                Value<int> effectId = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String> iconCode = const Value.absent(),
                 Value<String> conditionType = const Value.absent(),
                 Value<int> conditionValue = const Value.absent(),
                 Value<bool> isUnlocked = const Value.absent(),
@@ -3482,7 +4025,15 @@ class $$StampsTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => StampsCompanion.insert(
                 id: id,
+                phase: phase,
                 name: name,
+                rarity: rarity,
+                isFavorite: isFavorite,
+                colorPaletteId: colorPaletteId,
+                patternId: patternId,
+                frameId: frameId,
+                effectId: effectId,
+                description: description,
                 iconCode: iconCode,
                 conditionType: conditionType,
                 conditionValue: conditionValue,
