@@ -85,11 +85,20 @@ class _WordsScreenState extends State<WordsScreen> {
 
   Future<void> _loadWords() async {
     setState(() => _isLoading = true);
-    final words = await widget.database.getAllWords();
-    _allWords = words;
-    _applyFilterAndGrouping();
-    if (mounted) {
-      setState(() => _isLoading = false);
+    try {
+      final words = await widget.database.getAllWords();
+      if (words.isEmpty) {
+        await _rebuildDatabase(showSnackBar: false);
+        return;
+      }
+      _allWords = words;
+      _applyFilterAndGrouping();
+    } catch (e) {
+      debugPrint('Error loading words: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -246,7 +255,7 @@ class _WordsScreenState extends State<WordsScreen> {
     return result;
   }
 
-  Future<void> _rebuildDatabase() async {
+  Future<void> _rebuildDatabase({bool showSnackBar = true}) async {
     setState(() => _isLoading = true);
     try {
       final csvString = await rootBundle.loadString('assets/words.csv');
@@ -272,15 +281,17 @@ class _WordsScreenState extends State<WordsScreen> {
 
       await widget.database.clearAllWords();
       await widget.database.insertRawWords(rawData);
-      await _loadWords();
+      final words = await widget.database.getAllWords();
+      _allWords = words;
+      _applyFilterAndGrouping();
 
-      if (mounted) {
+      if (showSnackBar && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('DBの再構築が完了しました（全${_allWords.length}件）')),
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (showSnackBar && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('エラーが発生しました: $e')));
       }
     } finally {
