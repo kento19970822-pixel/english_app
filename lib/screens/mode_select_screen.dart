@@ -453,88 +453,87 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                               ),
                             ),
                           ],
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-                          // F-14: 相棒ふれあいスペース（待機・歩行・タップでハミング・胸バッジ合成）
-                          Container(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: _cardColor,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: _borderColor),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x08000000),
-                                  blurRadius: 4,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                            child: Row(
+            // F-14: 相棒ふれあいスペース（常時固定表示・待機・歩行・タップで図鑑）
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _cardColor,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: _borderColor),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x08000000),
+                    blurRadius: 4,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  PixelCharacterWidget(
+                    speciesIndex: BuddyService.instance.selectedSpeciesId,
+                    growthState: buddyGrowth,
+                    actionState: CharacterActionState.idle,
+                    favoriteStamp: _favoriteStamp,
+                    size: 38,
+                    isInteractive: true,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _openSubScreen(CharacterGalleryScreen(database: widget.database)),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
                               children: [
-                                PixelCharacterWidget(
-                                  speciesIndex: BuddyService.instance.selectedSpeciesId,
-                                  growthState: buddyGrowth,
-                                  actionState: CharacterActionState.idle,
-                                  favoriteStamp: _favoriteStamp,
-                                  size: 38,
-                                  isInteractive: true,
+                                Text(
+                                  '相棒: $buddyDisplayName',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: _textPrimary,
+                                  ),
                                 ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: InkWell(
-                                    onTap: () => _openSubScreen(CharacterGalleryScreen(database: widget.database)),
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Text(
-                                                '相棒: $buddyDisplayName',
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: _textPrimary,
-                                                ),
-                                              ),
-                                              const Spacer(),
-                                              const Text(
-                                                '図鑑変更 ➔',
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  color: _primaryAccent,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            selectedMode == 'learning'
-                                                ? (isBuddyLocked
-                                                    ? 'Ch.${buddySpecies.chapter} の暗記クリアで解放！'
-                                                    : 'Ch.$selectedChapter の暗記クリアを目指そう！')
-                                                : '制限時間1分間でスコアアタックに挑戦！',
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              color: _textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                const Spacer(),
+                                const Text(
+                                  '図鑑変更 ➔',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: _primaryAccent,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
+                            const SizedBox(height: 2),
+                            Text(
+                              selectedMode == 'learning'
+                                  ? (isBuddyLocked
+                                      ? 'Ch.${buddySpecies.chapter} の暗記クリアで解放！'
+                                      : 'Ch.$selectedChapter の暗記クリアを目指そう！')
+                                  : '制限時間1分間でスコアアタックに挑戦！',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: _textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

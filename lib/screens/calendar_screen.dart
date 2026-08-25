@@ -20,6 +20,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Map<String, DailyRecord> _dailyRecordsMap = {};
   Map<String, Stamp> _stampsMap = {};
   int _streakCount = 0;
+  int _totalStudiedDays = 0;
   bool _isLoading = true;
 
   // 定数パステルカラー
@@ -46,6 +47,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _focusedMonth.month,
       );
       final streak = await widget.database.calculateStreak();
+      final totalDays = await widget.database.calculateTotalStudiedDays();
       final allStamps = await widget.database.getAllStamps();
 
       final Map<String, DailyRecord> map = {};
@@ -62,6 +64,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           _dailyRecordsMap = map;
           _stampsMap = stampMap;
           _streakCount = streak;
+          _totalStudiedDays = totalDays;
           _isLoading = false;
         });
       }
@@ -134,10 +137,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  /// ストリーク（連続プレイ日数）ヘッダーカード
+  /// ストリーク（連続プレイ日数）＆ 累計学習日数ヘッダーカード (F-15)
   Widget _buildStreakHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
       decoration: BoxDecoration(
         color: _cardColor,
         borderRadius: BorderRadius.circular(16),
@@ -164,42 +167,82 @@ class _CalendarScreenState extends State<CalendarScreen> {
               size: 26,
             ),
           ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '連続学習日数',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: _textSecondary,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '連続学習日数',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: _textSecondary,
+                  ),
                 ),
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    '$_streakCount',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: _secondaryAccent,
-                    ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '$_streakCount',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: _secondaryAccent,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Text(
+                        '日連続プレイ中！',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: _textPrimary,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    '日連続',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: _textPrimary,
-                    ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // 累計学習日数バッジ (F-15)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFA5D6A7)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '累計学習日数',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2E7D32),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$_totalStudiedDays 日',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1B5E20),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
