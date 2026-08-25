@@ -39,7 +39,7 @@ class _WordCardTileState extends State<WordCardTile> {
   Color _getRetentionColor(int pt, bool isMem) {
     if (isMem || pt >= 80) return const Color(0xFF4CAF50); // 🟢 80〜100pt: 暗記達成
     if (pt >= 50) return const Color(0xFFE6A23C); // 🟡 50〜79pt: 定着中（高）
-    if (pt > 0) return const Color(0xFFECA882); // 🟠 1〜49pt: 学習初期
+    if (pt > 0) return _secondaryAccent; // 🟠 1〜49pt: 学習初期
     return const Color(0xFFDCD4BE); // ⚪ 0pt: 未学習
   }
 
