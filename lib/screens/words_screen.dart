@@ -108,8 +108,8 @@ class WordsScreenState extends State<WordsScreen> {
     _scrollToTop();
   }
 
-  /// 暗記フラグ・定着度の一括リセット確認ダイアログ (項目15)
-  Future<void> _showResetAllMemorizedDialog() async {
+  /// 暗記フラグ再同期確認ダイアログ (忘却等で80pt未満になった単語の暗記フラグを取り外し) (F-09)
+  Future<void> _showSyncMemorizedFlagsDialog() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -117,16 +117,16 @@ class WordsScreenState extends State<WordsScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Color(0xFFD9534F), size: 24),
+            Icon(Icons.published_with_changes_rounded, color: _primaryAccent, size: 24),
             SizedBox(width: 8),
             Text(
-              '暗記フラグの一括リセット',
+              '暗記フラグの再同期',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _textPrimary),
             ),
           ],
         ),
         content: const Text(
-          'すべての単語の暗記フラグ（覚えた）および定着度ポイントを0pt（未暗記）に一括リセットします。\n\n※この操作は取り消せません。\n※お気に入り登録した単語はそのまま保持されます。',
+          '忘却曲線やプレイ結果により定着度が80pt未満になった単語の【暗記済み】フラグを取り外し、現在の定着度と再同期します。\n\n※80pt以上の暗記済み単語やお気に入り登録は維持されます。',
           style: TextStyle(fontSize: 13, color: _textSecondary, height: 1.5),
         ),
         actions: [
@@ -136,12 +136,12 @@ class WordsScreenState extends State<WordsScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD9534F),
+              backgroundColor: _primaryAccent,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('リセット実行'),
+            child: const Text('再同期を実行'),
           ),
         ],
       ),
@@ -150,20 +150,24 @@ class WordsScreenState extends State<WordsScreen> {
     if (confirmed == true && mounted) {
       setState(() => _isLoading = true);
       try {
-        await widget.database.resetAllWordsMemorized();
+        final count = await widget.database.syncMemorizedFlags();
         await _loadWords();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('全単語の暗記フラグと定着度をリセットしました'),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: Text(
+                count > 0
+                    ? '$count 件の単語の暗記フラグを解除・再同期しました'
+                    : '暗記フラグの不整合はありませんでした（全件正常）',
+              ),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('リセット中にエラーが発生しました: $e')),
+            SnackBar(content: Text('再同期中にエラーが発生しました: $e')),
           );
         }
       } finally {
@@ -510,9 +514,9 @@ class WordsScreenState extends State<WordsScreen> {
                                     ),
                                     const SizedBox(width: 4),
                                     IconButton(
-                                      icon: const Icon(Icons.restart_alt_rounded, color: Color(0xFFD9534F)),
-                                      tooltip: '暗記フラグ一括リセット',
-                                      onPressed: _isLoading ? null : _showResetAllMemorizedDialog,
+                                      icon: const Icon(Icons.published_with_changes_rounded, color: _primaryAccent),
+                                      tooltip: '暗記フラグ再同期（80pt未満を解除）',
+                                      onPressed: _isLoading ? null : _showSyncMemorizedFlagsDialog,
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
                                     ),

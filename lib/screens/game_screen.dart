@@ -721,7 +721,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.refresh_rounded, size: 18),
                 label: const Text(
-                  '最初からやり直す (リスタート)',
+                  '最初からやり直す',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
                 style: OutlinedButton.styleFrom(

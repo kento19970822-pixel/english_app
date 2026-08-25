@@ -338,17 +338,33 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
-  /// 暗記フラグ一括更新（メンテ）: 80pt未満に落ちた単語のisMemorizedを解除 (F-09)
+  /// 暗記フラグ再同期: 80pt未満に落ちた単語のisMemorizedを解除 ＆ チャプター進捗同期 (F-09)
   Future<int> syncMemorizedFlags() async {
     final all = await select(words).get();
     int count = 0;
+    final Set<int> affectedChapters = {};
 
     for (final word in all) {
       if (word.isMemorized && word.retentionPoint < 80) {
         await (update(words)..where((t) => t.id.equals(word.id))).write(
           const WordsCompanion(isMemorized: Value(false)),
         );
+        affectedChapters.add(word.chapter);
         count++;
+      }
+    }
+
+    // 影響を受けたチャプターの進行状況（暗記率）を再計算
+    for (final ch in affectedChapters) {
+      final chWords = await (select(words)..where((t) => t.chapter.equals(ch))).get();
+      if (chWords.isNotEmpty) {
+        final memorizedInCh = chWords.where((w) => w.isMemorized).length;
+        final rate = memorizedInCh / chWords.length;
+        await (update(chapterProgresses)..where((t) => t.chapter.equals(ch))).write(
+          ChapterProgressesCompanion(
+            memorizedRate: Value(rate),
+          ),
+        );
       }
     }
     return count;

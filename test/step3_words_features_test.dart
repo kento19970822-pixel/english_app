@@ -25,6 +25,13 @@ void main() {
           'Example': 'A yellow banana.',
           'Example_JP': '黄色いバナナ。',
         },
+        {
+          'word': 'cherry',
+          'CEFR': 'A1',
+          'Japanese': 'さくらんぼ',
+          'Example': 'Sweet cherries.',
+          'Example_JP': '甘いさくらんぼ。',
+        },
       ]);
 
       // Set apple to restricted (0pt)
@@ -44,6 +51,16 @@ void main() {
         const WordsCompanion(
           isRestricted: Value(false),
           retentionPoint: Value(80),
+          isMemorized: Value(true),
+        ),
+      );
+
+      // Set cherry to forgotten word: isMemorized true, but retentionPoint 60 (<80)
+      final cherry = all.firstWhere((w) => w.english == 'cherry');
+      await (db.update(db.words)..where((t) => t.id.equals(cherry.id))).write(
+        const WordsCompanion(
+          isRestricted: Value(false),
+          retentionPoint: Value(60),
           isMemorized: Value(true),
         ),
       );
@@ -68,18 +85,26 @@ void main() {
       expect(updatedApple.isRestricted, isFalse);
     });
 
-    test('resetAllWordsMemorized resets all words to 0pt and unmemorized (Item 15)', () async {
+    test('syncMemorizedFlags clears isMemorized only for words under 80pt', () async {
       var wordsList = await db.getAllWords();
-      expect(wordsList.any((w) => w.isMemorized), isTrue);
+      final cherry = wordsList.firstWhere((w) => w.english == 'cherry');
+      final banana = wordsList.firstWhere((w) => w.english == 'banana');
+      expect(cherry.isMemorized, isTrue);
+      expect(cherry.retentionPoint, 60);
+      expect(banana.isMemorized, isTrue);
+      expect(banana.retentionPoint, 80);
 
-      await db.resetAllWordsMemorized();
+      final count = await db.syncMemorizedFlags();
+      expect(count, 1);
 
       wordsList = await db.getAllWords();
-      for (final w in wordsList) {
-        expect(w.isMemorized, isFalse);
-        expect(w.retentionPoint, 0);
-        expect(w.isRestricted, isFalse);
-      }
+      final updatedCherry = wordsList.firstWhere((w) => w.english == 'cherry');
+      final updatedBanana = wordsList.firstWhere((w) => w.english == 'banana');
+
+      expect(updatedCherry.isMemorized, isFalse);
+      expect(updatedCherry.retentionPoint, 60);
+      expect(updatedBanana.isMemorized, isTrue);
+      expect(updatedBanana.retentionPoint, 80);
     });
   });
 }

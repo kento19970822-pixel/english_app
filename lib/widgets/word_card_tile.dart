@@ -26,7 +26,7 @@ class WordCardTile extends StatefulWidget {
 }
 
 class _WordCardTileState extends State<WordCardTile> {
-  bool _isHolding = false;
+  bool? _overrideShowJapanese;
 
   // 定数パステルカラー
   static const Color _cardColor = Color(0xFFFFFDF9);
@@ -35,6 +35,14 @@ class _WordCardTileState extends State<WordCardTile> {
   static const Color _textPrimary = Color(0xFF2C302E);
   static const Color _textSecondary = Color(0xFF6B726E);
   static const Color _borderColor = Color(0xFFE5DEC9);
+
+  @override
+  void didUpdateWidget(covariant WordCardTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.showJapanese != widget.showJapanese) {
+      _overrideShowJapanese = null;
+    }
+  }
 
   Color _getRetentionColor(int pt, bool isMem) {
     if (isMem || pt >= 80) return const Color(0xFF4CAF50); // 🟢 80〜100pt: 暗記達成
@@ -45,7 +53,7 @@ class _WordCardTileState extends State<WordCardTile> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isJapaneseVisible = widget.showJapanese || _isHolding;
+    final bool isJapaneseVisible = _overrideShowJapanese ?? widget.showJapanese;
     final bool isMemorized = widget.word.isMemorized;
     final bool isRestricted = widget.word.isRestricted;
     final int pt = widget.word.retentionPoint;
@@ -130,14 +138,14 @@ class _WordCardTileState extends State<WordCardTile> {
             ),
           ],
         ),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onLongPressStart: (_) {
-            setState(() => _isHolding = true);
-            widget.onSpeak();
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            setState(() {
+              final current = _overrideShowJapanese ?? widget.showJapanese;
+              _overrideShowJapanese = !current;
+            });
           },
-          onLongPressEnd: (_) => setState(() => _isHolding = false),
-          onLongPressCancel: () => setState(() => _isHolding = false),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
