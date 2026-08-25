@@ -578,7 +578,7 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
-  /// 弱点克服モード用: 誤答・低定着・未暗記の単語を苦手度順に抽出
+  /// 弱点克服モード用: プレイ経験のある単語から誤答・低定着の単語を苦手度順に抽出
   Future<List<Word>> getWeaknessWords({int? level}) async {
     final all = await select(words).get();
     var filtered = all;
@@ -586,7 +586,24 @@ class AppDatabase extends _$AppDatabase {
       filtered = all.where((w) => w.level == level).toList();
     }
 
-    final scored = (filtered.isNotEmpty ? filtered : all).map((w) {
+    // プレイ経験のある単語（回答回数 > 0 または 定着度変動あり）を抽出
+    final played = (filtered.isNotEmpty ? filtered : all).where((w) {
+      final totalAnswered = w.wrongCount + w.correctCount;
+      return totalAnswered > 0 || w.retentionPoint > 0;
+    }).toList();
+
+    if (played.isEmpty) {
+      return [];
+    }
+
+    // 弱点候補: 誤答経験あり(wrongCount > 0)、または未暗記/定着度80pt未満
+    final weaknessCandidates = played.where((w) {
+      return w.wrongCount > 0 || !w.isMemorized || w.retentionPoint < 80;
+    }).toList();
+
+    final targetPool = weaknessCandidates.isNotEmpty ? weaknessCandidates : played;
+
+    final scored = targetPool.map((w) {
       int weaknessScore = (w.wrongCount * 3);
       if (!w.isMemorized) weaknessScore += 10;
       if (w.retentionPoint < 50) weaknessScore += 10;

@@ -300,18 +300,46 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       final memorized = targetWords.where((w) => w.isMemorized).toList()..shuffle();
       targetWords = [...unmemorized, ...memorized];
     } else if (currentMode == 'weakness') {
-      // 2. 弱点克服モード: 誤答・低定着・未暗記の単語を苦手スコア順に抽出
+      // 2. 弱点克服モード: プレイ経験のある単語（回答回数 > 0 または 定着度変動あり）から苦手単語を抽出
       final filtered = allWords.where((w) => w.level == selectedLevel).toList();
       final pool = filtered.isNotEmpty ? filtered : List<WordModel>.from(allWords);
-      final List<MapEntry<WordModel, int>> scored = pool.map<MapEntry<WordModel, int>>((WordModel w) {
-        int weaknessScore = (w.wrongCount * 3);
-        if (!w.isMemorized) weaknessScore += 10;
-        if (w.retentionPoint < 50) weaknessScore += 10;
-        weaknessScore -= w.correctCount.toInt();
-        return MapEntry<WordModel, int>(w, weaknessScore);
+
+      final played = pool.where((w) {
+        return (w.wrongCount + w.correctCount > 0) || w.retentionPoint > 0;
       }).toList();
-      scored.sort((a, b) => b.value.compareTo(a.value));
-      targetWords = scored.map<WordModel>((e) => e.key).take(100).toList();
+
+      if (played.isEmpty) {
+        // プレイ経験がまだない場合のフォールバック: 未暗記単語を安全に補充
+        final unmemorized = pool.where((w) => !w.isMemorized).toList()..shuffle();
+        targetWords = unmemorized.take(100).toList();
+      } else {
+        // 弱点候補: 誤答経験あり(wrongCount > 0)、または未暗記/定着度80pt未満
+        final weaknessCandidates = played.where((w) {
+          return w.wrongCount > 0 || !w.isMemorized || w.retentionPoint < 80;
+        }).toList();
+
+        final targetPool = weaknessCandidates.isNotEmpty ? weaknessCandidates : played;
+
+        final List<MapEntry<WordModel, int>> scored = targetPool.map<MapEntry<WordModel, int>>((WordModel w) {
+          int weaknessScore = (w.wrongCount * 3);
+          if (!w.isMemorized) weaknessScore += 10;
+          if (w.retentionPoint < 50) weaknessScore += 10;
+          weaknessScore -= w.correctCount.toInt();
+          return MapEntry<WordModel, int>(w, weaknessScore);
+        }).toList();
+        scored.sort((a, b) => b.value.compareTo(a.value));
+        var rawWeaknessList = scored.map<WordModel>((e) => e.key).take(100).toList();
+
+        // 出題対象が極端に少ない（1〜4件）場合: 集中特訓のため反復ループして補充
+        if (rawWeaknessList.isNotEmpty && rawWeaknessList.length < 5) {
+          final expandedList = <WordModel>[];
+          while (expandedList.length < 20) {
+            expandedList.addAll(rawWeaknessList);
+          }
+          rawWeaknessList = expandedList;
+        }
+        targetWords = rawWeaknessList;
+      }
     } else {
       // 3. チャレンジモード: 選択中レベルの全単語をシャッフル
       targetWords = allWords.where((w) => w.level == selectedLevel).toList();
