@@ -282,6 +282,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     final currentSession = ++_countdownSessionId;
 
     setState(() {
+      _isEnding = false;
       isGameStarted = true;
       remainingTime = totalGameDuration;
       score = 0;
@@ -337,12 +338,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     if (!mounted || !isGameStarted || isGameOver || isPaused) return;
 
     gameTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      if (isPaused) return;
-      if (remainingTime > 0.15) {
+      if (isPaused || isGameOver) return;
+      if (remainingTime > 0.1) {
         setState(() {
           remainingTime -= 0.1;
         });
       } else {
+        timer.cancel();
+        gameTimer = null;
         setState(() {
           remainingTime = 0.0;
         });
@@ -575,6 +578,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _togglePause() {
+    if (isGameOver || !isGameStarted) return;
     setState(() {
       isPaused = !isPaused;
     });
@@ -584,12 +588,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _rightDropController.stop();
       _showPauseDialog();
     } else {
-      if (leftWord != null) _leftDropController.forward();
-      if (rightWord != null) _rightDropController.forward();
+      if (leftWord != null && !isGameOver) _leftDropController.forward();
+      if (rightWord != null && !isGameOver) _rightDropController.forward();
     }
   }
 
   void _showPauseDialog() {
+    if (isGameOver || !isGameStarted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -705,17 +710,38 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   Map<String, dynamic>? _unlockResult;
+  bool _isEnding = false;
 
   void _endGame() async {
+    if (_isEnding || isGameOver) return;
+    _isEnding = true;
     _resetAndStopAll();
 
+    // 即座にリザルト画面状態へ遷移（ポーズボタンや落下処理の即時停止）
+    if (mounted) {
+      setState(() {
+        remainingTime = 0.0;
+        isGameOver = true;
+        isPaused = false;
+        isGameStarted = false;
+      });
+    }
+
     // F-10: 本日のプレイ回数加算と学習履歴の保存
-    await widget.database.addGameHistory(score, selectedLevel);
+    try {
+      await widget.database.addGameHistory(score, selectedLevel);
+    } catch (e) {
+      debugPrint("addGameHistory error: $e");
+    }
 
     // F-15: 学習モードの場合、チャプター暗記率判定および次チャプター解放処理を実行
     Map<String, dynamic>? unlockResult;
-    if (currentMode == 'learning') {
-      unlockResult = await widget.database.checkAndUnlockNextChapter(selectedChapter);
+    try {
+      if (currentMode == 'learning') {
+        unlockResult = await widget.database.checkAndUnlockNextChapter(selectedChapter);
+      }
+    } catch (e) {
+      debugPrint("checkAndUnlockNextChapter error: $e");
     }
 
     // F-11/F-12: 当日初回クリア時のスタンプ判定 & 獲得演出
@@ -729,15 +755,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     if (mounted) {
       setState(() {
-        remainingTime = 0.0;
         _unlockResult = unlockResult;
-        isGameOver = true;
-        isPaused = false;
       });
 
       if (awardedStamp != null) {
-        Future.delayed(const Duration(milliseconds: 350), () {
-          if (mounted) {
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (mounted && isGameOver) {
             StampRewardDialog.show(context, awardedStamp!, widget.database);
           }
         });
@@ -1468,10 +1491,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // 4択選択肢エリア（スリム化して単語落下エリアを広く確保）
+          // 4択選択肢エリア（広々としたタッチターゲット・快適なタップ領域）
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF6F2E7),
+              border: Border(top: BorderSide(color: Color(0xFFE5DEC9), width: 1)),
+            ),
             child: Column(
               children: List.generate(displayChoices.length, (index) {
                 final choice = displayChoices[index];
@@ -1480,38 +1506,39 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     isPlaceholder || disabledChoices.contains(choice);
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2.5),
+                  padding: const EdgeInsets.symmetric(vertical: 3.0),
                   child: SizedBox(
                     width: double.infinity,
-                    height: 36,
+                    height: 42,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         disabledBackgroundColor: isPlaceholder
-                            ? Colors.grey[100]
-                            : Colors.red.shade100,
+                            ? const Color(0xFFEDE8DC)
+                            : Colors.red.shade50,
                         disabledForegroundColor: isPlaceholder
                             ? Colors.transparent
                             : Colors.red.shade700,
                         backgroundColor: isDisabled
                             ? (isPlaceholder
-                                  ? Colors.grey[100]
-                                  : Colors.red.shade100)
-                            : Colors.grey[100],
+                                  ? const Color(0xFFEDE8DC)
+                                  : Colors.red.shade50)
+                            : const Color(0xFFFFFDF9),
                         foregroundColor: isDisabled
                             ? (isPlaceholder
                                   ? Colors.transparent
                                   : Colors.red.shade700)
-                            : Colors.black87,
-                        elevation: 0,
+                            : const Color(0xFF2C302E),
+                        elevation: isDisabled ? 0 : 1,
+                        shadowColor: Colors.black12,
                         side: BorderSide(
                           color: isPlaceholder
-                              ? Colors.grey.shade300
-                              : Colors.transparent,
-                          width: 1,
+                              ? const Color(0xFFE2DCCF)
+                              : (isDisabled ? Colors.red.shade300 : const Color(0xFFDCD4BE)),
+                          width: 1.2,
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       onPressed: isDisabled
@@ -1527,7 +1554,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           child: Text(
                             choice,
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                               decoration: (!isPlaceholder && isDisabled)
                                   ? TextDecoration.lineThrough
