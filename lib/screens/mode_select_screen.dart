@@ -244,17 +244,27 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                 Expanded(
                                   child: _buildModeCard(
                                     title: '学習モード',
-                                    subtitle: '章ごと集中学習\n(70pt以上90%で次章解放)',
+                                    subtitle: '章ごと集中学習\n(80pt以上90%で次章解放)',
                                     icon: Icons.school_rounded,
                                     modeKey: 'learning',
                                     accentColor: _primaryAccent,
                                   ),
                                 ),
-                                const SizedBox(width: 10),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _buildModeCard(
+                                    title: '弱点克服',
+                                    subtitle: '誤答・低定着の\n苦手単語を特訓',
+                                    icon: Icons.healing_rounded,
+                                    modeKey: 'weakness',
+                                    accentColor: const Color(0xFFD9534F),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
                                 Expanded(
                                   child: _buildModeCard(
                                     title: 'チャレンジ',
-                                    subtitle: '1分間/100問連続\n全単語ランダム出題',
+                                    subtitle: '1分間/100問\n全単語ランダム',
                                     icon: Icons.bolt_rounded,
                                     modeKey: 'challenge',
                                     accentColor: _secondaryAccent,
@@ -289,13 +299,48 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                     ),
                   ),
 
-                  // チャプター一覧・チャレンジ案内 ＆ 相棒バナー
+                  // チャプター一覧・弱点克服案内・チャレンジ案内 ＆ 相棒バナー
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          if (selectedMode == 'weakness') ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFFDF9),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFE5DEC9)),
+                              ),
+                              child: const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.psychology_rounded, color: Color(0xFFD9534F), size: 20),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        '弱点克服（リベンジ）特訓',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: _textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 6),
+                                  Text(
+                                    '過去の誤答履歴、定着度ポイント（50pt未満）、未暗記状態をリアルタイム集計し、あなたの苦手な単語を最優先で100問連続出題します。',
+                                    style: TextStyle(fontSize: 12, color: _textSecondary, height: 1.4),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           if (selectedMode == 'learning') ...[
                             const SizedBox(height: 8),
                             Row(
@@ -316,7 +361,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Text(
-                                    '解放条件: 70pt以上の単語が90%以上',
+                                    '解放条件: 80pt以上の単語が90%以上',
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
@@ -576,7 +621,9 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 10),
-                      backgroundColor: selectedMode == 'learning' ? _primaryAccent : _secondaryAccent,
+                      backgroundColor: selectedMode == 'learning'
+                          ? _primaryAccent
+                          : (selectedMode == 'weakness' ? const Color(0xFFD9534F) : _secondaryAccent),
                       foregroundColor: Colors.white,
                       elevation: 2,
                       shape: RoundedRectangleBorder(
@@ -589,7 +636,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                       child: Text(
                         selectedMode == 'learning'
                             ? 'Chapter $selectedChapter を学習開始'
-                            : 'チャレンジを開始',
+                            : (selectedMode == 'weakness' ? '弱点克服特訓を開始' : 'チャレンジを開始'),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

@@ -21,6 +21,8 @@ class WordModel {
   final bool isMemorized;
   final bool isRestricted;
   bool isFavorite;
+  final int correctCount;
+  final int wrongCount;
 
   WordModel({
     required this.id,
@@ -32,6 +34,8 @@ class WordModel {
     this.isMemorized = false,
     this.isRestricted = false,
     this.isFavorite = false,
+    this.correctCount = 0,
+    this.wrongCount = 0,
   });
 
   factory WordModel.fromDrift(Word driftWord) {
@@ -67,6 +71,8 @@ class WordModel {
       isMemorized: driftWord.isMemorized,
       isRestricted: driftWord.isRestricted,
       isFavorite: driftWord.isFavorite,
+      correctCount: driftWord.correctCount,
+      wrongCount: driftWord.wrongCount,
     );
   }
 }
@@ -271,11 +277,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _rightDropController.reset();
   }
 
-  void _startCountdownSequence() async {
+  void _startCountdownSequence({List<WordModel>? customWords}) async {
     _resetAndStopAll();
 
     List<WordModel> targetWords = [];
-    if (currentMode == 'learning') {
+    if (customWords != null && customWords.isNotEmpty) {
+      targetWords = List.from(customWords);
+    } else if (currentMode == 'learning') {
       // 1. 学習モード: 選択チャプター（selectedChapter）の全単語を抽出
       targetWords = allWords
           .where((w) => w.chapter == selectedChapter)
@@ -291,8 +299,21 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       final unmemorized = targetWords.where((w) => !w.isMemorized).toList()..shuffle();
       final memorized = targetWords.where((w) => w.isMemorized).toList()..shuffle();
       targetWords = [...unmemorized, ...memorized];
+    } else if (currentMode == 'weakness') {
+      // 2. 弱点克服モード: 誤答・低定着・未暗記の単語を苦手スコア順に抽出
+      final filtered = allWords.where((w) => w.level == selectedLevel).toList();
+      final pool = filtered.isNotEmpty ? filtered : List<WordModel>.from(allWords);
+      final List<MapEntry<WordModel, int>> scored = pool.map<MapEntry<WordModel, int>>((WordModel w) {
+        int weaknessScore = (w.wrongCount * 3);
+        if (!w.isMemorized) weaknessScore += 10;
+        if (w.retentionPoint < 50) weaknessScore += 10;
+        weaknessScore -= w.correctCount.toInt();
+        return MapEntry<WordModel, int>(w, weaknessScore);
+      }).toList();
+      scored.sort((a, b) => b.value.compareTo(a.value));
+      targetWords = scored.map<WordModel>((e) => e.key).take(100).toList();
     } else {
-      // 2. チャレンジモード: 選択中レベルの全単語をシャッフル
+      // 3. チャレンジモード: 選択中レベルの全単語をシャッフル
       targetWords = allWords.where((w) => w.level == selectedLevel).toList();
       if (targetWords.length < 5) {
         targetWords = List.from(allWords);
@@ -869,7 +890,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     final modeTitle = currentMode == 'learning'
         ? '学習モード (Ch.$selectedChapter)'
-        : 'チャレンジモード';
+        : (currentMode == 'weakness' ? '弱点克服モード' : 'チャレンジモード');
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -1287,6 +1308,36 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     ),
                   ),
                   const SizedBox(height: 6),
+                  if (mistakenWords.isNotEmpty) ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.flash_on_rounded, color: Colors.white, size: 18),
+                        label: Text(
+                          'このミス単語（${mistakenWords.length}語）を特訓する',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFD9534F),
+                          foregroundColor: Colors.white,
+                          elevation: 1,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        onPressed: () {
+                          final wordsToRetry = List<WordModel>.from(mistakenWords);
+                          setState(() {
+                            isGameOver = false;
+                            isGameStarted = true;
+                            remainingTime = totalGameDuration;
+                            _unlockResult = null;
+                          });
+                          _startCountdownSequence(customWords: wordsToRetry);
+                        },
+                      ),
+                    ),
+                  ],
                   mistakenWords.isEmpty
                       ? Container(
                           padding: const EdgeInsets.symmetric(vertical: 24),
@@ -1364,7 +1415,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // 常に画面最下部に固定表示されるボトムアクションバー（左: 選択画面へ, 右: 再挑戦）
+          // 常に画面最下部に固定表示されるボトムアクションバー
           SafeArea(
             top: false,
             bottom: true,
@@ -1403,21 +1454,21 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  // 右: 再挑戦
+                  const SizedBox(width: 8),
+
+                  // 中: 再挑戦
                   Expanded(
                     child: SizedBox(
                       height: 44,
-                      child: ElevatedButton.icon(
+                      child: OutlinedButton.icon(
                         icon: const Icon(Icons.refresh_rounded, size: 18),
                         label: const FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text('再挑戦', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5F9E98),
-                          foregroundColor: Colors.white,
-                          elevation: 1,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF2C302E),
+                          side: const BorderSide(color: Color(0xFFD0D7DE), width: 1.5),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -1428,12 +1479,54 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                             isGameOver = false;
                             isGameStarted = true;
                             remainingTime = totalGameDuration;
+                            _unlockResult = null;
                           });
                           _startCountdownSequence();
                         },
                       ),
                     ),
                   ),
+
+                  // 右: 次のチャプターへ (学習モードで次章が存在・解放される場合)
+                  if (isLearning && (nextChapter != null || isCleared || rate >= 90.0)) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 1,
+                      child: SizedBox(
+                        height: 44,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              '次章 Ch.${nextChapter ?? (selectedChapter + 1)}へ',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF5F9E98),
+                            foregroundColor: Colors.white,
+                            elevation: 1,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                          ),
+                          onPressed: () {
+                            final targetCh = nextChapter ?? (selectedChapter + 1);
+                            setState(() {
+                              selectedChapter = targetCh;
+                              isGameOver = false;
+                              isGameStarted = true;
+                              remainingTime = totalGameDuration;
+                              _unlockResult = null;
+                            });
+                            _startCountdownSequence();
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

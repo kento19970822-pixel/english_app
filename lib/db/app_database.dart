@@ -578,6 +578,26 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
+  /// 弱点克服モード用: 誤答・低定着・未暗記の単語を苦手度順に抽出
+  Future<List<Word>> getWeaknessWords({int? level}) async {
+    final all = await select(words).get();
+    var filtered = all;
+    if (level != null) {
+      filtered = all.where((w) => w.level == level).toList();
+    }
+
+    final scored = (filtered.isNotEmpty ? filtered : all).map((w) {
+      int weaknessScore = (w.wrongCount * 3);
+      if (!w.isMemorized) weaknessScore += 10;
+      if (w.retentionPoint < 50) weaknessScore += 10;
+      weaknessScore -= w.correctCount;
+      return MapEntry(w, weaknessScore);
+    }).toList();
+
+    scored.sort((a, b) => b.value.compareTo(a.value));
+    return scored.map((e) => e.key).toList();
+  }
+
   /// 指定難易度レベルに属するチャプター進行状況一覧を取得
   Future<List<ChapterProgressesData>> getChapterProgressesForLevel(int level) async {
     await initChapterProgresses();
