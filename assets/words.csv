@@ -2,12 +2,12 @@ word,CEFR,Japanese,phonetic,category,Example,Example_JP
 know,A1,知っている,/ˈnoʊ/,General,I know the answer.,私は答えを知っている。
 grandfather,A1,祖父,/ˈɡræˌndfɑðər/,General,My grandfather is very old.,私の祖父はとても年をとっている。
 sleeping,A1,眠っている,/ˈsliːpɪŋ/,General,The cat is sleeping on the sofa.,猫はソファーで眠っている。
-saturday,A1,土曜日,/ˈsætərdi/,General,We are going to the park on Saturday.,私たちは土曜日に公園に行く予定です。
+Saturday,A1,土曜日,/ˈsætərdi/,General,We are going to the park on Saturday.,私たちは土曜日に公園に行く予定です。
 ants,A1,アリ,/ˈænts/,General,There are ants in the kitchen.,台所にアリがいる。
 fur,A1,毛皮,/ˈfɜːr/,General,The cat has soft fur.,猫は柔らかい毛皮を持っている。
 laugh,A1,笑う,/ˈlæf/,Daily,We laugh at funny jokes.,私たちは面白いジョークで笑う。
-lakes,A1,湖,/ˈleɪks/,Nature,There are many lakes in the mountains.,山には多くの湖がある。
-colours,A1,色,/colours/,General,I like all the colours in the rainbow.,私は虹のすべての色が好きです。
+book,A2,〜を予約する [動],/bʊk/,Travel,I would like to book a flight to London.,ロンドン行きの飛行機を予約したいです。
+plant,B1,工場・製造施設 [名],/plænt/,Business,The company opened a modern car plant.,その会社は近代的な自動車工場を開設しました。
 pause,A1,一時停止,/ˈpɔz/,General,Please pause the video here.,ここでビデオを一時停止してください。
 taste,A1,味,/ˈteɪst/,Culture,I love the taste of chocolate.,私はチョコレートの味が大好きです。
 phone,A1,電話,/ˈfoʊn/,General,I need to charge my phone.,私は電話を充電する必要がある。
@@ -15,28 +15,28 @@ sleepy,A1,眠い,/ˈsliːpi/,General,I am feeling sleepy after lunch.,私は昼�
 pen,A1,ペン,/ˈpɛn/,General,I need a pen to write.,私は書くためのペンが必要だ。
 mouth,A1,口,/ˈmaʊθ/,General,"Open your mouth, please.",口を開けてください。
 hi,A1,やあ・こんにちは,/haɪ/,Daily,"Hi, nice to meet you!",やあ、はじめまして！
-brothers,A1,兄弟,/ˈbrʌðərz/,Daily,I have two brothers.,私には2人の兄弟がいる。
+fine,B1,罰金・過料 [名],/faɪn/,Daily,He paid a heavy fine for speeding.,彼はスピード違反で高額の罰金を支払いました。
 whale,A1,クジラ,/ˈweɪl/,General,Whales are very large animals.,クジラはとても大きな動物です。
 catch,A1,捕まえる,/ˈkætʃ/,General,Can you catch the ball?,ボールを捕まえることはできますか？
 sad,A1,悲しい,/ˈsæd/,Daily,She is sad because she lost her toy.,彼女はおもちゃを失くしたので悲しい。
 lemonade,A1,レモネード,/ˈlɛməˈneɪd/,General,I want a glass of lemonade.,私はレモネードを一杯飲みたい。
 nap,A1,昼寝,/ˈnæp/,Daily,I'm going to take a nap.,私は昼寝をするつもりだ。
-peas,A1,エンドウ豆,/ˈpiːz/,Daily,I like to eat peas with my dinner.,私は夕食にエンドウ豆を食べるのが好きです。
+park,A2,〜を駐車する [動],/pɑrk/,Daily,You may park your vehicle in the driveway.,私道に車を駐車して構いません。
 beach,A1,ビーチ,/ˈbiːtʃ/,General,We are going to the beach tomorrow.,私たちは明日ビーチに行く予定です。
 green,A1,緑,/ˈɡriːn/,General,The grass is green.,草は緑色です。
-apples,A1,リンゴ,/ˈæpəlz/,Daily,I want to eat apples.,私はリンゴを食べたい。
+orchard,A1,果樹園,/ˈɔːr.tʃərd/,Nature,They picked fresh fruit in the apple orchard.,彼らはリンゴ果樹園で新鮮な果物を収穫しました。
 heat,A1,熱,/ˈhiːt/,General,The heat is unbearable today.,今日は暑さが耐えられない。
-taxis,A1,タクシー,/ˈtæksiz/,General,We took taxis to the station.,私たちは駅までタクシーに乗った。
+cab,A1,タクシー・乗り物,/kæb/,Travel,Let us call a cab to the train station.,駅までタクシーを呼びましょう。
 shelves,A1,棚,/ˈʃɛlvz/,General,The books are on the shelves.,本は棚の上にある。
 skirt,A1,スカート,/ˈskɜːrt/,General,She is wearing a new skirt.,彼女は新しいスカートを着ている。
-parks,A1,公園,/ˈpɑrks/,General,We like to play in parks.,私たちは公園で遊ぶのが好きです。
+garden,A1,庭園・植物園,/ˈɡɑːr.dən/,Nature,Flowers bloom beautifully in the botanical garden.,植物園には花が美しく咲いています。
 hello,A1,こんにちは,/həˈloʊ/,General,"Hello, how are you?",こんにちは、元気ですか？
 taxi,A1,タクシー,/ˈtæksi/,General,Can you call a taxi?,タクシーを呼んでいただけますか？
 dream,A1,夢,/ˈdriːm/,Daily,I had a strange dream last night.,昨夜、私は奇妙な夢を見た。
 cucumber,A1,キュウリ,/ˈkjuːkəmbər/,General,I like cucumbers in my salad.,サラダにキュウリを入れるのが好きです。
-snakes,A1,ヘビ,/ˈsneɪks/,General,Be careful of snakes in the grass.,草の中にいるヘビに注意してください。
+reptile,A1,爬虫類,/ˈrɛp.taɪl/,Nature,"Turtles, lizards, and snakes are reptiles.",カメ、トカゲ、ヘビは爬虫類です。
 sweet,A1,甘い,/ˈswiːt/,General,This cake is very sweet.,このケーキはとても甘い。
-hens,A1,雌鶏,/ˈhɛnz/,General,The hens are in the coop.,雌鶏は鶏小屋にいる。
+rooster,A1,おんどり・雄鶏,/ˈruː.stər/,Nature,The rooster crows early at sunrise.,おんどりは日の出とともに早く鳴きます。
 boy,A1,男の子,/ˈbɔɪ/,General,The boy is playing with his toys.,男の子はおもちゃで遊んでいる。
 sweat,A1,汗,/ˈswɛt/,General,I am covered in sweat.,私は汗まみれです。
 snake,A1,ヘビ,/ˈsneɪk/,General,A snake slithered across the road.,ヘビが道路を横切って滑った。
@@ -46,33 +46,33 @@ kras,A1,クラス,/ˈkræs/,General,Kras is a type of geological formation.,ク�
 sing,A1,歌う,/ˈsɪŋ/,Culture,I like to sing in the shower.,私はシャワーで歌うのが好きです。
 grey,A1,灰色,/ˈɡreɪ/,General,The sky is grey today.,今日の空は灰色です。
 ran,A1,走った,/ˈræn/,General,I ran to the store.,私は店まで走った。
-coffees,A1,コーヒー,/ˈkɔfiz/,General,We drank two coffees.,私たちはコーヒーを2杯飲んだ。
+beverage,A1,飲み物・飲料,/ˈbɛv.ər.ɪdʒ/,Daily,Hot tea is a popular morning beverage.,温かいお茶は人気のある朝の飲み物です。
 fish,A1,魚,/ˈfɪʃ/,Nature,I ate a fish for dinner.,私は夕食に魚を食べた。
 lazy,A1,怠惰な,/ˈleɪzi/,General,The cat is lazy today.,猫は今日は怠惰だ。
 jacket,A1,ジャケット,/ˈdʒækət/,Daily,I wear a jacket in winter.,私は冬にジャケットを着る。
-danced,A1,踊った,/ˈdænst/,General,We danced at the party.,私たちはパーティーで踊った。
+waltz,A1,ワルツ・円舞曲,/wɔːlts/,Culture,They danced a graceful waltz at the gala.,彼らは祝賀会で優雅なワルツを踊りました。
 crayon,A1,クレヨン,/ˈkreɪˌɑn/,General,I used a crayon to draw a picture.,私は絵を描くためにクレヨンを使った。
 elephant,A1,象,/ˈɛləfənt/,General,The elephant is very big.,象はとても大きい。
 someday,A1,いつか,/ˈsʌˌmdeɪ/,Culture,I hope to travel the world someday.,いつか世界中を旅行したい。
 player,A1,選手,/ˈpleɪər/,Daily,He is a good football player.,彼は優秀なサッカー選手です。
-sticks,A1,棒,/ˈstɪks/,General,We picked up sticks for the fire.,私たちは火のために棒を拾った。
-watches,A1,腕時計,/ˈwɑtʃəz/,Daily,He has two watches.,彼は腕時計を2つ持っている。
-smelled,A1,匂った,/ˈsmɛld/,General,The flowers smelled sweet.,花は甘い匂いがした。
+address,B2,(課題に)取り組む・対処する [動],/ˈæˌdrɛs/,Business,Leaders met to address the economic crisis.,首脳陣は経済危機に対処するために会談しました。
+clock,A1,時計・置き時計,/klɑːk/,Daily,The wall clock in the kitchen shows 3 PM.,台所の壁掛け時計は午後3時を指しています。
+fragrant,A1,香りの良い・芳しい,/ˈfreɪ.ɡrənt/,Nature,The blooming jasmine flowers are very fragrant.,咲いているジャスミンの花はとても良い香りがします。
 headphones,A1,ヘッドフォン,/ˈhɛˌdfoʊnz/,Daily,I wear headphones while studying.,私は勉強中にヘッドフォンを着用します。
-kittens,A1,子猫,/ˈkɪtənz/,General,The kittens are very cute.,子猫はとてもかわいい。
+puppy,A1,子犬,/ˈpʌp.i/,Nature,The playful puppy chased a tennis ball.,無邪気な子犬がテニスボールを追いかけました。
 knew,A1,知っていた,/ˈnuː/,General,I knew the answer to that question.,私はその質問の答えを知っていた。
 mango,A1,マンゴー,/ˈmæŋɡoʊ/,General,I love the taste of mango.,私はマンゴーの味が大好きです。
-boats,A1,ボート,/ˈboʊts/,General,We saw many boats in the harbor.,私たちは港にたくさんのボートを見た。
+vessel,A1,船・大型船舶,/ˈvɛs.əl/,Travel,A large cargo vessel entered the harbor.,大型貨物船が港に入港しました。
 sweatshirt,A1,トレーナー,/ˈswɛˌtʃɜːrt/,General,I am wearing a sweatshirt today.,私は今日、トレーナーを着ています。
 step,A1,ステップ,/ˈstɛp/,General,Take a step forward.,一歩前に進んでください。
-birds,A1,鳥,/ˈbɜːrdz/,Nature,The birds are singing.,鳥が歌っている。
-chocolates,A1,チョコレート,/ˈtʃɔkləts/,Daily,I love to eat chocolates.,私はチョコレートを食べるのが大好きです。
-cards,A1,カード,/ˈkɑrdz/,Daily,We played cards last night.,私たちは昨夜カードゲームをした。
-yellows,A1,黄色,/ˈjɛloʊz/,Culture,There are many yellows in this painting.,この絵には多くの黄色がある。
+fire,B1,〜を解雇する・クビにする [動],/faɪər/,Business,The firm had to fire fifty workers.,会社は50人の労働者を解雇せざるを得ませんでした。
+sweet,A1,甘い・お菓子,/swiːt/,Daily,She enjoys eating sweet treats after dinner.,彼女は夕食後に甘いお菓子を食べるのが好きです。
+ticket,A1,切符・チケット,/ˈtɪk.ɪt/,Travel,Please show your train ticket to the officer.,車掌に電車の切符を見せてください。
+golden,A1,金色の・見事な,/ˈɡoʊl.dən/,Daily,The autumn trees have golden leaves.,秋の木々は金色の葉をつけています。
 corn,A1,トウモロコシ,/ˈkɔrn/,Daily,I like to eat corn on the cob.,私はトウモロコシを芯ごと食べるのが好きだ。
 sheep,A1,羊,/ˈʃiːp/,General,The sheep are in the field.,羊は畑にいる。
 goodbye,A1,さようなら,/ˌɡʊˈdbaɪ/,General,"Goodbye, see you later.",さようなら、また後でね。
-cleans,A1,掃除する,/ˈkliːnz/,Daily,She cleans the house every Saturday.,彼女は毎週土曜日に家を掃除する。
+tidy,A1,整頓された・きちんとした,/ˈtaɪ.di/,Daily,Please keep your study desk neat and tidy.,勉強机をきちんと整理整頓しておいてください。
 toothpaste,A1,歯磨き粉,/ˈtuːˌθpeɪst/,General,I use toothpaste to brush my teeth.,私は歯を磨くために歯磨き粉を使います。
 dog,A1,犬,/ˈdɔɡ/,General,The dog is barking.,犬が吠えている。
 male,A1,男性,/ˈmeɪl/,General,He is a male teacher.,彼は男性の先生です。
@@ -89,7 +89,7 @@ screen,A1,画面,/ˈskriːn/,General,The screen is too bright.,画面が明る�
 grass,A1,草,/ˈɡræs/,General,The grass is wet.,草は濡れている。
 yam,A1,ヤムイモ,/ˈjæm/,General,I love roasted yam.,私は焼きヤムイモが大好きです。
 pictures,A1,写真,/ˈpɪktʃərz/,Culture,She takes a lot of pictures.,彼女はたくさんの写真を撮ります。
-handbags,A1,ハンドバッグ,/ˈhæˌndbæɡz/,General,She has a lot of handbags.,彼女はたくさんのハンドバッグを持っています。
+room,B2,余地・可能性 [名],/rum/,General,There is ample room for technological growth.,技術的成長の余地は十分にあります。
 gold,A1,金,/ˈɡoʊld/,General,The ring is made of gold.,その指輪は金でできています。
 piano,A1,ピアノ,/piˈænoʊ/,Culture,She plays the piano beautifully.,彼女はピアノを美しく弾きます。
 horse,A1,馬,/ˈhɔrs/,General,The horse ran very fast.,その馬はとても速く走りました。
@@ -99,32 +99,32 @@ payday,A1,給料日,/ˈpeɪˌdeɪ/,General,Payday is finally here!,ついに給�
 sofa,A1,ソファー,/ˈsoʊfə/,General,I like to relax on the sofa.,私はソファーでくつろぐのが好きです。
 toothpick,A1,つまようじ,/ˈtuːˌθpɪk/,General,I need a toothpick after eating.,食後に爪楊枝が必要です。
 goodnight,A1,おやすみ,/ˈɡʊˌdnaɪt/,General,"Goodnight, see you tomorrow.",おやすみ、また明日。
-togethers,A1,一緒に,/təˈɡɛðərz/,Daily,We are happy when we are togethers.,私たちは一緒にいると幸せです。
+date,B2,年代を特定する・さかのぼる [動],/deɪt/,Science,Geologists date the rock formation to the ice age.,地質学者はその岩層を氷河期のものと年代特定しています。
 holiday,A1,休日,/ˈhɑləˌdeɪ/,General,We are planning a holiday trip.,私たちは休日旅行を計画しています。
 tag,A1,タグ,/ˈtæɡ/,General,The tag shows the price.,タグには価格が表示されています。
-houses,A1,家,/ˈhaʊsəz/,Daily,There are many houses in this neighborhood.,この近所にはたくさんの家があります。
+current,B1,現在の・通用している [形],/ˈkɑrənt/,Business,Keep a record of your current expenses.,現在の支出の記録をつけておきましょう。
 strawberry,A1,イチゴ,/ˈstrɔˌbɛri/,General,I ate a sweet strawberry.,私は甘いイチゴを食べました。
 lilly,A1,ユリ,/ˈlɪli/,Nature,The lilly has a beautiful white flower.,ユリには美しい白い花が咲いています。
 walk,A1,散歩,/ˈwɔk/,Daily,Let's take a walk in the park.,公園を散歩しましょう。
 clean,A1,きれいにする,/ˈkliːn/,Daily,I need to clean my room.,私は自分の部屋を掃除する必要があります。
 sound,A1,音,/ˈsaʊnd/,General,I heard a strange sound.,私は奇妙な音を聞きました。
 kite,A1,凧,/ˈkaɪt/,General,The kite flew high in the sky.,凧は空高く舞い上がった。
-wings,A1,翼,/ˈwɪŋz/,Nature,The bird has beautiful wings.,鳥は美しい翼を持っています。
+mean,A2,意地悪な・不親切な [形],/min/,Daily,Do not say such mean words to your classmate.,クラスメートにそんな意地悪な言葉を言わないでください。
 hold,A1,持つ,/ˈhoʊld/,General,Please hold this for me.,これを私に持ってください。
-olives,A1,オリーブ,/ˈɑlɪvz/,General,I love eating green olives.,私は緑色のオリーブを食べるのが大好きです。
+mine,B1,鉱山・採鉱地 [名],/maɪn/,Nature,Valuable minerals were extracted from the mine.,鉱山から貴重な鉱物が採掘されました。
 dress,A1,ドレス,/ˈdrɛs/,General,She is wearing a beautiful dress.,彼女は美しいドレスを着ています。
-rocks,A1,岩,/ˈrɑks/,General,The kids are playing with the rocks.,子供たちは岩で遊んでいます。
+match,B1,匹敵する・調和する [動],/mæʧ/,Business,Her skills match the job requirements well.,彼女のスキルは職務要件によく合致しています。
 happen,A1,起こる,/ˈhæpən/,General,What will happen next?,次に何が起こるでしょうか？
 happier,A1,より幸せな,/ˈhæpiər/,General,I am happier now than before.,私は以前より今の方が幸せです。
 cellphone,A1,携帯電話,/ˈsɛlfoʊn/,General,I use my cellphone every day.,私は毎日携帯電話を使います。
 grandson,A1,孫,/ˈɡræˌndsʌn/,General,He is a loving grandson.,彼は愛情深い孫です。
-preschoolers,A1,未就学児,/ˈpriːˌskuːlərz/,General,The preschoolers are playing in the yard.,未就学児たちは庭で遊んでいます。
+train,A2,訓練する・養成する [動],/treɪn/,Daily,The academy trains young athletes rigorously.,そのアカデミーは若い運動選手を厳しく養成しています。
 mum,A1,お母さん,/ˈmʌm/,General,I love my mum.,私はお母さんが大好きです。
-gives,A1,与える,/ˈɡɪvz/,Daily,She gives a gift to her friend.,彼女は友達に贈り物をあげます。
+watch,A2,用心する・見守る [動],/wɔʧ/,Daily,Watch out for icy patches on the sidewalk.,歩道の凍結した場所に注意してください。
 leg,A1,脚,/ˈlɛɡ/,General,He hurt his leg while running.,彼は走っている間に脚を怪我しました。
 twentytwo,A1,22,/twentytwo/,General,She is twenty-two years old.,彼女は22歳です。
 yolk,A1,卵黄,/ˈjoʊk/,General,The yolk of the egg is yellow.,卵の黄身は黄色です。
-beds,A1,ベッド,/ˈbɛdz/,Daily,There are two beds in this room.,この部屋には2つのベッドがあります。
+state,B1,述べる・明言する [動],/steɪt/,Business,The contract states all delivery conditions.,契約書にはすべての納品条件が明記されています。
 puppy,A1,子犬,/ˈpʌpi/,General,The puppy is very cute.,子犬はとてもかわいいです。
 circle,A1,円,/ˈsɜːrkəl/,General,Draw a circle on the paper.,紙に円を描いてください。
 strawberries,A1,イチゴ,/ˈstrɔˌbɛriz/,General,I bought some fresh strawberries.,私は新鮮なイチゴを買いました。
@@ -132,9 +132,9 @@ cash,A1,現金,/ˈkæʃ/,General,I paid for the item in cash.,私はその品物
 pajamas,A1,パジャマ,/pəˈdʒɑməz/,Daily,She wears her pajamas before bed.,彼女は寝る前にパジャマを着ます。
 thank,A1,感謝する,/ˈθæŋk/,General,I want to thank you for your help.,あなたの助けに感謝したいです。
 yesterday,A1,昨日,/ˈjɛstərˌdeɪ/,General,I went to the park yesterday.,私は昨日公園に行きました。
-keys,A1,鍵,/ˈkiːz/,General,Where are my keys?,私の鍵はどこですか？
+present,B1,出席している・現在の [形],/ˈprɛzənt/,Business,Every board member was present at the vote.,役員全員が投票に出席していました。
 sticker,A1,ステッカー,/ˈstɪkər/,General,The sticker is very colorful.,そのステッカーはとてもカラフルです。
-rings,A1,指輪,/ˈrɪŋz/,General,She has many rings.,彼女はたくさんの指輪を持っています。
+present,B1,提示する・発表する [動],/ˈprɛzənt/,Academic,The team will present their project results.,チームはプロジェクトの成果を発表します。
 tomorrow,A1,明日,/təˈmɑˌroʊ/,General,I have a meeting tomorrow.,私は明日会議があります。
 nine,A1,九,/ˈnaɪn/,General,There are nine players on a baseball team.,野球チームには9人の選手がいます。
 cold,A1,寒い,/ˈkoʊld/,General,It's very cold today.,今日はとても寒いです。
@@ -153,12 +153,12 @@ bake,A1,焼く,/ˈbeɪk/,General,I like to bake cookies.,私はクッキーを�
 gave,A1,与えた,/ˈɡeɪv/,General,He gave me a present.,彼は私にプレゼントをくれました。
 key,A1,鍵,/ˈkiː/,General,I can't find my key.,私は自分の鍵を見つけることができません。
 listening,A1,聴いている,/ˈlɪsənɪŋ/,Culture,She is listening to music.,彼女は音楽を聴いています。
-bikes,A1,自転車,/ˈbaɪks/,General,I like to ride bikes with my friends.,私は友達と自転車に乗るのが好きです。
+object,B2,反対する・抗議する [動],/ˈɑbʤɛkt/,Culture,Neighbors objected to the construction plan.,近隣住民は建設計画に反対しました。
 evening,A1,夕方,/ˈiːvnɪŋ/,General,We are going out this evening.,私たちは今夜出かけます。
 vegetable,A1,野菜,/ˈvɛdʒtəbəl/,General,I love eating fresh vegetables.,私は新鮮な野菜を食べるのが大好きです。
-dogs,A1,犬,/ˈdɑɡz/,General,My neighbor has two dogs.,私の隣人は2匹の犬を飼っています。
+subject,B2,〜を受けやすい・影響下の [形],/ˈsəbʤɪkt/,Business,Special discounts are subject to availability.,特別割引は在庫状況により変更される場合があります。
 forget,A1,忘れる,/fərˈɡɛt/,General,Don't forget to close the door.,ドアを閉めるのを忘れないでください。
-faces,A1,顔,/ˈfeɪsəz/,Daily,They have happy faces.,彼らは幸せそうな顔をしています。
+bank,B1,川岸・土手 [名],/bæŋk/,Nature,Willow trees grow along the river bank.,川岸に沿ってヤナギの木が生えています。
 easy,A1,簡単,/ˈiːzi/,General,This question is very easy.,この質問はとても簡単です。
 rabbit,A1,ウサギ,/ˈræbət/,General,The rabbit is hopping in the garden.,ウサギが庭で跳ねています。
 mouse,A1,ネズミ,/ˈmaʊs/,General,I saw a mouse in the kitchen.,私は台所でネズミを見ました。
@@ -167,10 +167,10 @@ paws,A1,足（動物の）,/ˈpɔz/,Nature,The cat has soft paws.,猫は柔ら�
 backpack,A1,リュックサック,/ˈbæˌkpæk/,General,I carry my books in a backpack.,私はリュックサックに本を入れて運びます。
 price,A1,値段,/ˈpraɪs/,General,What is the price of this shirt?,このシャツの値段はいくらですか？
 till,A1,まで,/ˈtɪl/,General,I will wait until you come back.,あなたが戻ってくるまで待ちます。
-evenings,A1,夕方,/ˈiːvnɪŋz/,Daily,I always go for a walk on evenings.,私はいつも夕方に散歩に行きます。
+spring,B1,跳ねる・飛び出る [動],/spərɪŋ/,Nature,Deer sprang gracefully across the meadow.,シカが草原を優雅に跳ね回りました。
 hear,A1,聞く,/ˈhiːr/,Culture,Can you hear the music?,音楽が聞こえますか？
-schools,A1,学校,/ˈskuːlz/,Academic,There are many schools in this city.,この都市にはたくさんの学校があります。
-oranges,A1,オレンジ,/ˈɔrəndʒəz/,Daily,I like to eat juicy oranges.,私はジューシーなオレンジを食べるのが好きです。
+right,B1,正当な権利・自由 [名],/raɪt/,Culture,Citizens have the right to a fair trial.,市民には公正な裁判を受ける権利があります。
+customs,B1,税関・関税手続き [名],/ˈkəstəmz/,Travel,Declare all foreign purchases at airport customs.,空港の税関ですべての海外購入品を申告してください。
 ill,A1,病気,/ˈɪl/,Science,She is ill today.,彼女は今日病気です。
 stop,A1,止まる,/ˈstɑp/,General,Please stop the car here.,ここに車を止めてください。
 thirteen,A1,13,/ˈθɜːrˈtiːn/,General,I am thirteen years old.,私は13歳です。
@@ -178,10 +178,10 @@ television,A1,テレビ,/ˈtɛləˌvɪʒən/,General,I like watching television.
 monkey,A1,猿,/ˈmʌŋki/,General,The monkey is eating a banana.,猿はバナナを食べています。
 somebody,A1,誰か,/ˈsʌˌmbɑdi/,General,Somebody called me yesterday.,昨日、誰かが私に電話をかけてきました。
 pie,A1,パイ,/ˈpaɪ/,General,We are going to bake a pie.,私たちはパイを焼く予定です。
-forgets,A1,忘れる,/fərˈɡɛts/,General,He always forgets my name.,彼はいつも私の名前を忘れます。
+goods,B1,商品・物品 [名],/gʊdz/,Business,The warehouse stores consumer electronic goods.,その倉庫には家庭用電化製品が保管されています。
 behind,A1,後ろに,/bɪˈhaɪnd/,General,The ball is behind the chair.,ボールは椅子の後ろにあります。
 basket,A1,かご,/ˈbæskət/,General,I put my fruits in a basket.,私は果物をかごに入れます。
-laughs,A1,笑う,/ˈlæfs/,Daily,She laughs at the joke.,彼女は冗談を笑います。
+arms,B2,武器・軍備 [名],/ɑrmz/,Culture,Both nations signed a historic arms control pact.,両国は歴史的な軍備管理協定に署名しました。
 stay,A1,滞在する,/ˈsteɪ/,Daily,I will stay at home today.,私は今日家にいます。
 pig,A1,豚,/ˈpɪɡ/,General,The pig is in the mud.,豚は泥の中にいます。
 glove,A1,手袋,/ˈɡlʌv/,Daily,I lost my glove.,私は手袋をなくしました。
@@ -189,10 +189,10 @@ desk,A1,机,/ˈdɛsk/,Daily,I have a desk in my room.,私の部屋には机が�
 cup,A1,カップ,/ˈkʌp/,General,She drank tea from a cup.,彼女はカップでお茶を飲みました。
 shortest,A1,最も短い,/ˈʃɔrtɪst/,General,He is the shortest boy in the class.,彼はクラスで最も背の低い少年です。
 quick,A1,速い,/ˈkwɪk/,Nature,The cheetah is a very quick animal.,チーターはとても速い動物です。
-lessons,A1,レッスン,/ˈlɛsənz/,Culture,I have piano lessons every week.,私は毎週ピアノのレッスンがあります。
+grounds,B2,根拠・正当な理由 [名],/graʊnz/,Academic,There are solid grounds for this legal claim.,この法的主張には十分な根拠があります。
 lollipop,A1,ロリポップ,/ˈlɑliˌpɑp/,Daily,The child was sucking on a lollipop.,その子供はロリポップをなめていました。
 eighty,A1,80,/ˈeɪti/,General,She is eighty years old.,彼女は80歳です。
-grapes,A1,ぶどう,/ˈɡreɪps/,General,We bought a bunch of green grapes.,私たちは緑のブドウの房を買いました。
+order,B1,命令する・指示する [動],/ˈɔrdər/,General,The commander ordered an immediate retreat.,指揮官は即時の撤退を命じました。
 eight,A1,8,/ˈeɪt/,General,I have eight pens.,私は8本のペンを持っています。
 bunnies,A1,ウサギ,/ˈbʌniz/,General,The children were watching the bunnies.,子供たちはウサギを見ていました。
 pet,A1,ペット,/ˈpɛt/,General,I have a pet cat.,私はペットの猫を飼っています。
@@ -201,9 +201,9 @@ wine,A1,ワイン,/ˈwaɪn/,General,We drank a bottle of red wine with dinner.,�
 pool,A1,プール,/ˈpuːl/,General,They were swimming in the pool.,彼らはプールで泳いでいました。
 sock,A1,靴下,/ˈsɑk/,Daily,I found a sock under the bed.,私はベッドの下に靴下を見つけました。
 seven,A1,7,/ˈsɛvən/,General,She has seven siblings.,彼女には7人の兄弟姉妹がいます。
-afternoons,A1,午後,/ˌæftərˈnuːnz/,General,I usually go to the gym in the afternoons.,私は通常、午後にジムに行きます。
+light,A1,軽い・負担の少ない [形],/laɪt/,Daily,Carry a light backpack for the mountain hike.,山登りには軽いリュックサックを背負っていきましょう。
 saw,A1,見た,/ˈsɔ/,Nature,I saw a bird in the garden.,私は庭で鳥を見ました。
-chickens,A1,鶏,/ˈtʃɪkənz/,General,The farmer has many chickens.,農夫はたくさんの鶏を飼っています。
+sound,B2,健全な・確かな [形],/saʊnd/,Business,Invest in companies with sound financial health.,健全な財務状況を持つ企業に投資しましょう。
 morning,A1,朝,/ˈmɔrnɪŋ/,Daily,I drink coffee every morning.,私は毎朝コーヒーを飲みます。
 twenty,A1,20,/ˈtwɛnti/,General,There are twenty students in the class.,クラスには20人の生徒がいます。
 pond,A1,池,/ˈpɑnd/,General,The ducks were swimming in the pond.,アヒルが池で泳いでいました。
@@ -212,7 +212,7 @@ coming,A1,来ている,/ˈkʌmɪŋ/,General,He is coming to visit us soon.,彼�
 knife,A1,ナイフ,/ˈnaɪf/,General,I used a knife to cut the bread.,私はパンを切るのにナイフを使いました。
 park,A1,公園,/ˈpɑrk/,General,We went to the park to play.,私たちは遊ぶために公園に行きました。
 mile,A1,マイル,/ˈmaɪl/,General,The distance was about a mile.,距離は約1マイルでした。
-pancakes,A1,パンケーキ,/ˈpæˌnkeɪks/,General,We ate pancakes for breakfast.,私たちは朝食にパンケーキを食べました。
+well,B1,井戸・水源 [名],/wɛl/,Nature,Villagers built a clean well for drinking water.,村人たちは飲料水のためにきれいな井戸を建設しました。
 heart,A1,心臓,/ˈhɑrt/,Science,The doctor listened to my heart.,医者は私の心臓の音を聞きました。
 hero,A1,英雄,/ˈhɪroʊ/,General,He is a hero in our town.,彼は私たちの町で英雄です。
 road,A1,道,/ˈroʊd/,General,The road was very long.,道はとても長かった。
@@ -220,28 +220,28 @@ beg,A1,懇願する,/ˈbɛɡ/,General,He began to beg for money.,彼は金銭を
 numbers,A1,数字,/ˈnʌmbərz/,Academic,I am learning about numbers in school.,私は学校で数字について学んでいます。
 reading,A1,読書,/ˈrɛdɪŋ/,Culture,She enjoys reading books.,彼女は本を読むのが好きです。
 barn,A1,納屋,/ˈbɑrn/,General,The animals were in the barn.,動物たちは納屋にいました。
-sizes,A1,サイズ,/ˈsaɪzəz/,General,We have clothes in different sizes.,私たちはさまざまなサイズの服を持っています。
-gifts,A1,贈り物,/ˈɡɪfts/,General,I received many gifts for my birthday.,私は誕生日プレゼントをたくさんもらいました。
+will,B1,意志力・遺言書 [名],/wɪl/,Culture,Strong will is key to overcoming difficulties.,強い意志が困難を克服する鍵となります。
+fair,B1,見本市・博覧会 [名],/fɛr/,Business,Thousands attended the international trade fair.,何千人もの人々が国際見本市に参加しました。
 hezbollah,A1,ヒズボラ,/hɛˈzbɑlə/,General,Hezbollah is a political party and militant group.,ヒズボラは政治組織であり、軍事組織です。
 steak,A1,ステーキ,/ˈsteɪk/,General,He ordered a steak at the restaurant.,彼はレストランでステーキを注文しました。
 team,A1,チーム,/ˈtiːm/,General,We are a team.,私たちはチームです。
-sweaters,A1,セーター,/ˈswɛtərz/,General,I bought two new sweaters for winter.,私は冬のために2枚の新しいセーターを買いました。
+minute,B2,微小な・詳細な [形],/ˈmɪnət/,Science,Examine the sample for minute structural flaws.,サンプルの微小な構造欠陥を検査してください。
 hour,A1,時間,/ˈaʊər/,Daily,The class lasts for one hour.,授業は1時間続きます。
 sons,A1,息子たち,/ˈsʌnz/,General,She has two sons.,彼女には2人の息子がいます。
-colors,A1,色,/ˈkʌlərz/,General,I like all the colors.,私はすべての色が好きです。
+row,A2,座席の列・並び [名],/roʊ/,Daily,We reserved seats in the front row.,私たちは最前列の座席を予約しました。
 tablet,A1,タブレット,/ˈtæblət/,General,I use my tablet to read books.,私は本を読むためにタブレットを使っています。
 violet,A1,すみれ色,/ˈvaɪəlɪt/,General,Her dress was violet.,彼女のドレスはすみれ色でした。
 lives,A1,生きる,/ˈlɪvz/,General,She lives in London.,彼女はロンドンに住んでいます。
 dot,A1,点,/ˈdɑt/,General,There is a small dot on the paper.,紙に小さな点があります。
-gloves,A1,手袋,/ˈɡlʌvz/,Daily,She wears gloves in the winter.,彼女は冬に手袋を着用します。
+bear,B1,耐える・我慢する [動],/bɛr/,Daily,He could hardly bear the intense summer heat.,彼は猛烈な夏の暑さにほとんど耐えられませんでした。
 cloud,A1,雲,/ˈklaʊd/,Nature,There are many clouds in the sky.,空にはたくさんの雲があります。
 yell,A1,叫ぶ,/ˈjɛl/,General,He yelled at the top of his lungs.,彼は肺の頂点で叫んだ。
 canary,A1,カナリア,/kəˈnɛri/,General,The canary was singing in its cage.,カナリアはケージの中で歌っていました。
-toddlers,A1,幼児,/ˈtɑdlərz/,General,The toddlers were playing with toys.,幼児たちは玩具で遊んでいました。
-hamsters,A1,ハムスター,/ˈhæmstərz/,General,We have two hamsters as pets.,私たちはペットとして2匹のハムスターを飼っています。
-noses,A1,鼻,/ˈnoʊzɪz/,General,We all have noses.,私たちには皆、鼻があります。
+novel,B2,斬新な・新奇な [形],/ˈnɑvəl/,Business,The startup introduced a novel business model.,その新興企業は斬新なビジネスモデルを導入しました。
+patient,A2,患者・受診者 [名],/ˈpeɪʃənt/,Daily,The nurse checked the patient's heart rate.,看護師は患者の心拍数を測定しました。
+refuse,B2,ゴミ・廃棄物 [名],/ˈrɛfˌjuz/,Nature,Recyclable refuse must be sorted properly.,リサイクル可能な廃棄物は適切に分別しなければなりません。
 celery,A1,セロリ,/ˈsɛləri/,Daily,I like to eat celery with hummus.,私はフムスと一緒にセロリを食べるのが好きです。
-spoons,A1,スプーン,/ˈspuːnz/,Daily,We need spoons to eat the soup.,スープを食べるにはスプーンが必要です。
+contract,B2,収縮する・契約する [動],/ˈkɑnˌtrækt/,Science,Pupils contract in bright ambient light.,明るい光の中では瞳孔が収縮します。
 bulb,A1,電球,/ˈbʌlb/,General,We need to change the light bulb.,私たちは電球を交換する必要があります。
 trains,A1,電車,/ˈtreɪnz/,General,The trains are very crowded during rush hour.,電車はラッシュアワーの間、非常に混雑しています。
 pant,A1,息を切らす,/ˈpænt/,General,He was panting after the race.,彼はレース後、息を切らしていました。
@@ -251,27 +251,27 @@ hastert,A1,ハスタート,/ˈhæstərt/,General,Hastert was a former politician
 grozny,A1,グロズヌイ,/ˈɡroʊzni/,General,Grozny is a city in Russia.,グロズヌイはロシアの都市です。
 none,A1,全くない,/ˈnʌn/,General,There is none left.,全く残っていません。
 move,A1,動く,/ˈmuːv/,General,He asked her to move.,彼は彼女に動くように頼んだ。
-lived,A1,住んでいた,/ˈlaɪvd/,Daily,They lived in that house for ten years.,彼らはその家に10年間住んでいました。
+reside,A1,居住する・住む,/rɪˈzaɪd/,Daily,They reside in a quiet residential district.,彼らは静かな住宅街に住んでいます。
 mop,A1,モップ,/ˈmɑp/,General,He used a mop to clean the floor.,彼は床を掃除するためにモップを使用しました。
 khatami,A1,ハタミ,/kəˈtɑmi/,General,Khatami was the former president of Iran.,ハタミはイランの元大統領でした。
 son,A1,息子,/ˈsʌn/,General,He is my son.,彼は私の息子です。
 sylvia,A1,シルビア,/ˈsɪlviə/,Daily,Sylvia is my friend.,シルビアは私の友人です。
 land,A1,土地,/ˈlænd/,General,The farmer owns a large piece of land.,農夫は大きな土地を所有しています。
 welcome,A1,歓迎する,/ˈwɛlkəm/,Daily,We welcome you to our house.,私たちはあなたを私たちの家に歓迎します。
-seconds,A1,秒,/ˈsɛkəndz/,General,Please wait for a few seconds.,数秒お待ちください。
-waits,A1,待つ,/ˈweɪts/,Daily,She waits for the bus every morning.,彼女は毎朝バスを待ちます。
+conduct,B2,実施する・導く [動],/ˈkɑndəkt/,Science,The laboratory conducts groundbreaking medical research.,その研究所は画期的な医学研究を実施しています。
+produce,B2,生鮮農産物・野菜果物 [名],/ˈproʊdus/,Daily,Local farms supply organic fresh produce.,地元の農場が有機栽培の新鮮な農産物を供給しています。
 dancing,A1,踊る,/ˈdænsɪŋ/,General,They were dancing at the party.,彼らはパーティーで踊っていました。
 simple,A1,単純な,/ˈsɪmpəl/,Culture,It's a simple recipe.,それは単純なレシピです。
 meat,A1,肉,/ˈmiːt/,Daily,I love to eat meat.,私は肉を食べるのが大好きです。
 stair,A1,階段,/ˈstɛr/,General,Be careful when you go down the stair.,階段を降りるときは気をつけてください。
 potato,A1,じゃがいも,/pəˈteɪˌtoʊ/,General,I made mashed potatoes for dinner.,私は夕食にマッシュポテトを作りました。
 red,A1,赤い,/ˈrɛd/,General,The apple is red.,そのリンゴは赤い。
-tires,A1,タイヤ,/ˈtaɪərz/,General,The tires on the car need to be replaced.,車のタイヤは交換する必要があります。
-names,A1,名前,/ˈneɪmz/,General,What are their names?,彼らの名前は何ですか？
+record,A2,記録する・録音する [動],/ˈrɛkərd/,Business,Cameras record all transactions at the counter.,カメラが窓口でのすべての取引を記録しています。
+project,B2,予測する・推定する [動],/ˈprɑʤɛkt/,Business,Economists project modest global growth next year.,経済学者は来年の世界的な緩やかな成長を予測しています。
 mail,A1,郵便物,/ˈmeɪl/,General,Did you get any mail today?,今日、何か郵便物が届きましたか？
-worked,A1,働いた,/ˈwɜːrkt/,General,He worked at the factory for many years.,彼は長年工場で働いていました。
+labor,A1,労働・勤労,/ˈleɪ.bər/,Business,Manual labor requires high physical stamina.,肉体労働には高い体力が必要です。
 meet,A1,会う,/ˈmiːt/,General,Let's meet at the cafe.,カフェで会いましょう。
-animals,A1,動物,/ˈænəməlz/,Nature,I love all kinds of animals.,私はあらゆる種類の動物が大好きです。
+suspect,B1,容疑者・被疑者 [名],/ˈsəˌspɛkt/,Culture,Detectives detained a key robbery suspect.,刑事たちは強盗の主要な容疑者を拘束しました。
 friend,A1,友達,/ˈfrɛnd/,Daily,She is my best friend.,彼女は私の親友です。
 bathtub,A1,浴槽,/ˈbæθtəb/,General,He took a bath in the bathtub.,彼は浴槽で入浴しました。
 father,A1,父,/ˈfɑðər/,General,My father is a teacher.,私の父は先生です。
@@ -287,13 +287,13 @@ slide,A1,滑り台,/ˈslaɪd/,General,The children love to play on the slide.,�
 anyone,A1,誰か,/ˈɛniˌwʌn/,General,Does anyone know the answer to this question?,この質問の答えを知っている人はいますか？
 kid,A1,子供,/ˈkɪd/,Daily,The kid was laughing at the funny clown.,その子供は面白いピエロを見て笑っていた。
 soon,A1,すぐに,/ˈsuːn/,General,I will be there soon.,私はすぐにそこに行くでしょう。
-places,A1,場所,/ˈpleɪsəz/,General,There are many interesting places to visit in this city.,この街には訪れるべき興味深い場所がたくさんある。
+transport,B1,輸送する・運ぶ [動],/ˈtrænspɔrt/,Business,Pipelines transport crude oil across continents.,パイプラインが大陸を越えて原油を輸送しています。
 ask,A1,尋ねる,/ˈæsk/,General,You should ask your teacher if you don't understand.,理解できない場合は先生に尋ねるべきです。
 beer,A1,ビール,/ˈbɪr/,General,Would you like a glass of beer?,ビールを一杯いかがですか？
 scissors,A1,はさみ,/ˈsɪzərz/,General,Please use scissors to cut the paper.,紙を切るためにハサミを使ってください。
 minute,A1,分,/ˈmɪnət/,General,I'll be ready in a minute.,私はすぐに準備できます。
 rooms,A1,部屋,/ˈruːmz/,Culture,The hotel has many rooms for guests.,そのホテルには宿泊客のための部屋がたくさんある。
-legs,A1,脚,/ˈlɛɡz/,General,The table has four legs.,そのテーブルには４本の脚がある。
+survey,B1,調査する・見渡す [動],/ˈsərˌveɪ/,Business,The agency surveyed over five thousand shoppers.,調査機関は5000人以上の買い物客を調査しました。
 watermelon,A1,スイカ,/ˈwɔtərˌmɛlən/,General,We had some watermelon for dessert.,デザートにスイカを食べました。
 game,A1,ゲーム,/ˈɡeɪm/,Culture,Let's play a game together.,一緒にゲームをしましょう。
 pee,A1,おしっこ,/ˈpiː/,General,The little boy needed to pee.,その小さな男の子はおしっこをする必要があった。
@@ -302,16 +302,16 @@ fries,A1,フライドポテト,/ˈfraɪz/,Daily,I love to eat fries with ketchup
 everyone,A1,みんな,/ˈɛvriˌwʌn/,General,Everyone should listen to the teacher.,みんな先生の話を聞くべきです。
 ice,A1,氷,/ˈaɪs/,Daily,The drink needs some ice to be cold.,その飲み物を冷たくするには氷が必要です。
 quietly,A1,静かに,/ˈkwaɪətli/,General,Please speak quietly in the library.,図書館では静かに話してください。
-beans,A1,豆,/ˈbiːnz/,General,I ate a bowl of beans for lunch.,私は昼食に豆のボウルを食べました。
+extract,B2,抽出物・エキス [名],/ˈɛkˌstrækt/,Nature,Chamomile extract helps soothe sensitive skin.,カモミール抽出物は敏感肌を落ち着かせるのに役立ちます。
 snows,A1,雪が降る,/ˈsnoʊz/,Nature,It snows a lot during winter here.,ここでは冬の間によく雪が降る。
 tick,A1,チック,/ˈtɪk/,Daily,The clock made a tick-tock sound.,時計はチクタクという音を立てた。
 grasses,A1,草,/ˈɡræsəz/,Nature,The grasses swayed gently in the wind.,草が風に優しく揺れた。
 sign,A1,標識,/ˈsaɪn/,General,There is a sign that says 'No Parking'.,「駐車禁止」と書かれた標識がある。
 lets,A1,～しよう,/ˈlɛts/,General,Let's go to the park.,公園に行きましょう。
-stars,A1,星,/ˈstɑrz/,General,The stars are shining brightly tonight.,今夜は星が明るく輝いている。
+frequent,B2,頻繁に訪れる・出入りする [動],/ˈfrikˌwɛnt/,Daily,College students frequent the neighborhood bookstore.,大学生たちが近所の書店を頻繁に訪れます。
 classes,A1,授業,/ˈklæsəz/,Culture,She takes piano classes on Mondays.,彼女は月曜日にピアノの授業を受けています。
 snow,A1,雪,/ˈsnoʊ/,Nature,The snow was falling softly outside.,雪が外で優しく降っていた。
-blouses,A1,ブラウス,/ˈblaʊsəz/,General,She bought two new blouses yesterday.,彼女は昨日、新しいブラウスを２枚買った。
+perfect,B2,完成させる・磨きをかける [動],/ˈpərˌfɪkt/,Culture,Chefs practiced for months to perfect the recipe.,シェフたちはレシピを完成させるために何ヶ月も練習しました。
 alphabet,A1,アルファベット,/ˈælfəˌbɛt/,General,Children learn the alphabet in kindergarten.,子供たちは幼稚園でアルファベットを学びます。
 lunchtime,A1,昼食時間,/ˈlʌˌntʃtaɪm/,Daily,Lunchtime is my favorite part of the day.,昼食時間は１日の中で私の一番好きな時間です。
 peach,A1,桃,/ˈpiːtʃ/,General,I ate a delicious peach for breakfast.,私は朝食においしい桃を食べました。
@@ -321,7 +321,7 @@ learning,A1,学習,/ˈlɜːrnɪŋ/,General,Learning new things is important.,新
 bite,A1,噛む,/ˈbaɪt/,General,Don't bite your fingernails.,爪を噛んではいけません。
 brother,A1,兄弟,/ˈbrʌðər/,Daily,He is my older brother.,彼は私の兄です。
 listen,A1,聞く,/ˈlɪsən/,General,Please listen to what I am saying.,私が言っていることを聞いてください。
-mornings,A1,朝,/ˈmɔrnɪŋz/,Daily,I like to drink coffee in the mornings.,私は朝にコーヒーを飲むのが好きです。
+finance,B2,融資する・資金調達する [動],/ˈfaɪˌnæns/,Business,Investors agreed to finance the green energy project.,投資家たちはグリーンエネルギープロジェクトへの資金提供に合意しました。
 biscuits,A1,ビスケット,/ˈbɪskəts/,General,I ate some biscuits with my tea.,お茶と一緒にビスケットを食べました。
 restroom,A1,トイレ,/ˈrɛˌstruːm/,General,Where is the restroom?,トイレはどこですか？
 drawers,A1,引き出し,/ˈdrɔrz/,General,She keeps her socks in the top drawer.,彼女は靴下を一番上の引き出しに入れています。
@@ -336,7 +336,7 @@ suitcase,A1,スーツケース,/ˈsuːˌtkeɪs/,General,He packed his suitcase f
 nickels,A1,ニッケル硬貨,/ˈnɪkəlz/,General,I have two nickels in my pocket.,私はポケットに２枚のニッケル硬貨を持っている。
 swim,A1,泳ぐ,/ˈswɪm/,General,I like to swim in the pool.,私はプールで泳ぐのが好きです。
 fast,A1,速い,/ˈfæst/,General,The car is very fast.,その車はとても速い。
-helped,A1,助けた,/ˈhɛlpt/,Daily,My friend helped me with my homework.,友達が私の宿題を手伝ってくれた。
+assist,A1,支援する・手伝う,/əˈsɪst/,Daily,A volunteer came forward to assist elderly citizens.,高齢者を支援するためにボランティアが名乗り出ました。
 haves,A1,持っている,/ˈhævz/,Daily,She has many books in her room.,彼女は部屋にたくさんの本を持っています。
 swimsuit,A1,水着,/ˈswɪˌmsuːt/,General,I need to buy a new swimsuit for summer.,夏のために新しい水着を買う必要があります。
 radish,A1,大根,/ˈrædɪʃ/,Daily,I like to eat radish in salads.,サラダで大根を食べるのが好きです。
@@ -379,8 +379,8 @@ shirts,A1,シャツ,/ˈʃɜːrts/,General,He has a collection of colorful shirts
 soda,A1,ソーダ,/ˈsoʊdə/,General,I would like a soda with my meal.,食事にソーダが欲しいです。
 kitten,A1,子猫,/ˈkɪtən/,General,The kitten was very playful and cute.,その子猫はとても遊び好きでかわいかった。
 mine,A1,私のもの,/ˈmaɪn/,General,This toy is mine.,このおもちゃは私のものです。
-snowing,A1,雪が降っている,/ˈsnoʊɪŋ/,Nature,It is snowing heavily outside.,外は雪が激しく降っている。
-september,A1,九月,/sɛˈptɛmbər/,Nature,My birthday is in September.,私の誕生日は九月です。
+blizzard,A1,猛吹雪・暴風雪,/ˈblɪz.ərd/,Nature,The severe blizzard caused major flight cancellations.,激しい猛吹雪により多くの飛行機便が欠航となりました。
+September,A1,九月,/sɛˈptɛmbər/,Nature,My birthday is in September.,私の誕生日は九月です。
 sister,A1,妹、姉,/ˈsɪstər/,Daily,She is my younger sister.,彼女は私の妹です。
 sick,A1,病気の,/ˈsɪk/,Science,I felt sick after eating too much candy.,私はキャンディーを食べ過ぎて気分が悪くなった。
 hair,A1,髪,/ˈhɛr/,General,"She has long, beautiful hair.",彼女は長く美しい髪をしている。
@@ -439,7 +439,7 @@ pennies,A1,ペニー,/ˈpɛniz/,General,He found some pennies on the ground.,彼
 eyes,A1,目,/ˈaɪz/,Daily,She has beautiful blue eyes.,彼女は美しい青い目をしています。
 tracks,A1,トラック,/ˈtræks/,General,The train runs on the tracks.,電車は線路の上を走ります。
 languages,A1,言語,/ˈlæŋɡwədʒəz/,General,How many languages do you speak?,あなたはいくつ言語を話せますか？
-thursday,A1,木曜日,/ˈθɜːrˌzdeɪ/,General,Thursday is my favorite day of the week.,木曜日は私の一番好きな曜日です。
+Thursday,A1,木曜日,/ˈθɜːrˌzdeɪ/,General,Thursday is my favorite day of the week.,木曜日は私の一番好きな曜日です。
 cats,A1,猫,/ˈkæts/,Daily,There are three cats in our house.,私たちの家には3匹の猫がいます。
 dice,A1,サイコロ,/ˈdaɪs/,Culture,We need a pair of dice to play this game.,このゲームをするには一組のサイコロが必要です。
 brown,A1,茶色の,/ˈbraʊn/,General,The dog has brown fur.,その犬は茶色の毛をしています。
@@ -456,7 +456,7 @@ sneakers,A1,スニーカー,/ˈsniːkərz/,General,She bought new sneakers for r
 wear,A1,着る,/ˈwɛr/,Daily,You need to wear a warm coat in winter.,冬には暖かいコートを着る必要があります。
 camp,A1,キャンプ,/ˈkæmp/,General,We are going camping this weekend.,私たちは今週末キャンプに行きます。
 wait,A1,待つ,/ˈweɪt/,General,Please wait for a moment.,少々お待ちください。
-smiled,A1,微笑んだ,/ˈsmaɪld/,General,She smiled at me.,彼女は私に微笑みかけました。
+cheerful,A1,陽気な・明るい,/ˈtʃɪr.fəl/,Daily,He gave a cheerful greeting to everyone.,彼はみんなに明るく挨拶をしました。
 sink,A1,流し,/ˈsɪŋk/,General,Wash your hands in the sink.,流しで手を洗いなさい。
 stops,A1,停止,/ˈstɑps/,General,The bus stops here.,バスはここに停車します。
 jumping,A1,ジャンプしている,/ˈdʒʌmpɪŋ/,General,The kids were jumping on the trampoline.,子供たちはトランポリンでジャンプしていました。
@@ -705,7 +705,7 @@ anything,A1,何か,/ˈɛniˌθɪŋ/,Daily,Do you want anything to drink?,何か�
 cookie,A1,クッキー,/ˈkʊki/,General,I ate a chocolate cookie.,私はチョコレートクッキーを食べました。
 toilets,A1,トイレ,/ˈtɔɪləts/,General,Where are the toilets?,トイレはどこですか？
 air,A1,空気,/ˈɛr/,General,I need some fresh air.,私は新鮮な空気が必要です。
-cooked,A1,調理された,/ˈkʊkt/,General,We cooked dinner together.,私たちは一緒に夕食を作りました。
+cuisine,A1,料理・郷土料理,/kwɪˈziːn/,Culture,Italian cuisine is famous for pasta and pizza.,イタリア料理はパスタとピザで有名です。
 shop,A1,店,/ˈʃɑp/,Daily,I go to the shop to buy groceries.,私は食料品を買いにお店に行きます。
 computers,A1,コンピューター,/kəˈmpjuːtərz/,Science,We use computers for our work.,私たちは仕事でコンピューターを使います。
 meal,A1,食事,/ˈmiːl/,General,We had a delicious meal.,私たちは美味しい食事をしました。
@@ -784,7 +784,7 @@ toe,A1,つま先,/ˈtoʊ/,General,I stubbed my toe on the chair.,私は椅子に
 garlic,A1,ニンニク,/ˈɡɑrlɪk/,General,I added two cloves of garlic to the pasta sauce.,パスタソースにニンニクを2かけ加えた。
 moo,A1,モー,/ˈmuː/,General,"The cow said, 'moo'.",牛が「モー」と鳴いた。
 live,A1,住む,/ˈlaɪv/,General,They live in a small apartment.,彼らは小さなアパートに住んでいる。
-english,A1,英語,/ˈɪŋɡlɪʃ/,General,She is learning to speak English.,彼女は英語を話すことを学んでいる。
+English,A1,英語,/ˈɪŋɡlɪʃ/,General,She is learning to speak English.,彼女は英語を話すことを学んでいる。
 foot,A1,足,/ˈfʊt/,Daily,He hurt his foot while playing soccer.,彼はサッカーをしている時に足を怪我した。
 early,A1,早い,/ˈɜːrli/,Daily,I woke up early this morning.,私は今朝早く起きた。
 plane,A1,飛行機,/ˈpleɪn/,Daily,The plane took off on time.,飛行機は定刻通りに離陸した。
@@ -849,7 +849,7 @@ one,A1,1,/ˈwʌn/,Daily,I have one brother.,私には1人の兄弟がいる。
 good,A1,良い,/ˈɡʊd/,Culture,It was a good movie.,それは良い映画だった。
 things,A1,もの,/ˈθɪŋz/,General,These are my favorite things.,これらはお気に入りのものです。
 much,A1,たくさん,/ˈmʌtʃ/,General,Thank you very much.,どうもありがとうございます。
-saturdays,A1,土曜日,/ˈsætərdiz/,General,I play soccer on Saturdays.,私は土曜日にサッカーをします。
+weekend,A1,週末・土日,/ˈwiːk.ɛnd/,Daily,Have a wonderful weekend with family.,家族と素晴らしい週末をお過ごしください。
 say,A1,言う,/ˈseɪ/,General,What did you say?,何て言ったの？
 three,A1,3,/ˈθriː/,General,I have three books.,私は3冊の本を持っている。
 make,A1,作る,/ˈmeɪk/,General,I will make dinner.,私が夕食を作ります。
@@ -860,7 +860,7 @@ year,A1,年,/ˈjɪr/,General,I was born in 1990.,私は1990年に生まれた。
 got,A1,手に入れた,/ˈɡɑt/,Daily,I got a new car.,私は新しい車を手に入れた。
 going,A1,行く,/ˈɡoʊɪŋ/,General,I am going to the store.,私は店に行きます。
 little,A1,小さい,/ˈlɪtəl/,General,He is a little boy.,彼は小さな男の子です。
-closed,A1,閉まっている,/ˈkloʊzd/,General,The store is closed today.,今日は店が閉まっている。
+shut,A1,閉める・閉ざす,/ʃʌt/,Daily,Please shut the wooden window firmly.,木の窓をしっかり閉めてください。
 lot,A1,たくさん,/ˈlɑt/,General,I have a lot of work to do.,私はたくさんの仕事がある。
 way,A1,方法,/ˈweɪ/,General,What is the best way to do it?,それをするのに一番良い方法は何ですか？
 mean,A1,意味する,/ˈmiːn/,Culture,What do you mean?,どういう意味ですか？
@@ -945,7 +945,7 @@ cub,A1,子,/ˈkʌb/,General,The bear cub followed its mother.,クマの子は母
 today,A1,今日,/təˈdeɪ/,General,What are you doing today?,今日は何をしていますか？
 yes,A1,はい,/ˈjɛs/,General,"Yes, I will be there.",はい、私はそこに行きます。
 clock,A1,時計,/ˈklɑk/,Daily,What time is it by the clock?,時計では何時ですか？
-clicked,A1,クリックした,/ˈklɪkt/,General,I clicked on the link.,私はリンクをクリックしました。
+select,A1,選択する・選ぶ,/sɪˈlɛkt/,General,Click the button to select your preferred option.,希望する選択肢を選ぶにはボタンをクリックしてください。
 course,A1,コース,/ˈkɔrs/,General,Which course are you taking?,どのコースを受講していますか？
 okay,A1,大丈夫,/ˌoʊˈkeɪ/,General,Everything is okay now.,今はすべて大丈夫です。
 always,A1,いつも,/ˈɔˌlweɪz/,Daily,She always comes on time.,彼女はいつも時間通りに来ます。
@@ -1036,7 +1036,7 @@ class,A1,クラス,/ˈklæs/,General,I like this class.,私はこのクラスが
 wall,A1,壁,/ˈwɔl/,General,The wall is painted blue.,壁は青く塗られています。
 seats,A1,座席,/ˈsiːts/,General,There are many empty seats.,空席がたくさんあります。
 olive,A1,オリーブ,/ˈɑləv/,Daily,I love to eat olives.,私はオリーブを食べるのが大好きです。
-mondaysaturday,A1,月曜日土曜日,/mondaysaturday/,Nature,The store is open from monday to saturday.,店は月曜日から土曜日まで開いています。
+calendar,A1,カレンダー・日程表,/ˈkæl.ən.dər/,Daily,Mark the important event on your calendar.,カレンダーに大切なイベントを記入してください。
 van,A1,バン,/ˈvæn/,General,They drive a van.,彼らはバンを運転します。
 click,A1,クリック,/ˈklɪk/,General,Click the button.,ボタンをクリックしてください。
 building,A1,建物,/ˈbɪldɪŋ/,General,That is a tall building.,あれは高い建物です。
@@ -3067,7 +3067,7 @@ foreigner,A2,外国人,/ˈfɔrənər/,General,He is a foreigner.,彼は外国人
 townhouse,A2,タウンハウス,/ˈtaʊˌnhaʊs/,General,They live in a townhouse.,彼らはタウンハウスに住んでいます。
 cords,A2,コード,/ˈkɔrdz/,General,He tripped over the cords.,彼はコードにつまずきました。
 entrances,A2,入口,/ˈɛntrənsəz/,General,There are two entrances to the building.,建物には2つの入口があります。
-wednesdays,A2,水曜日,/ˈwɛˌnzdeɪz/,General,We have a meeting on wednesdays.,私たちは水曜日に会議があります。
+midweek,A2,週半ば・水曜日頃,/ˈmɪd.wiːk/,Daily,We usually have a team meeting midweek.,私たちは通常、週の半ばにチーム会議を行います。
 barber,A2,理容師,/ˈbɑrbər/,General,He is a barber.,彼は理容師です。
 sleeper,A2,寝台車,/ˈsliːpər/,General,We traveled by sleeper train.,私たちは寝台列車で旅行しました。
 loaf,A2,パン,/ˈloʊf/,General,He ate a whole loaf of bread.,彼はパンを丸ごと食べました。
@@ -4312,7 +4312,7 @@ hundreds,A2,何百もの,/ˈhʌndrədz/,Culture,There were hundreds of people at
 parmesan,A2,パルメザンチーズ,/ˈpɑrməˌzɑn/,General,He grated parmesan cheese on his pasta.,彼はパスタにパルメザンチーズをすりおろした。
 decide,A2,決める,/dɪˈsaɪd/,Daily,We need to decide what to eat for dinner.,私たちは夕食に何を食べるか決める必要があります。
 buying,A2,購入する,/ˈbaɪɪŋ/,General,She's buying new shoes for the party.,彼女はパーティーのために新しい靴を買っています。
-december,A2,12月,/dɪˈsɛmbər/,Nature,Christmas is in December.,クリスマスは12月です。
+December,A2,12月,/dɪˈsɛmbər/,Nature,Christmas is in December.,クリスマスは12月です。
 cross,A2,横切る,/ˈkrɔs/,General,You need to cross the road carefully.,あなたは注意深く道を横切る必要があります。
 gettogether,A2,集まり,/gettogether/,General,We're having a gettogether with friends this weekend.,私たちは週末に友人たちと集まりをします。
 somewhere,A2,どこか,/ˈsʌˌmwɛr/,General,Let's go somewhere new this weekend.,今週末はどこか新しい場所に行きましょう。
@@ -4910,7 +4910,7 @@ center,A2,中心,/ˈsɛntər/,General,The park is located in the center of the t
 mouthful,A2,一口,/ˈmaʊˌθfʊl/,General,He took a mouthful of sandwich.,彼はサンドイッチを一口食べた。
 used,A2,使われた,/ˈjuːzd/,General,The car was used for ten years.,その車は10年間使われた。
 worried,A2,心配した,/ˈwɜːrid/,General,I was worried about my dog.,私は自分の犬を心配した。
-may,A2,かもしれない,/ˈmeɪ/,Nature,It may rain tomorrow.,明日は雨が降るかもしれない。
+May,A2,かもしれない,/ˈmeɪ/,Nature,It may rain tomorrow.,明日は雨が降るかもしれない。
 space,A2,空間,/ˈspeɪs/,General,We need more space in the office.,私たちはオフィスにもっと空間が必要だ。
 rhino,A2,サイ,/ˈraɪˌnoʊ/,General,The rhino has a big horn.,サイは大きな角を持っている。
 across,A2,横切って,/əˈkrɔs/,General,She walked across the street.,彼女は通りを横切って歩いた。
@@ -11179,7 +11179,7 @@ minimum,B1,"最小限,最低限",/ˈmɪnəməm/,Society,The minimum wage is set 
 aware,B1,気づいて,/əˈwɛr/,General,She was aware of the problem.,彼女はその問題に気づいていた。
 hate,B1,憎む,/ˈheɪt/,General,I hate when it rains on the weekend.,週末に雨が降ると嫌だ。
 lies,B1,嘘,/ˈlaɪz/,Daily,He told lies to his family.,彼は家族に嘘をついた。
-italian,B1,イタリアの,/ɪˈtæljən/,Culture,She loves Italian food.,彼女はイタリア料理が大好きだ。
+Italian,B1,イタリアの,/ɪˈtæljən/,Culture,She loves Italian food.,彼女はイタリア料理が大好きだ。
 abuse,B1,虐待,/əˈbjuːs/,Daily,The child suffered abuse at home.,その子供は家庭で虐待を受けた。
 released,B1,解放された,/riˈliːst/,General,The prisoner was released from jail.,囚人は刑務所から解放された。
 truly,B1,本当に,/ˈtruːli/,General,I am truly grateful for your help.,あなたの助けに本当に感謝しています。
