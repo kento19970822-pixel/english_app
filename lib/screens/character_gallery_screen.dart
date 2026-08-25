@@ -1,27 +1,30 @@
-// コード管理番号: VER-20260824-48
+// コード管理番号: VER-20260825-14
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
 import '../services/buddy_service.dart';
 import '../widgets/pixel_character_widget.dart';
 
-/// キャラクター図鑑画面 (F-12)
+/// キャラクター図鑑画面 (F-12: 全374チャプター1:1固有キャラクター・8大系統フィルター)
 class CharacterGalleryScreen extends StatefulWidget {
   final AppDatabase database;
 
-  const CharacterGalleryScreen({super.key, required this.database});
+  const CharacterGalleryScreen({
+    super.key,
+    required this.database,
+  });
 
   @override
   State<CharacterGalleryScreen> createState() => _CharacterGalleryScreenState();
 }
 
 class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
+  int _activeBuddyId = 0; // 0..373 (対応チャプター: _activeBuddyId + 1)
+  List<ChapterProgressesData> _chapterProgresses = [];
   bool _isLoading = true;
   Stamp? _favoriteStamp;
-  List<ChapterProgressesData> _chapterProgresses = [];
-  int _activeBuddyId = 0;
+  CharacterCategory? _selectedCategoryFilter; // null = 全て
 
-  // 定数パステルカラー
   static const Color _bgColor = Color(0xFFFBF7EE);
   static const Color _cardColor = Color(0xFFFFFDF9);
   static const Color _primaryAccent = Color(0xFF5F9E98);
@@ -56,36 +59,12 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
     }
   }
 
-  /// 各種族の最高成長状態をチャプター進行状況から算出
+  /// チャプター進行状況からキャラクターの成長状態を厳格に判定
   CharacterGrowthState _getSpeciesGrowthState(int speciesId) {
-    if (_chapterProgresses.isEmpty) return CharacterGrowthState.healthy;
-
-    // 種族に対応するチャプター群（例: speciesId 0 -> Chapter 1, 13, 25...）
-    final matchingChapters = _chapterProgresses.where(
-      (cp) => (cp.chapter - 1) % 12 == speciesId,
-    ).toList();
-
-    if (matchingChapters.isEmpty) {
-      // 該当チャプターがまだ存在しない場合は初期解放種族（0: ヒヨコ）はhealthy、それ以外はlocked
-      return speciesId == 0 ? CharacterGrowthState.healthy : CharacterGrowthState.locked;
-    }
-
-    bool hasUnlocked = matchingChapters.any((cp) => cp.isUnlocked);
-    if (!hasUnlocked && speciesId != 0) {
-      return CharacterGrowthState.locked;
-    }
-
-    double maxRate = 0.0;
-    for (final cp in matchingChapters) {
-      if (cp.memorizedRate > maxRate) {
-        maxRate = cp.memorizedRate;
-      }
-    }
-
-    if (maxRate >= 80.0) return CharacterGrowthState.evolved;
-    if (maxRate >= 50.0) return CharacterGrowthState.healthy;
-    if (maxRate > 0.0 || hasUnlocked || speciesId == 0) return CharacterGrowthState.healthy;
-    return CharacterGrowthState.locked;
+    final chapter = speciesId + 1;
+    final progress = _chapterProgresses.where((cp) => cp.chapter == chapter).firstOrNull;
+    if (progress == null) return CharacterGrowthState.locked;
+    return PixelCharacterWidget.stateFromRate(progress.memorizedRate, progress.isUnlocked);
   }
 
   void _setAsBuddy(int speciesId) {
@@ -94,9 +73,10 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
       BuddyService.instance.setSelectedSpeciesId(speciesId);
     });
 
+    final species = getCharacterSpecies(speciesId + 1);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('相棒を「${kCharacterSpeciesList[speciesId].japaneseName}」に変更しました！'),
+        content: Text('相棒を「${species.japaneseName}（Ch.${species.chapter}）」に変更しました！'),
         duration: const Duration(milliseconds: 1500),
       ),
     );
@@ -104,8 +84,14 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final activeSpecies = kCharacterSpeciesList[_activeBuddyId];
+    final activeSpecies = getCharacterSpecies(_activeBuddyId + 1);
     final activeGrowth = _getSpeciesGrowthState(_activeBuddyId);
+
+    // フィルター適用後のチャプターリスト (1..374)
+    final filteredChapters = List.generate(kTotalChapterCount, (i) => i + 1).where((chap) {
+      if (_selectedCategoryFilter == null) return true;
+      return CharacterCategory.fromChapter(chap) == _selectedCategoryFilter;
+    }).toList();
 
     return Scaffold(
       backgroundColor: _bgColor,
@@ -128,11 +114,11 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
           ? const Center(child: CircularProgressIndicator(color: _primaryAccent))
           : SafeArea(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 children: [
                   // 1. 現在の相棒バナー
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: _cardColor,
                       borderRadius: BorderRadius.circular(18),
@@ -149,15 +135,15 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
                       children: [
                         PixelCharacterWidget(
                           speciesIndex: _activeBuddyId,
-                          growthState: activeGrowth == CharacterGrowthState.locked
-                              ? CharacterGrowthState.healthy
-                              : activeGrowth,
-                          actionState: CharacterActionState.humming,
+                          growthState: activeGrowth,
+                          actionState: activeGrowth == CharacterGrowthState.locked
+                              ? CharacterActionState.idle
+                              : CharacterActionState.humming,
                           favoriteStamp: _favoriteStamp,
-                          size: 72,
+                          size: 68,
                           isInteractive: true,
                         ),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +151,7 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: _primaryAccent,
                                       borderRadius: BorderRadius.circular(6),
@@ -180,27 +166,34 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  Text(
-                                    activeSpecies.japaneseName,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: _textPrimary,
+                                  Expanded(
+                                    child: Text(
+                                      activeGrowth == CharacterGrowthState.locked
+                                          ? '？？？？？ (Ch.${activeSpecies.chapter})'
+                                          : '${activeSpecies.japaneseName} (Ch.${activeSpecies.chapter})',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: _textPrimary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                activeSpecies.description,
+                                activeGrowth == CharacterGrowthState.locked
+                                    ? 'チャプター${activeSpecies.chapter}の単語を暗記して解放しよう！'
+                                    : activeSpecies.description,
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   color: _textSecondary,
                                   height: 1.3,
                                 ),
                               ),
-                              if (_favoriteStamp != null) ...[
-                                const SizedBox(height: 6),
+                              if (_favoriteStamp != null && activeGrowth != CharacterGrowthState.locked) ...[
+                                const SizedBox(height: 4),
                                 Row(
                                   children: [
                                     const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
@@ -222,35 +215,53 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 14),
 
-                  // 2. 図鑑リスト
-                  const Text(
-                    '章ドットキャラクター一覧 (全12種)',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: _textPrimary,
+                  // 2. 8大系統フィルター（横スクロール）
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFilterChip(
+                          label: 'すべて (全$kTotalChapterCount体)',
+                          isSelected: _selectedCategoryFilter == null,
+                          onTap: () => setState(() => _selectedCategoryFilter = null),
+                        ),
+                        ...CharacterCategory.values.map((cat) {
+                          final count = cat.endChapter - cat.startChapter + 1;
+                          return Padding(
+                            padding: const EdgeInsets.only(left: 6),
+                            child: _buildFilterChip(
+                              label: '${cat.icon} ${cat.label} ($count)',
+                              isSelected: _selectedCategoryFilter == cat,
+                              onTap: () => setState(() => _selectedCategoryFilter = cat),
+                            ),
+                          );
+                        }),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 12),
 
+                  // 3. 図鑑リスト
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: kCharacterSpeciesList.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    itemCount: filteredChapters.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
-                      final species = kCharacterSpeciesList[index];
-                      final growth = _getSpeciesGrowthState(index);
+                      final chapter = filteredChapters[index];
+                      final speciesId = chapter - 1;
+                      final species = getCharacterSpecies(chapter);
+                      final growth = _getSpeciesGrowthState(speciesId);
                       final isLocked = growth == CharacterGrowthState.locked;
-                      final isCurrentBuddy = _activeBuddyId == index;
+                      final isCurrentBuddy = _activeBuddyId == speciesId;
 
                       return Container(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: _cardColor,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isCurrentBuddy ? _primaryAccent : _borderColor,
                             width: isCurrentBuddy ? 2 : 1,
@@ -261,15 +272,15 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
                           children: [
                             // キャラクタープレビュー
                             PixelCharacterWidget(
-                              speciesIndex: index,
+                              speciesIndex: speciesId,
                               growthState: growth,
                               actionState: isLocked
                                   ? CharacterActionState.idle
                                   : CharacterActionState.walk,
                               favoriteStamp: isCurrentBuddy ? _favoriteStamp : null,
-                              size: 54,
+                              size: 50,
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: 12),
 
                             // 情報エリア
                             Expanded(
@@ -281,32 +292,52 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
                                       Text(
                                         isLocked ? '？？？？？' : species.japaneseName,
                                         style: TextStyle(
-                                          fontSize: 16,
+                                          fontSize: 15,
                                           fontWeight: FontWeight.bold,
                                           color: isLocked ? Colors.grey : _textPrimary,
                                         ),
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        isLocked ? '' : species.name,
+                                        'Ch.$chapter',
                                         style: const TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
                                           color: _textSecondary,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFECEFF1),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '${species.category.icon} ${species.category.label}',
+                                          style: const TextStyle(fontSize: 9, color: _textSecondary, fontWeight: FontWeight.bold),
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 3),
                                   Text(
                                     isLocked
-                                        ? 'チャプターを進めて解放しよう！'
+                                        ? 'Chapter $chapter の単語を学習・暗記しよう！'
                                         : species.description,
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: isLocked ? Colors.grey : _textSecondary,
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
+                                  if (!isLocked) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '特徴: ${species.coreFeature}',
+                                      style: const TextStyle(fontSize: 10, color: _primaryAccent, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 5),
 
                                   // 形態ステータスバッジ
                                   _buildGrowthBadge(growth),
@@ -314,28 +345,28 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
                               ),
                             ),
 
-                            // 相棒選択ボタン
+                            // 相棒選択ボタン（解放済みのみ）
                             if (!isLocked) ...[
                               const SizedBox(width: 8),
                               ElevatedButton(
                                 onPressed: isCurrentBuddy
                                     ? null
-                                    : () => _setAsBuddy(index),
+                                    : () => _setAsBuddy(speciesId),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: _primaryAccent,
                                   foregroundColor: Colors.white,
                                   disabledBackgroundColor: _primaryAccent.withAlpha(40),
                                   disabledForegroundColor: _primaryAccent,
                                   elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
                                 child: Text(
                                   isCurrentBuddy ? '相棒中' : '相棒にする',
                                   style: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -353,6 +384,35 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
     );
   }
 
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? _primaryAccent : const Color(0xFFEFEAE0),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? _primaryAccent : _borderColor,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : _textPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildGrowthBadge(CharacterGrowthState growth) {
     String label;
     Color bg;
@@ -360,7 +420,7 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
 
     switch (growth) {
       case CharacterGrowthState.locked:
-        label = '🔒 未解放';
+        label = '🔒 未解放 (0%)';
         bg = Colors.grey.shade200;
         textColor = Colors.grey.shade700;
         break;
@@ -390,7 +450,7 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 9,
           fontWeight: FontWeight.bold,
           color: textColor,
         ),

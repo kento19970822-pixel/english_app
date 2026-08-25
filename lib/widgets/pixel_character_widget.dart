@@ -1,14 +1,18 @@
-// コード管理番号: VER-20260824-47
+// コード管理番号: VER-20260825-12
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+
 import '../db/app_database.dart';
+
+/// 全チャプター数（37,303単語 ÷ 100単語/章）
+const int kTotalChapterCount = 374;
 
 /// キャラクターの成長・進化段階 (F-13)
 enum CharacterGrowthState {
-  locked, // シルエット（未解放）
-  lowHealth, // 元気がない（定着率 1〜49%）
-  healthy, // 元気（定着率 50〜79%）
-  evolved, // 進化形態（定着率 80%以上 / クリア）
+  locked, // ① シルエット（未解放 または 暗記率0%: 完全に均一な黒ベタ塗り）
+  lowHealth, // ② 元気がない（暗記率 1〜49%: 基本形・くすみ色・下向き目・汗💧）
+  healthy, // ③ 元気（暗記率 50〜79%: 鮮やか色・パッチリ目・笑顔・呼吸バウンド）
+  evolved, // ④ 進化形態（暗記率 80%以上 / 章マスター: 元特徴維持・王冠・翼・オーラ星粒子✨）
 }
 
 /// キャラクターのアクション・行動状態 (F-14)
@@ -19,170 +23,243 @@ enum CharacterActionState {
   humming, // ハミング・喜び（スイングジャンプ・音符ポップアップ）
 }
 
-/// キャラクター種族メタデータ
+/// キャラクターの8大系統
+enum CharacterCategory {
+  animal('動物系', '🐾', 1, 75),
+  bird('鳥・飛行系', '🕊️', 76, 115),
+  aquatic('水棲系', '🐟', 116, 155),
+  plant('植物・自然系', '🌿', 156, 195),
+  monster('モンスター系', '👾', 196, 270),
+  fantasy('ファンタジー系', '🐲', 271, 320),
+  humanoid('人型・妖精系', '🧚', 321, 355),
+  special('特殊・コズミック系', '🤖', 356, 374);
+
+  final String label;
+  final String icon;
+  final int startChapter;
+  final int endChapter;
+  const CharacterCategory(this.label, this.icon, this.startChapter, this.endChapter);
+
+  static CharacterCategory fromChapter(int chapter) {
+    if (chapter <= 75) return CharacterCategory.animal;
+    if (chapter <= 115) return CharacterCategory.bird;
+    if (chapter <= 155) return CharacterCategory.aquatic;
+    if (chapter <= 195) return CharacterCategory.plant;
+    if (chapter <= 270) return CharacterCategory.monster;
+    if (chapter <= 320) return CharacterCategory.fantasy;
+    if (chapter <= 355) return CharacterCategory.humanoid;
+    return CharacterCategory.special;
+  }
+}
+
+/// キャラクター種族メタデータ (48x48 高精細ドットモデル)
 class CharacterSpecies {
-  final int id;
+  final int chapter; // 対応チャプター番号 (1..374)
+  final int id; // 0..373
   final String name;
   final String japaneseName;
+  final CharacterCategory category;
   final String description;
   final Color primaryColor;
   final Color secondaryColor;
   final Color bellyColor;
+  final Color outlineColor;
+  final Color accessoryColor;
   final Color evolvedPrimaryColor;
   final Color evolvedSecondaryColor;
+  final String coreFeature;
 
   const CharacterSpecies({
+    required this.chapter,
     required this.id,
     required this.name,
     required this.japaneseName,
+    required this.category,
     required this.description,
     required this.primaryColor,
     required this.secondaryColor,
     required this.bellyColor,
+    this.outlineColor = const Color(0xFF2C302E),
+    required this.accessoryColor,
     required this.evolvedPrimaryColor,
     required this.evolvedSecondaryColor,
+    required this.coreFeature,
   });
 }
 
-/// 12種類の固有種族マスター
-const List<CharacterSpecies> kCharacterSpeciesList = [
-  CharacterSpecies(
-    id: 0,
-    name: 'Chicky',
-    japaneseName: 'ヒヨコ',
-    description: '元気いっぱいに飛び跳ねる、生まれたての相棒ヒヨコ。',
-    primaryColor: Color(0xFFFFD54F),
-    secondaryColor: Color(0xFFFFA000),
-    bellyColor: Color(0xFFFFF9C4),
-    evolvedPrimaryColor: Color(0xFFFFE082),
-    evolvedSecondaryColor: Color(0xFFFF6F00),
-  ),
-  CharacterSpecies(
-    id: 1,
-    name: 'Kitty',
-    japaneseName: 'ネコ',
-    description: '好奇心旺盛でちょっぴり気まぐれなドットネコ。',
-    primaryColor: Color(0xFFFFAB91),
-    secondaryColor: Color(0xFFE64A19),
-    bellyColor: Color(0xFFFFF3E0),
-    evolvedPrimaryColor: Color(0xFFFF8A80),
-    evolvedSecondaryColor: Color(0xFFD50000),
-  ),
-  CharacterSpecies(
-    id: 2,
-    name: 'Puppy',
-    japaneseName: 'イヌ',
-    description: 'いつでもご主人様についてくる忠実で優しい子犬。',
-    primaryColor: Color(0xFFD7CCC8),
-    secondaryColor: Color(0xFF8D6E63),
-    bellyColor: Color(0xFFEFEBE9),
-    evolvedPrimaryColor: Color(0xFFFFCC80),
-    evolvedSecondaryColor: Color(0xFFE65100),
-  ),
-  CharacterSpecies(
-    id: 3,
-    name: 'Bunny',
-    japaneseName: 'ウサギ',
-    description: '長い耳で英語の微細な発音を聞き分けるウサギ。',
-    primaryColor: Color(0xFFF8BBD0),
-    secondaryColor: Color(0xFFC2185B),
-    bellyColor: Color(0xFFFCE4EC),
-    evolvedPrimaryColor: Color(0xFFEA80FC),
-    evolvedSecondaryColor: Color(0xFFAA00FF),
-  ),
-  CharacterSpecies(
-    id: 4,
-    name: 'Bear',
-    japaneseName: 'クマ',
-    description: 'のんびり屋だけど勉強熱心な頼もしい子グマ。',
-    primaryColor: Color(0xFFBCAAA4),
-    secondaryColor: Color(0xFF5D4037),
-    bellyColor: Color(0xFFD7CCC8),
-    evolvedPrimaryColor: Color(0xFFFFD180),
-    evolvedSecondaryColor: Color(0xFFBF360C),
-  ),
-  CharacterSpecies(
-    id: 5,
-    name: 'Penguin',
-    japaneseName: 'ペンギン',
-    description: '涼しい顔で難関英単語をスラスラ覚えるペンギン。',
-    primaryColor: Color(0xFF90CAF9),
-    secondaryColor: Color(0xFF1976D2),
-    bellyColor: Color(0xFFFFFFFF),
-    evolvedPrimaryColor: Color(0xFF80D8FF),
-    evolvedSecondaryColor: Color(0xFF0091EA),
-  ),
-  CharacterSpecies(
-    id: 6,
-    name: 'Frog',
-    japaneseName: 'カエル',
-    description: 'ピョンピョン跳ねて連続正解ストリークを応援するカエル。',
-    primaryColor: Color(0xFFA5D6A7),
-    secondaryColor: Color(0xFF388E3C),
-    bellyColor: Color(0xFFE8F5E9),
-    evolvedPrimaryColor: Color(0xFFB9F6CA),
-    evolvedSecondaryColor: Color(0xFF00C853),
-  ),
-  CharacterSpecies(
-    id: 7,
-    name: 'Fox',
-    japaneseName: 'キツネ',
-    description: '知性豊かで華麗なステップを踏む賢いキツネ。',
-    primaryColor: Color(0xFFFFCC80),
-    secondaryColor: Color(0xFFEF6C00),
-    bellyColor: Color(0xFFFFF3E0),
-    evolvedPrimaryColor: Color(0xFFFFAB40),
-    evolvedSecondaryColor: Color(0xFFFF3D00),
-  ),
-  CharacterSpecies(
-    id: 8,
-    name: 'Panda',
-    japaneseName: 'パンダ',
-    description: 'おっとり癒やし系で学習の疲れを吹き飛ばすパンダ。',
-    primaryColor: Color(0xFFCFD8DC),
-    secondaryColor: Color(0xFF37474F),
-    bellyColor: Color(0xFFECEFF1),
-    evolvedPrimaryColor: Color(0xFFB0BEC5),
-    evolvedSecondaryColor: Color(0xFF263238),
-  ),
-  CharacterSpecies(
-    id: 9,
-    name: 'Dragon',
-    japaneseName: 'ドラゴン',
-    description: '高い目標に向かって炎の如く情熱を燃やすベビードラゴン。',
-    primaryColor: Color(0xFFCE93D8),
-    secondaryColor: Color(0xFF7B1FA2),
-    bellyColor: Color(0xFFF3E5F5),
-    evolvedPrimaryColor: Color(0xFFE040FB),
-    evolvedSecondaryColor: Color(0xFF4A148C),
-  ),
-  CharacterSpecies(
-    id: 10,
-    name: 'Robo',
-    japaneseName: 'ロボ',
-    description: '最新AI学習アルゴリズムを搭載した相棒小型ロボット。',
-    primaryColor: Color(0xFF80CBC4),
-    secondaryColor: Color(0xFF00796B),
-    bellyColor: Color(0xFFE0F2F1),
-    evolvedPrimaryColor: Color(0xFF64FFDA),
-    evolvedSecondaryColor: Color(0xFF00BFA5),
-  ),
-  CharacterSpecies(
-    id: 11,
-    name: 'Starlet',
-    japaneseName: 'スター',
-    description: '暗記の星座から生まれたキラキラ輝く星の精霊。',
-    primaryColor: Color(0xFFFFF59D),
-    secondaryColor: Color(0xFFFBC02D),
-    bellyColor: Color(0xFFFFFDE7),
-    evolvedPrimaryColor: Color(0xFFFFFF00),
-    evolvedSecondaryColor: Color(0xFFFF8F00),
-  ),
+/// 系統ごとの固有ベースモチーフ辞書
+const List<Map<String, dynamic>> _kAnimalMotifs = [
+  {'ja': 'ミケネコ', 'en': 'Calico', 'feat': '三角のネコ耳・三毛模様・丸いしっぽ', 'p': 0xFFFFB74D, 's': 0xFFE65100, 'b': 0xFFFFF3E0, 'a': 0xFF8D6E63},
+  {'ja': 'しばいぬ', 'en': 'Shiba', 'feat': 'ピンと立った耳・赤バンダナ・巻尾', 'p': 0xFFFFB300, 's': 0xFFB71C1C, 'b': 0xFFFFF8E1, 'a': 0xFF6D4C41},
+  {'ja': 'ロップウサギ', 'en': 'LopBunny', 'feat': '長い垂れ耳・ふわふわ胸毛・丸い鼻', 'p': 0xFFF48FB1, 's': 0xFFC2185B, 'b': 0xFFFCE4EC, 'a': 0xFFF06292},
+  {'ja': 'こぐま', 'en': 'BearCub', 'feat': '丸いクマ耳・大きな胸あて・温かい茶毛', 'p': 0xFF8D6E63, 's': 0xFF4E342E, 'b': 0xFFD7CCC8, 'a': 0xFFA1887F},
+  {'ja': 'こぎつね', 'en': 'FoxCub', 'feat': '大きな尖り耳・白い頬毛・ふさふさの尾', 'p': 0xFFFF9800, 's': 0xFFE65100, 'b': 0xFFFFFDE7, 'a': 0xFF3E2723},
+  {'ja': 'パンダ', 'en': 'Panda', 'feat': '黒いタレ目・黒耳・手に持った笹', 'p': 0xFFFAFAFA, 's': 0xFF212121, 'b': 0xFFFFFFFF, 'a': 0xFF81C784},
+  {'ja': 'シマリス', 'en': 'Squirrel', 'feat': '背中のしま模様・ドングリ帽子・大尾', 'p': 0xFFA1887F, 's': 0xFF5D4037, 'b': 0xFFEFEBE9, 'a': 0xFFFFB300},
+  {'ja': 'コアラ', 'en': 'Koala', 'feat': '大きなフサフサ耳・大きな黒鼻・灰毛', 'p': 0xFFB0BEC5, 's': 0xFF546E7A, 'b': 0xFFECEFF1, 'a': 0xFF37474F},
+  {'ja': 'ハリネズミ', 'en': 'Hedgehog', 'feat': '背中のやわらかトゲ・丸いお腹・黒つぶ目', 'p': 0xFFD7CCC8, 's': 0xFF8D6E63, 'b': 0xFFF5F5F5, 'a': 0xFF4E342E},
+  {'ja': 'レッサーパンダ', 'en': 'RedPanda', 'feat': '赤茶の毛並み・白い眉毛・しましま尾', 'p': 0xFFFF7043, 's': 0xFFBF360C, 'b': 0xFFFFF3E0, 'a': 0xFF3E2723},
+  {'ja': 'オオカミの子', 'en': 'WolfPup', 'feat': '銀灰色の毛並み・凛々しい瞳・青マフラー', 'p': 0xFF90A4AE, 's': 0xFF37474F, 'b': 0xFFECEFF1, 'a': 0xFF42A5F5},
+  {'ja': 'アルパカ', 'en': 'Alpaca', 'feat': 'もこもこの首毛・長い首・やさしい瞳', 'p': 0xFFFFF8E1, 's': 0xFFFFE082, 'b': 0xFFFFFFFF, 'a': 0xFFFF8A80},
 ];
 
-/// プロシージャルドット絵キャラクターウィジェット
+const List<Map<String, dynamic>> _kBirdMotifs = [
+  {'ja': 'ヒヨコ', 'en': 'Chicky', 'feat': '黄色いまん丸ボディ・小羽・オレンジくちばし', 'p': 0xFFFFEB3B, 's': 0xFFFF9800, 'b': 0xFFFFFDE7, 'a': 0xFFFF5722},
+  {'ja': 'ペンギン', 'en': 'Penguin', 'feat': '白いお腹・パタパタフリッパー・黄くちばし', 'p': 0xFF37474F, 's': 0xFF263238, 'b': 0xFFFFFFFF, 'a': 0xFFFF9800},
+  {'ja': 'フクロウ', 'en': 'Owl', 'feat': '丸眼鏡のような大きな目・羽角・茶の羽模様', 'p': 0xFFA1887F, 's': 0xFF4E342E, 'b': 0xFFEFEBE9, 'a': 0xFFFFB300},
+  {'ja': 'オウム', 'en': 'Parrot', 'feat': 'トロピカルなトサカ・鮮やかな羽・丸いくちばし', 'p': 0xFF26A69A, 's': 0xFF00695C, 'b': 0xFFFFF9C4, 'a': 0xFFFF1744},
+  {'ja': 'スズメ', 'en': 'Sparrow', 'feat': '茶色い頭巾・黒いほっぺ斑点・ちょこんとした足', 'p': 0xFF8D6E63, 's': 0xFF4E342E, 'b': 0xFFFFF8E1, 'a': 0xFF212121},
+  {'ja': 'フラミンゴ', 'en': 'Flamingo', 'feat': '鮮やかなピンク羽・一本足立ち・曲がりくちばし', 'p': 0xFFFF80AB, 's': 0xFFF50057, 'b': 0xFFFCE4EC, 'a': 0xFF212121},
+  {'ja': 'アヒル', 'en': 'Ducky', 'feat': '真っ白な羽毛・平たい黄色いくちばし・丸い尻尾', 'p': 0xFFFFFFFF, 's': 0xFFCFD8DC, 'b': 0xFFFAFAFA, 'a': 0xFFFFB300},
+  {'ja': 'ハト', 'en': 'Dove', 'feat': '首元のオパール光沢・くわえたオリーブ葉・銀灰羽', 'p': 0xFFB0BEC5, 's': 0xFF78909C, 'b': 0xFFECEFF1, 'a': 0xFF66BB6A},
+];
+
+const List<Map<String, dynamic>> _kAquaticMotifs = [
+  {'ja': 'あまがえる', 'en': 'Froggy', 'feat': '頭上の大きな丸目・エメラルドグリーン・白い喉', 'p': 0xFF81C784, 's': 0xFF388E3C, 'b': 0xFFE8F5E9, 'a': 0xFF2E7D32},
+  {'ja': 'クラゲぼうや', 'en': 'Jelly', 'feat': '丸い傘・ゆらゆら触手・透き通るブルー', 'p': 0xFF80DEEA, 's': 0xFF00ACC1, 'b': 0xFFE0F7FA, 'a': 0xFF4DD0E1},
+  {'ja': 'タコまる', 'en': 'Octy', 'feat': 'おちょぼ口・くるくる足・赤い丸頭', 'p': 0xFFEF5350, 's': 0xFFC62828, 'b': 0xFFFFEBEE, 'a': 0xFFFFCDD2},
+  {'ja': 'イルカくん', 'en': 'Dolphin', 'feat': 'なめらかな流線形・元気な背びれ・笑顔の口元', 'p': 0xFF42A5F5, 's': 0xFF1976D2, 'b': 0xFFE3F2FD, 'a': 0xFF90CAF9},
+  {'ja': 'ウミガメ', 'en': 'Turtle', 'feat': '六角形の甲羅・大きなヒレ足・のんびりした目', 'p': 0xFF66BB6A, 's': 0xFF2E7D32, 'b': 0xFFC8E6C9, 'a': 0xFF8D6E63},
+  {'ja': 'クリオネ', 'en': 'Clione', 'feat': '氷の妖精の羽・透明な赤い心臓・クリスタルボディ', 'p': 0xFFE0F7FA, 's': 0xFF80DEEA, 'b': 0xFFFFFFFF, 'a': 0xFFFF5252},
+  {'ja': 'マンタ', 'en': 'Manta', 'feat': '広いひれ翼・白い腹・長い尾針', 'p': 0xFF546E7A, 's': 0xFF263238, 'b': 0xFFFFFFFF, 'a': 0xFF78909C},
+  {'ja': 'キンギョ', 'en': 'Goldfish', 'feat': 'ひらひらした尾びれ・ぷっくりほっぺ・朱色の鱗', 'p': 0xFFFF7043, 's': 0xFFD84315, 'b': 0xFFFFF3E0, 'a': 0xFFFFAB91},
+];
+
+const List<Map<String, dynamic>> _kPlantMotifs = [
+  {'ja': 'プチトマト', 'en': 'Tomaty', 'feat': '頭の緑のヘタ・真っ赤な丸い体・つやつやハイライト', 'p': 0xFFE53935, 's': 0xFFB71C1C, 'b': 0xFFFFCDD2, 'a': 0xFF43A047},
+  {'ja': 'サボテンくん', 'en': 'Cactus', 'feat': '両腕の枝・頭のピンクの花・トゲトゲ模様', 'p': 0xFF66BB6A, 's': 0xFF2E7D32, 'b': 0xFFC8E6C9, 'a': 0xFFFF4081},
+  {'ja': 'キノコちゃん', 'en': 'Shroom', 'feat': '大きな傘・白い水玉模様・白い軸ボディ', 'p': 0xFFAB47BC, 's': 0xFF6A1B9A, 'b': 0xFFF3E5F5, 'a': 0xFFFFFFFF},
+  {'ja': 'ヒマワリぼうや', 'en': 'Sunflower', 'feat': '黄金の花びら王冠・茶色い丸顔・緑の葉手', 'p': 0xFFFFCA28, 's': 0xFFF57F17, 'b': 0xFFFFF8E1, 'a': 0xFF795548},
+  {'ja': 'ドングリぼうや', 'en': 'Acorn', 'feat': 'しましまの帽子・ツヤツヤの茶色ボディ・ちょこん足', 'p': 0xFF8D6E63, 's': 0xFF4E342E, 'b': 0xFFD7CCC8, 'a': 0xFF6D4C41},
+  {'ja': 'リンゴちゃん', 'en': 'Apple', 'feat': '一本の若葉の茎・丸い赤リンゴ体・愛らしい瞳', 'p': 0xFFF44336, 's': 0xFFC62828, 'b': 0xFFFFEBEE, 'a': 0xFF81C784},
+  {'ja': 'クローバー', 'en': 'Clover', 'feat': '四つ葉のヘッドドレス・若草色のケープ・幸運のオーラ', 'p': 0xFF4CAF50, 's': 0xFF1B5E20, 'b': 0xFFE8F5E9, 'a': 0xFF81C784},
+  {'ja': 'ダイコンくん', 'en': 'Radish', 'feat': '頭のふさふさ青首葉・真っ白なボディ・赤いほっぺ', 'p': 0xFFFAFAFA, 's': 0xFFCFD8DC, 'b': 0xFFFFFFFF, 'a': 0xFF43A047},
+];
+
+const List<Map<String, dynamic>> _kMonsterMotifs = [
+  {'ja': 'ぷるぷるスライム', 'en': 'Slimey', 'feat': '水滴型の頭とんがり・ぷるぷるボディ・大きな瞳', 'p': 0xFF42A5F5, 's': 0xFF1565C0, 'b': 0xFFE3F2FD, 'a': 0xFF90CAF9},
+  {'ja': 'おばけちゃん', 'en': 'Ghosty', 'feat': 'ひらひらした裾・まん丸黒目・浮遊ポーズ', 'p': 0xFFEDE7F6, 's': 0xFF7E57C2, 'b': 0xFFFFFFFF, 'a': 0xFFB39DDB},
+  {'ja': 'コバコモドキ', 'en': 'Mimic', 'feat': '宝箱のフタ頭・赤い舌・金色の金具', 'p': 0xFF8D6E63, 's': 0xFF4E342E, 'b': 0xFFFFD54F, 'a': 0xFFFF1744},
+  {'ja': 'プチゴーレム', 'en': 'Golem', 'feat': '四角い石ブロックボディ・光る瞳・苔のアクセント', 'p': 0xFF78909C, 's': 0xFF37474F, 'b': 0xFFB0BEC5, 'a': 0xFF81C784},
+  {'ja': 'マンドラゴラ', 'en': 'Mandrake', 'feat': '土色の根っこ体・頭の芽吹き葉・驚いた丸口', 'p': 0xFFA1887F, 's': 0xFF5D4037, 'b': 0xFFD7CCC8, 'a': 0xFF66BB6A},
+  {'ja': 'こうもりモドキ', 'en': 'Batty', 'feat': '小さな紫のコウモリ翼・牙・丸い耳', 'p': 0xFF7E57C2, 's': 0xFF4527A0, 'b': 0xFFEDE7F6, 'a': 0xFFFFB300},
+  {'ja': 'カボチャランタン', 'en': 'Pumpkin', 'feat': 'オレンジの彫り顔・緑のヘタ・キャンドルの光', 'p': 0xFFFF9800, 's': 0xFFE65100, 'b': 0xFFFFF3E0, 'a': 0xFF43A047},
+  {'ja': 'シャドウパップ', 'en': 'ShadowPup', 'feat': '漆黒の毛並み・光る金色の瞳・煙のしっぽ', 'p': 0xFF37474F, 's': 0xFF212121, 'b': 0xFF455A64, 'a': 0xFFFFD700},
+];
+
+const List<Map<String, dynamic>> _kFantasyMotifs = [
+  {'ja': 'プチドラゴン', 'en': 'Drake', 'feat': '小さなドラゴンのツノ・背中の羽・ギザギザ尾', 'p': 0xFFEF5350, 's': 0xFFC62828, 'b': 0xFFFFE082, 'a': 0xFFFF9800},
+  {'ja': 'ユニコーン', 'en': 'Unicorn', 'feat': '額の黄金の一本角・レインボーたてがみ・優雅な瞳', 'p': 0xFFF3E5F5, 's': 0xFFBA68C8, 'b': 0xFFFFFFFF, 'a': 0xFFFFD700},
+  {'ja': 'ペガサス', 'en': 'Pegasus', 'feat': '純白の大きな翼・青い瞳・銀の蹄', 'p': 0xFFE1F5FE, 's': 0xFF81D4FA, 'b': 0xFFFFFFFF, 'a': 0xFF0288D1},
+  {'ja': 'フェニックス', 'en': 'Phoenix', 'feat': '燃える紅蓮の羽・黄金の冠毛・炎の尾', 'p': 0xFFFF5722, 's': 0xFFBF360C, 'b': 0xFFFFE082, 'a': 0xFFFFD700},
+  {'ja': 'グリフォン', 'en': 'Griffin', 'feat': '猛禽の頭と翼・ライオンの胴体・鋭い瞳', 'p': 0xFFFFB300, 's': 0xFFE65100, 'b': 0xFFFFF8E1, 'a': 0xFF8D6E63},
+  {'ja': 'キマイラちゃん', 'en': 'Chimera', 'feat': 'ライオン耳・ヤギの小角・ヘビのしっぽ', 'p': 0xFFFF8A65, 's': 0xFFD84315, 'b': 0xFFFFCCBC, 'a': 0xFF66BB6A},
+  {'ja': 'クリスタル竜', 'en': 'CrystalDrake', 'feat': '透き通るサファイアの鱗・氷の角・星の羽', 'p': 0xFF4FC3F7, 's': 0xFF0288D1, 'b': 0xFFE1F5FE, 'a': 0xFFB3E5FC},
+  {'ja': '九尾のキツネ', 'en': 'NineTails', 'feat': '9本の扇状の尾・額の朱印・神聖な白い毛', 'p': 0xFFFFFDE7, 's': 0xFFFFD54F, 'b': 0xFFFFFFFF, 'a': 0xFFFF1744},
+];
+
+const List<Map<String, dynamic>> _kHumanoidMotifs = [
+  {'ja': 'もりの妖精', 'en': 'Pixie', 'feat': '尖ったエルフ耳・花の帽子・背中の薄羽', 'p': 0xFFFFE082, 's': 0xFF81C784, 'b': 0xFFFFF9C4, 'a': 0xFF80DEEA},
+  {'ja': 'ちび勇者', 'en': 'Hero', 'feat': '青い勇者のマント・革ベルト・木製ミニソード', 'p': 0xFF42A5F5, 's': 0xFF1565C0, 'b': 0xFFFFE082, 'a': 0xFF8D6E63},
+  {'ja': 'ちび魔女', 'en': 'Witch', 'feat': 'とんがり魔女帽子・紫のマント・星のステッキ', 'p': 0xFF7E57C2, 's': 0xFF4527A0, 'b': 0xFFEDE7F6, 'a': 0xFFFFCA28},
+  {'ja': 'エンジェル', 'en': 'Angel', 'feat': '頭上の光の天使輪・小さな純白翼・白いドレス', 'p': 0xFFFFF9C4, 's': 0xFFFFD54F, 'b': 0xFFFFFFFF, 'a': 0xFFFFEE58},
+  {'ja': 'プチデビル', 'en': 'Devil', 'feat': '小さなコウモリ角・赤いマント・三叉の槍尾', 'p': 0xFFE91E63, 's': 0xFF880E4F, 'b': 0xFFFCE4EC, 'a': 0xFF212121},
+  {'ja': 'マーメイド', 'en': 'Mermaid', 'feat': 'エメラルドの魚尾・真珠の髪飾り・波色の髪', 'p': 0xFF26A69A, 's': 0xFF00695C, 'b': 0xFFE0F2F1, 'a': 0xFFFF80AB},
+  {'ja': 'ノームじい', 'en': 'Gnome', 'feat': '赤い三角帽子・白いふさふさ髭・青い作業着', 'p': 0xFFEF5350, 's': 0xFFC62828, 'b': 0xFFFFFFFF, 'a': 0xFF1E88E5},
+  {'ja': 'ちびナイト', 'en': 'Knight', 'feat': 'シルバーの兜・羽飾り・小さな丸盾', 'p': 0xFF90A4AE, 's': 0xFF455A64, 'b': 0xFFECEFF1, 'a': 0xFFFF1744},
+];
+
+const List<Map<String, dynamic>> _kSpecialMotifs = [
+  {'ja': 'レトロロボ', 'en': 'Robo', 'feat': '頭のアンテナ・四角い頭部・胸のメーター画面', 'p': 0xFF78909C, 's': 0xFF37474F, 'b': 0xFF80CBC4, 'a': 0xFFFFCA28},
+  {'ja': 'ほしの子', 'en': 'Starlet', 'feat': '五角の星型ヘッド・キラキラの瞳・星のしっぽ', 'p': 0xFFFFEE58, 's': 0xFFF57F17, 'b': 0xFFFFFDE7, 'a': 0xFFFF4081},
+  {'ja': 'プチUFO', 'en': 'Ufo', 'feat': 'ドーム型ガラス頭・点滅シグナルランプ・ビーム足', 'p': 0xFF26C6DA, 's': 0xFF00838F, 'b': 0xFFE0F7FA, 'a': 0xFFFFEE58},
+  {'ja': '歯車ボーイ', 'en': 'Clockwork', 'feat': '頭上のぜんまいキー・真鍮の歯車ボディ・ゴーグル', 'p': 0xFFFFB300, 's': 0xFFE65100, 'b': 0xFFFFF8E1, 'a': 0xFF795548},
+  {'ja': 'クリスタルくん', 'en': 'Crystal', 'feat': '多面体の宝石頭・光の屈折プリズム・浮遊クリスタル', 'p': 0xFFAB47BC, 's': 0xFF6A1B9A, 'b': 0xFFF3E5F5, 'a': 0xFF80DEEA},
+  {'ja': 'ムーンライト', 'en': 'Moon', 'feat': '三日月型の頭部・夜空色のローブ・星屑の粉', 'p': 0xFFFFF59D, 's': 0xFFFBC02D, 'b': 0xFFFFF9C4, 'a': 0xFF5C6BC0},
+];
+
+/// 指定チャプター（1..374）に対応する固有キャラクター種族を生成・取得
+CharacterSpecies getCharacterSpecies(int chapter) {
+  final clampedChap = chapter.clamp(1, kTotalChapterCount);
+  final id = clampedChap - 1;
+  final category = CharacterCategory.fromChapter(clampedChap);
+
+  List<Map<String, dynamic>> motifList;
+  int offsetInCat;
+  switch (category) {
+    case CharacterCategory.animal:
+      motifList = _kAnimalMotifs;
+      offsetInCat = clampedChap - category.startChapter;
+      break;
+    case CharacterCategory.bird:
+      motifList = _kBirdMotifs;
+      offsetInCat = clampedChap - category.startChapter;
+      break;
+    case CharacterCategory.aquatic:
+      motifList = _kAquaticMotifs;
+      offsetInCat = clampedChap - category.startChapter;
+      break;
+    case CharacterCategory.plant:
+      motifList = _kPlantMotifs;
+      offsetInCat = clampedChap - category.startChapter;
+      break;
+    case CharacterCategory.monster:
+      motifList = _kMonsterMotifs;
+      offsetInCat = clampedChap - category.startChapter;
+      break;
+    case CharacterCategory.fantasy:
+      motifList = _kFantasyMotifs;
+      offsetInCat = clampedChap - category.startChapter;
+      break;
+    case CharacterCategory.humanoid:
+      motifList = _kHumanoidMotifs;
+      offsetInCat = clampedChap - category.startChapter;
+      break;
+    case CharacterCategory.special:
+      motifList = _kSpecialMotifs;
+      offsetInCat = clampedChap - category.startChapter;
+      break;
+  }
+
+  final base = motifList[offsetInCat % motifList.length];
+  final cycle = offsetInCat ~/ motifList.length;
+
+  // サイクルごとに固有の称号・バリエーション名とカラー微調整を生成
+  final prefixes = ['', '若き', '勇気の', '月光の', '黄金の', '大樹の', '星の', '古代の', '虹の', '真紅の'];
+  final prefix = cycle > 0 && cycle < prefixes.length ? prefixes[cycle] : '';
+  final japaneseName = prefix.isNotEmpty ? '$prefix${base['ja']}' : base['ja'] as String;
+  final name = cycle > 0 ? '${base['en']} $cycle' : base['en'] as String;
+
+  // 色相シフトによる固有パレット生成
+  final hueShift = (cycle * 25.0) % 360.0;
+  final pColor = HSLColor.fromColor(Color(base['p'] as int)).withHue((HSLColor.fromColor(Color(base['p'] as int)).hue + hueShift) % 360).toColor();
+  final sColor = HSLColor.fromColor(Color(base['s'] as int)).withHue((HSLColor.fromColor(Color(base['s'] as int)).hue + hueShift) % 360).toColor();
+  final bColor = Color(base['b'] as int);
+  final aColor = HSLColor.fromColor(Color(base['a'] as int)).withHue((HSLColor.fromColor(Color(base['a'] as int)).hue + hueShift) % 360).toColor();
+
+  final evoP = HSLColor.fromColor(pColor).withLightness((HSLColor.fromColor(pColor).lightness + 0.1).clamp(0.0, 1.0)).withSaturation(1.0).toColor();
+  final evoS = HSLColor.fromColor(sColor).withSaturation(1.0).toColor();
+
+  return CharacterSpecies(
+    chapter: clampedChap,
+    id: id,
+    name: name,
+    japaneseName: japaneseName,
+    category: category,
+    description: 'Chapter $clampedChap の相棒。${base['ja']}（${category.label}）。',
+    primaryColor: pColor,
+    secondaryColor: sColor,
+    bellyColor: bColor,
+    accessoryColor: aColor,
+    evolvedPrimaryColor: evoP,
+    evolvedSecondaryColor: evoS,
+    coreFeature: base['feat'] as String,
+  );
+}
+
+/// 48x48 高解像度・2〜2.5頭身 プロシージャルドット絵キャラクターウィジェット
 class PixelCharacterWidget extends StatefulWidget {
-  final int speciesIndex;
+  final int speciesIndex; // 0..373 (対応チャプター: speciesIndex + 1)
   final CharacterGrowthState growthState;
   final CharacterActionState actionState;
   final Stamp? favoriteStamp;
@@ -193,21 +270,20 @@ class PixelCharacterWidget extends StatefulWidget {
   const PixelCharacterWidget({
     super.key,
     required this.speciesIndex,
-    this.growthState = CharacterGrowthState.healthy,
+    this.growthState = CharacterGrowthState.locked,
     this.actionState = CharacterActionState.idle,
     this.favoriteStamp,
-    this.size = 64.0,
+    this.size = 48.0,
     this.isInteractive = false,
     this.onTap,
   });
 
-  /// 暗記率（0〜100%）から成長状態を判定
+  /// 暗記率（0〜100%）と解放フラグから、厳格に統一された成長状態を算出
   static CharacterGrowthState stateFromRate(double rate, bool isUnlocked) {
-    if (!isUnlocked) return CharacterGrowthState.locked;
-    if (rate >= 80.0) return CharacterGrowthState.evolved;
-    if (rate >= 50.0) return CharacterGrowthState.healthy;
-    if (rate > 0.0) return CharacterGrowthState.lowHealth;
-    return CharacterGrowthState.lowHealth;
+    if (!isUnlocked || rate <= 0.0) return CharacterGrowthState.locked; // 0%または未解放は完全単色黒シルエット
+    if (rate >= 80.0) return CharacterGrowthState.evolved;             // 80%以上は進化形態
+    if (rate >= 50.0) return CharacterGrowthState.healthy;             // 50〜79%は元気な状態
+    return CharacterGrowthState.lowHealth;                             // 1〜49%（学習開始後）は元気がない状態
   }
 
   @override
@@ -217,12 +293,12 @@ class PixelCharacterWidget extends StatefulWidget {
 class _PixelCharacterWidgetState extends State<PixelCharacterWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
-  CharacterActionState _currentAction = CharacterActionState.idle;
+  CharacterActionState _runtimeAction = CharacterActionState.idle;
 
   @override
   void initState() {
     super.initState();
-    _currentAction = widget.actionState;
+    _runtimeAction = widget.actionState;
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
@@ -233,7 +309,7 @@ class _PixelCharacterWidgetState extends State<PixelCharacterWidget>
   void didUpdateWidget(covariant PixelCharacterWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.actionState != oldWidget.actionState) {
-      _currentAction = widget.actionState;
+      _runtimeAction = widget.actionState;
     }
   }
 
@@ -244,67 +320,62 @@ class _PixelCharacterWidgetState extends State<PixelCharacterWidget>
   }
 
   void _handleTap() {
-    if (widget.growthState == CharacterGrowthState.locked) return;
-
-    if (widget.isInteractive) {
-      setState(() {
-        _currentAction = CharacterActionState.humming;
-      });
-
-      // 2秒後に元の待機/歩行アクションに復帰
-      Future.delayed(const Duration(milliseconds: 2200), () {
-        if (mounted) {
-          setState(() {
-            _currentAction = widget.actionState;
-          });
-        }
-      });
+    if (!widget.isInteractive || widget.growthState == CharacterGrowthState.locked) {
+      widget.onTap?.call();
+      return;
     }
 
+    setState(() {
+      _runtimeAction = CharacterActionState.humming;
+    });
+
     widget.onTap?.call();
+
+    // 2.2秒後に元の状態に戻る
+    Future.delayed(const Duration(milliseconds: 2200), () {
+      if (mounted) {
+        setState(() {
+          _runtimeAction = widget.actionState;
+        });
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final species = kCharacterSpeciesList[widget.speciesIndex % kCharacterSpeciesList.length];
+    final species = getCharacterSpecies((widget.speciesIndex % kTotalChapterCount) + 1);
 
-    Widget characterContent = AnimatedBuilder(
-      animation: _animController,
-      builder: (context, child) {
-        return CustomPaint(
-          size: Size(widget.size, widget.size),
-          painter: _PixelCharacterPainter(
-            species: species,
-            growthState: widget.growthState,
-            actionState: _currentAction,
-            favoriteStamp: widget.favoriteStamp,
-            animValue: _animController.value,
-          ),
-        );
-      },
+    return GestureDetector(
+      onTap: widget.isInteractive || widget.onTap != null ? _handleTap : null,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedBuilder(
+        animation: _animController,
+        builder: (context, child) {
+          return CustomPaint(
+            size: Size(widget.size, widget.size),
+            painter: _PixelCharacterPainter48(
+              species: species,
+              growthState: widget.growthState,
+              actionState: _runtimeAction,
+              favoriteStamp: widget.favoriteStamp,
+              animValue: _animController.value,
+            ),
+          );
+        },
+      ),
     );
-
-    if (widget.isInteractive || widget.onTap != null) {
-      return GestureDetector(
-        onTap: _handleTap,
-        behavior: HitTestBehavior.opaque,
-        child: characterContent,
-      );
-    }
-
-    return characterContent;
   }
 }
 
-/// プロシージャルキャラクター描画Painter
-class _PixelCharacterPainter extends CustomPainter {
+/// 48x48 高解像度・2〜2.5頭身 プロシージャル描画ペインター
+class _PixelCharacterPainter48 extends CustomPainter {
   final CharacterSpecies species;
   final CharacterGrowthState growthState;
   final CharacterActionState actionState;
   final Stamp? favoriteStamp;
   final double animValue;
 
-  _PixelCharacterPainter({
+  _PixelCharacterPainter48({
     required this.species,
     required this.growthState,
     required this.actionState,
@@ -312,129 +383,154 @@ class _PixelCharacterPainter extends CustomPainter {
     required this.animValue,
   });
 
+  static const int kGridSize = 24; // 24x24の論理ドットマトリクス（2px輪郭で48x48キャンバスに精密マッピング）
+
   @override
   void paint(Canvas canvas, Size size) {
-    final double pixelSize = size.width / 16.0;
-    final Paint paint = Paint()..style = PaintingStyle.fill;
+    final double pixelSize = size.width / kGridSize;
+    final bool isLocked = growthState == CharacterGrowthState.locked;
+    final bool isLowHealth = growthState == CharacterGrowthState.lowHealth;
+    final bool isEvolved = growthState == CharacterGrowthState.evolved;
 
-    // アニメーション用変数
-    final int step = (animValue * 4).floor() % 4; // 0, 1, 2, 3
-    final bool isBlinking = animValue > 0.88 && animValue < 0.96;
-    final double breathOffsetY = (step % 2 == 1 && actionState != CharacterActionState.sleep) ? -0.6 : 0.0;
-    final double walkLegOffset = (actionState == CharacterActionState.walk && (step == 1 || step == 3)) ? 1.0 : 0.0;
-    final double humSwingAngle = (actionState == CharacterActionState.humming)
-        ? math.sin(animValue * math.pi * 6) * 0.08
-        : 0.0;
-    final double humJumpOffsetY = (actionState == CharacterActionState.humming)
-        ? -math.sin(animValue * math.pi * 4).abs() * 2.0
-        : 0.0;
+    // アクションによる上下・左右オフセット
+    double offsetY = 0.0;
+    double offsetX = 0.0;
+    bool isBlinking = false;
 
-    canvas.save();
-    // センタリング & ハミング時のスイング・ジャンプ変換
-    canvas.translate(size.width / 2, size.height / 2);
-    if (humSwingAngle != 0.0) canvas.rotate(humSwingAngle);
-    canvas.translate(-size.width / 2, -size.height / 2 + humJumpOffsetY * pixelSize);
-
-    // 1. カラーパレットの選定
-    final Color bodyColor;
-    final Color shadeColor;
-    final Color bellyColor;
-    final Color eyeColor;
-    final Color blushColor;
-    final Color accessoryColor;
-
-    switch (growthState) {
-      case CharacterGrowthState.locked:
-        bodyColor = const Color(0xFF4A5568);
-        shadeColor = const Color(0xFF2D3748);
-        bellyColor = const Color(0xFF718096);
-        eyeColor = Colors.transparent;
-        blushColor = Colors.transparent;
-        accessoryColor = const Color(0xFF2D3748);
-        break;
-      case CharacterGrowthState.lowHealth:
-        // くすみパステルカラー
-        bodyColor = Color.lerp(species.primaryColor, const Color(0xFF9E9E9E), 0.45)!;
-        shadeColor = Color.lerp(species.secondaryColor, const Color(0xFF616161), 0.45)!;
-        bellyColor = Color.lerp(species.bellyColor, const Color(0xFFE0E0E0), 0.3)!;
-        eyeColor = const Color(0xFF37474F);
-        blushColor = const Color(0xFFB0BEC5);
-        accessoryColor = shadeColor;
-        break;
-      case CharacterGrowthState.healthy:
-        bodyColor = species.primaryColor;
-        shadeColor = species.secondaryColor;
-        bellyColor = species.bellyColor;
-        eyeColor = const Color(0xFF212121);
-        blushColor = const Color(0xFFFF8A80);
-        accessoryColor = species.secondaryColor;
-        break;
-      case CharacterGrowthState.evolved:
-        bodyColor = species.evolvedPrimaryColor;
-        shadeColor = species.evolvedSecondaryColor;
-        bellyColor = species.bellyColor;
-        eyeColor = const Color(0xFF1A237E);
-        blushColor = const Color(0xFFFF4081);
-        accessoryColor = const Color(0xFFFFD700); // 黄金
-        break;
+    if (!isLocked) {
+      if (actionState == CharacterActionState.idle) {
+        // 呼吸バウンド（元気な時は大きめ、元気ない時は極小）
+        final breathAmp = isLowHealth ? 0.3 : 0.8;
+        offsetY = math.sin(animValue * math.pi * 2) * breathAmp * pixelSize;
+        // 定期的な瞬き（毎周期の最後10%で閉じる）
+        isBlinking = animValue > 0.88;
+      } else if (actionState == CharacterActionState.walk) {
+        // 歩行時の左右スライド＆ステップ
+        offsetY = (math.sin(animValue * math.pi * 4).abs()) * 1.2 * pixelSize;
+        offsetX = math.sin(animValue * math.pi * 2) * 1.0 * pixelSize;
+      } else if (actionState == CharacterActionState.sleep) {
+        // 睡眠時のゆったりとした微小呼吸
+        offsetY = math.sin(animValue * math.pi * 2) * 0.4 * pixelSize;
+      } else if (actionState == CharacterActionState.humming) {
+        // 喜びのスイングジャンプ
+        offsetY = -(math.sin(animValue * math.pi * 4).abs()) * 2.8 * pixelSize;
+        offsetX = math.sin(animValue * math.pi * 2) * 1.2 * pixelSize;
+      }
     }
 
-    // 2. 種族別マトリクス描画 (16x16)
-    final matrix = _getSpeciesMatrix(species.id, growthState == CharacterGrowthState.evolved);
+    canvas.save();
+    canvas.translate(offsetX, offsetY);
 
-    for (int r = 0; r < 16; r++) {
-      for (int c = 0; c < 16; c++) {
-        final char = matrix[r][c];
+    // 1. カラーパレットの選定
+    Color primary;
+    Color secondary;
+    Color belly;
+    Color accessory;
+    Color outline = species.outlineColor;
+
+    if (isLocked) {
+      // ① シルエット: 完全に均一な黒ベタ塗り（内部の濃淡差・目の区別ゼロ）
+      const solidBlack = Color(0xFF2C302E);
+      primary = solidBlack;
+      secondary = solidBlack;
+      belly = solidBlack;
+      accessory = solidBlack;
+      outline = solidBlack;
+    } else if (isLowHealth) {
+      // ② 元気がない状態: くすみパステル調（彩度低下・明度微増）
+      primary = HSLColor.fromColor(species.primaryColor).withSaturation(0.4).toColor();
+      secondary = HSLColor.fromColor(species.secondaryColor).withSaturation(0.4).toColor();
+      belly = HSLColor.fromColor(species.bellyColor).withSaturation(0.3).toColor();
+      accessory = HSLColor.fromColor(species.accessoryColor).withSaturation(0.4).toColor();
+    } else if (isEvolved) {
+      // ④ 進化形態: ゴールド・オーロラアクセント＋元特徴カラーの洗練
+      primary = species.evolvedPrimaryColor;
+      secondary = species.evolvedSecondaryColor;
+      belly = const Color(0xFFFFF9C4); // ゴールデンベリー
+      accessory = const Color(0xFFFFD700); // 黄金パーツ
+    } else {
+      // ③ 元気な状態: 鮮やかな標準ビタミンカラー
+      primary = species.primaryColor;
+      secondary = species.secondaryColor;
+      belly = species.bellyColor;
+      accessory = species.accessoryColor;
+    }
+
+    final matrix = _getSpeciesMatrix24(species.id, isEvolved);
+
+    // 2. ドットマトリクス描画
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    for (int r = 0; r < matrix.length && r < kGridSize; r++) {
+      final line = matrix[r];
+      for (int c = 0; c < line.length && c < kGridSize; c++) {
+        final char = line[c];
         if (char == '.') continue;
 
-        double py = (r + breathOffsetY) * pixelSize;
-        double px = c * pixelSize;
+        final px = c * pixelSize;
+        final py = r * pixelSize;
 
-        // 足の歩行アニメーション
-        if (r >= 13 && actionState == CharacterActionState.walk) {
-          if (c < 8 && step == 1) py -= walkLegOffset * pixelSize;
-          if (c >= 8 && step == 3) py -= walkLegOffset * pixelSize;
+        if (isLocked) {
+          paint.color = primary;
+          canvas.drawRect(Rect.fromLTWH(px, py, pixelSize + 0.1, pixelSize + 0.1), paint);
+          continue;
         }
 
         switch (char) {
+          case 'O': // 輪郭線 (1-2px)
+            paint.color = outline;
+            break;
           case 'B': // メインボディ
-            paint.color = bodyColor;
+            paint.color = primary;
             break;
-          case 'S': // シェード・輪郭
-            paint.color = shadeColor;
+          case 'H': // ハイライト
+            paint.color = HSLColor.fromColor(primary).withLightness((HSLColor.fromColor(primary).lightness + 0.15).clamp(0.0, 1.0)).toColor();
             break;
-          case 'W': // お腹・ハイライト
-            paint.color = bellyColor;
+          case 'S': // 陰影シェード
+            paint.color = secondary;
             break;
-          case 'A': // 耳・角・アクセサリ
-            paint.color = accessoryColor;
+          case 'W': // お腹・胸元
+            paint.color = belly;
             break;
-          case 'M': // 口・くちばし・鼻
-            paint.color = (growthState == CharacterGrowthState.locked)
-                ? shadeColor
-                : const Color(0xFFFF7043);
+          case 'A': // 耳・角・ヘタ・アクセサリ
+            paint.color = accessory;
             break;
-          case 'E': // 目
-            if (growthState == CharacterGrowthState.locked) {
-              paint.color = shadeColor;
-            } else if (actionState == CharacterActionState.sleep || isBlinking) {
-              // 閉じ目（横線1px）
-              paint.color = eyeColor;
+          case 'E': // 瞳
+            if (actionState == CharacterActionState.sleep || isBlinking) {
+              paint.color = outline; // 閉じ目
+            } else if (isLowHealth) {
+              paint.color = const Color(0xFF455A64); // しょんぼり瞳
             } else {
-              paint.color = eyeColor;
+              paint.color = const Color(0xFF1A1A1A); // 大きな黒目
             }
             break;
-          case 'C': // ほっぺ（チーク）
-            paint.color = blushColor;
+          case 'P': // 瞳のハイライト光 ✨
+            if (actionState == CharacterActionState.sleep || isBlinking || isLowHealth) {
+              paint.color = outline;
+            } else {
+              paint.color = Colors.white;
+            }
+            break;
+          case 'M': // 口・鼻・くちばし
+            paint.color = isLowHealth ? const Color(0xFF8D6E63) : const Color(0xFFFF7043);
+            break;
+          case 'C': // ほっぺチーク
+            paint.color = isLowHealth ? Colors.transparent : const Color(0xFFFF8A80).withAlpha(180);
+            break;
+          case 'F': // 手足
+            paint.color = secondary;
+            break;
+          case 'T': // 尻尾・翼
+            paint.color = accessory;
             break;
           default:
-            paint.color = bodyColor;
+            paint.color = primary;
         }
 
         // 閉じ目または睡眠時の表現
-        if (char == 'E' && (actionState == CharacterActionState.sleep || isBlinking)) {
+        if ((char == 'E' || char == 'P') && (actionState == CharacterActionState.sleep || isBlinking)) {
           canvas.drawRect(
-            Rect.fromLTWH(px, py + pixelSize * 0.4, pixelSize, pixelSize * 0.3),
+            Rect.fromLTWH(px, py + pixelSize * 0.45, pixelSize, pixelSize * 0.25),
             paint,
           );
         } else {
@@ -446,14 +542,14 @@ class _PixelCharacterPainter extends CustomPainter {
       }
     }
 
-    // 3. 進化形態のパーツ（王冠・翼・オーロラ粒子）
-    if (growthState == CharacterGrowthState.evolved) {
+    // 3. 進化形態のパーツ（王冠・翼・オーラ星粒子）
+    if (isEvolved) {
       _drawEvolutionDecorations(canvas, pixelSize, animValue);
     }
 
     // 4. アクション状態のエフェクト
-    if (growthState != CharacterGrowthState.locked) {
-      if (growthState == CharacterGrowthState.lowHealth) {
+    if (!isLocked) {
+      if (isLowHealth) {
         // 汗マーク 💧
         _drawSweatDrop(canvas, pixelSize, animValue);
       } else if (actionState == CharacterActionState.sleep) {
@@ -466,300 +562,69 @@ class _PixelCharacterPainter extends CustomPainter {
     }
 
     // 5. お気に入りスタンプ胸バッジの合成描画 (F-14)
-    if (favoriteStamp != null && growthState != CharacterGrowthState.locked) {
+    if (favoriteStamp != null && !isLocked) {
       _drawChestBadge(canvas, pixelSize, favoriteStamp!);
     }
 
     canvas.restore();
   }
 
-  /// 種族ごとの16x16ドットマトリクス定義
-  List<String> _getSpeciesMatrix(int speciesId, bool isEvolved) {
-    switch (speciesId % 12) {
-      case 0: // ヒヨコ (Chicky)
-        return [
-          '................',
-          '......AAA.......',
-          '.....AAAAA......',
-          '....BBBBBBB.....',
-          '....BEEBEEB.....',
-          '...BBMEBMMEB....',
-          '...BBCBBBCBB....',
-          '..BBBBBBBBBBB...',
-          '..BBWWWWWWWBB...',
-          '..BBWWWWWWWBB...',
-          '..BBBBBBBBBBB...',
-          '...BBBBBBBBB....',
-          '....BBBBBBB.....',
-          '.....SS.SS......',
-          '....SSS.SSS.....',
-          '................',
-        ];
-      case 1: // ネコ (Kitty)
-        return [
-          '..AA.......AA...',
-          '..AAAA...AAAA...',
-          '...BBBBBBBBB....',
-          '..BBBBBBBBBBB...',
-          '..BEEBBBBBEEB...',
-          '..BEEBMMMBEEB...',
-          '..BBCBMMMBCBB...',
-          '..BBBBBBBBBBB...',
-          '..BBWWWWWWWBB...',
-          '..BBWWWWWWWBB.T.',
-          '..BBBBBBBBBBB.T.',
-          '..BBBBBBBBBBBTT.',
-          '...BBBBBBBBB.T..',
-          '....SS...SS.....',
-          '....SS...SS.....',
-          '................',
-        ];
-      case 2: // イヌ (Puppy)
-        return [
-          '..AA.......AA...',
-          '.AAAA.....AAAA..',
-          '.AABBBBBBBBBAA..',
-          '.AABBBBBBBBBAA..',
-          '..BEEBBBBBEEB...',
-          '..BEEBMMMBEEB...',
-          '..BBCBMMMBCBB...',
-          '..BBBBBBBBBBB...',
-          '..BBWWWWWWWBB...',
-          '..BBWWWWWWWBB.T.',
-          '..BBBBBBBBBBBTT.',
-          '..BBBBBBBBBBB...',
-          '...BBBBBBBBB....',
-          '....SS...SS.....',
-          '....SS...SS.....',
-          '................',
-        ];
-      case 3: // ウサギ (Bunny)
-        return [
-          '..AA.......AA...',
-          '..AA.......AA...',
-          '..AAAA...AAAA...',
-          '..AABBBBBBBAA...',
-          '..BBBBBBBBBBB...',
-          '..BEEBBBBBEEB...',
-          '..BEEBMMMBEEB...',
-          '..BBCBMMMBCBB...',
-          '..BBBBBBBBBBB...',
-          '..BBWWWWWWWBB...',
-          '..BBWWWWWWWBB.T.',
-          '..BBBBBBBBBBBTT.',
-          '...BBBBBBBBB....',
-          '....SS...SS.....',
-          '....SS...SS.....',
-          '................',
-        ];
-      case 4: // クマ (Bear)
-        return [
-          '.AAA.......AAA..',
-          '.AAAA.....AAAA..',
-          '..BBBBBBBBBBB...',
-          '..BBBBBBBBBBB...',
-          '..BEEBBBBBEEB...',
-          '..BEEBMMMBEEB...',
-          '..BBCBMMMBCBB...',
-          '..BBBBBBBBBBB...',
-          '..BBWWWWWWWBB...',
-          '..BBWWWWWWWBB...',
-          '..BBBBBBBBBBB...',
-          '..BBBBBBBBBBB...',
-          '...BBBBBBBBB....',
-          '....SS...SS.....',
-          '....SS...SS.....',
-          '................',
-        ];
-      case 5: // ペンギン (Penguin)
-        return [
-          '................',
-          '.....SSSSS......',
-          '....SSSSSSS.....',
-          '...SSEESSSEESS..',
-          '...SSEEEMEEESS..',
-          '...SSSSSMMSSSS..',
-          '..SSSSSCSSCССSS.',
-          '..SSSWWWWWWWSS..',
-          '..SSSWWWWWWWSS..',
-          '..SSSWWWWWWWSS..',
-          '..SSSWWWWWWWSS..',
-          '...SSSWWWWWSS...',
-          '....SSSSSSSSS...',
-          '.....MM...MM....',
-          '....MMM...MMM...',
-          '................',
-        ];
-      case 6: // カエル (Frog)
-        return [
-          '..AAA.....AAA...',
-          '.AAAAA...AAAAA..',
-          '.AAEEA...AAEEA..',
-          '.AABBBBBBBBBAA..',
-          '..BBBBBBBBBBB...',
-          '..BBBBMMMBBBB...',
-          '..BBCBMMMBCBB...',
-          '..BBBBBBBBBBB...',
-          '..BBWWWWWWWBB...',
-          '..BBWWWWWWWBB...',
-          '..BBBBBBBBBBB...',
-          '..BBBBBBBBBBB...',
-          '...BBBBBBBBB....',
-          '..SSSS...SSSS...',
-          '..SSSS...SSSS...',
-          '................',
-        ];
-      case 7: // キツネ (Fox)
-        return [
-          '.AA.........AA..',
-          '.AAAA.....AAAA..',
-          '..AABBBBBBBAA...',
-          '..BBBBBBBBBBB...',
-          '..BEEBBBBBEEB...',
-          '..BEEBMMMBEEB.TT',
-          '..BBCBMMMBCBBTTT',
-          '..BBBBBBBBBB.TTT',
-          '..BBWWWWWWWB.TT.',
-          '..BBWWWWWWWB..T.',
-          '..BBBBBBBBBB....',
-          '..BBBBBBBBBBB...',
-          '...BBBBBBBBB....',
-          '....SS...SS.....',
-          '....SS...SS.....',
-          '................',
-        ];
-      case 8: // パンダ (Panda)
-        return [
-          '.AAA.......AAA..',
-          '.AAAA.....AAAA..',
-          '..BBBBBBBBBBB...',
-          '..BSSBBBBBSSB...',
-          '..BSEBBBBBSEB...',
-          '..BSSBMMMBSSB...',
-          '..BBCBMMMBCBB...',
-          '..SSSSSSSSSSS...',
-          '..SSWWWWWWWSS...',
-          '..SSWWWWWWWSS...',
-          '..BBBBBBBBBBB...',
-          '..BBBBBBBBBBB...',
-          '...BBBBBBBBB....',
-          '....SS...SS.....',
-          '....SS...SS.....',
-          '................',
-        ];
-      case 9: // ドラゴン (Dragon)
-        return [
-          '.AA.........AA..',
-          '.AAAA.AAA.AAAA..',
-          '..AABBBBBBBAA...',
-          '..BBBBBBBBBBB...',
-          '..BEEBBBBBEEB.TT',
-          '..BEEBMMMBEEBTTT',
-          '..BBCBMMMBCBBTT.',
-          'T.BBBBBBBBBBB.T.',
-          'TTBBWWWWWWWB....',
-          '.TBBWWWWWWWB....',
-          '..BBBBBBBBBBB...',
-          '..BBBBBBBBBBB...',
-          '...BBBBBBBBB....',
-          '....SS...SS.....',
-          '....SS...SS.....',
-          '................',
-        ];
-      case 10: // ロボ (Robo)
-        return [
-          '.......AAA......',
-          '.......AAA......',
-          '..SSSSSSSSSSS...',
-          '..SBBBBBBBBBS...',
-          '..SBEEBBBEEBS...',
-          '..SBEEBBBEEBS...',
-          '..SBBBMMMBBBS...',
-          '..SSSSSSSSSSS...',
-          '..SBBWWWWWWBSS..',
-          '..SBBWWWWWWBSS..',
-          '..SBBBBBBBBBS...',
-          '..SSSSSSSSSSS...',
-          '...SSSSSSSSS....',
-          '....SS...SS.....',
-          '....SS...SS.....',
-          '................',
-        ];
-      case 11: // スター (Starlet)
-      default:
-        return [
-          '.......AAA......',
-          '......AAAAA.....',
-          '..AA.AAAAAAA.AA.',
-          '...AAAAAAAAAAA..',
-          '..AAABEEBEEBAAA.',
-          '...AABMEBMMEBA..',
-          '....ABCBMMMCBA..',
-          '...AAAAAAAAAAA..',
-          '..AAAAWWWWWAAAA.',
-          '..AA.AWWWWW.AA..',
-          '.....AAAAAAA....',
-          '....AAAAAAAAA...',
-          '...AAA.....AAA..',
-          '..AAA.......AAA.',
-          '..AA.........AA.',
-          '................',
-        ];
-    }
-  }
-
-  /// 進化形態のパーツ（王冠・翼・オーラ星粒子）
+  /// 進化形態の豪華パーツ（王冠・羽ばたく翼・オーラ星粒子）
   void _drawEvolutionDecorations(Canvas canvas, double pixelSize, double anim) {
     final goldPaint = Paint()..color = const Color(0xFFFFD700);
     final rubyPaint = Paint()..color = const Color(0xFFFF1744);
-    final wingPaint = Paint()..color = const Color(0xFFE1F5FE).withAlpha(220);
+    final wingPaint = Paint()..color = const Color(0xFFE1F5FE).withAlpha(230);
     final starPaint = Paint()..color = const Color(0xFFFFF9C4);
 
-    // 1. 王冠 (頭上: row 0-2, col 5-10)
-    canvas.drawRect(Rect.fromLTWH(5 * pixelSize, 0 * pixelSize, pixelSize, pixelSize), goldPaint);
-    canvas.drawRect(Rect.fromLTWH(7.5 * pixelSize, 0 * pixelSize, pixelSize, pixelSize), goldPaint);
-    canvas.drawRect(Rect.fromLTWH(10 * pixelSize, 0 * pixelSize, pixelSize, pixelSize), goldPaint);
-    canvas.drawRect(Rect.fromLTWH(5 * pixelSize, 1 * pixelSize, 6 * pixelSize, pixelSize), goldPaint);
-    canvas.drawRect(Rect.fromLTWH(7.5 * pixelSize, 1 * pixelSize, pixelSize, pixelSize), rubyPaint);
+    // 1. 黄金の王冠 (頭上: col 9-14, row 0-2)
+    canvas.drawRect(Rect.fromLTWH(9 * pixelSize, 0 * pixelSize, 1.2 * pixelSize, 1.5 * pixelSize), goldPaint);
+    canvas.drawRect(Rect.fromLTWH(11.5 * pixelSize, 0 * pixelSize, 1.2 * pixelSize, 1.8 * pixelSize), goldPaint);
+    canvas.drawRect(Rect.fromLTWH(14 * pixelSize, 0 * pixelSize, 1.2 * pixelSize, 1.5 * pixelSize), goldPaint);
+    canvas.drawRect(Rect.fromLTWH(9 * pixelSize, 1.5 * pixelSize, 6.2 * pixelSize, 1.2 * pixelSize), goldPaint);
+    canvas.drawRect(Rect.fromLTWH(11.6 * pixelSize, 1.5 * pixelSize, 1.0 * pixelSize, 1.0 * pixelSize), rubyPaint);
 
-    // 2. 天使の翼 (左右)
-    final wingOffset = math.sin(anim * math.pi * 2) * 0.6;
+    // 2. 羽ばたく天使の翼 (左右)
+    final wingFlap = math.sin(anim * math.pi * 4) * 0.8;
     // 左翼
-    canvas.drawRect(Rect.fromLTWH(0 * pixelSize, (5 + wingOffset) * pixelSize, 2 * pixelSize, 3 * pixelSize), wingPaint);
+    canvas.drawRect(Rect.fromLTWH(1 * pixelSize, (8 + wingFlap) * pixelSize, 3 * pixelSize, 4 * pixelSize), wingPaint);
+    canvas.drawRect(Rect.fromLTWH(2 * pixelSize, (7 + wingFlap) * pixelSize, 2 * pixelSize, 2 * pixelSize), wingPaint);
     // 右翼
-    canvas.drawRect(Rect.fromLTWH(14 * pixelSize, (5 + wingOffset) * pixelSize, 2 * pixelSize, 3 * pixelSize), wingPaint);
+    canvas.drawRect(Rect.fromLTWH(20 * pixelSize, (8 + wingFlap) * pixelSize, 3 * pixelSize, 4 * pixelSize), wingPaint);
+    canvas.drawRect(Rect.fromLTWH(20 * pixelSize, (7 + wingFlap) * pixelSize, 2 * pixelSize, 2 * pixelSize), wingPaint);
 
-    // 3. キラキラ星粒子 (周囲に浮遊)
-    final p1Y = (3 + math.sin(anim * math.pi * 2) * 2) * pixelSize;
-    final p2Y = (11 + math.cos(anim * math.pi * 2) * 2) * pixelSize;
-    canvas.drawCircle(Offset(2 * pixelSize, p1Y), pixelSize * 0.5, starPaint);
-    canvas.drawCircle(Offset(14 * pixelSize, p2Y), pixelSize * 0.5, starPaint);
+    // 3. オーラ星粒子 ✨ (周囲に浮遊)
+    final p1Y = (4 + math.sin(anim * math.pi * 2) * 2.5) * pixelSize;
+    final p2Y = (16 + math.cos(anim * math.pi * 2) * 2.5) * pixelSize;
+    final p3Y = (8 + math.sin(anim * math.pi * 2 + 1) * 2.0) * pixelSize;
+    canvas.drawCircle(Offset(3 * pixelSize, p1Y), pixelSize * 0.7, starPaint);
+    canvas.drawCircle(Offset(21 * pixelSize, p2Y), pixelSize * 0.7, starPaint);
+    canvas.drawCircle(Offset(22 * pixelSize, p3Y), pixelSize * 0.5, starPaint);
   }
 
   /// 汗マーク 💧
   void _drawSweatDrop(Canvas canvas, double pixelSize, double anim) {
     final sweatPaint = Paint()..color = const Color(0xFF42A5F5);
-    final dropY = (4 + (anim * 2) % 2.5) * pixelSize;
-    canvas.drawRect(Rect.fromLTWH(13 * pixelSize, dropY, 1.2 * pixelSize, 1.8 * pixelSize), sweatPaint);
+    final dropY = (6 + (anim * 3) % 4) * pixelSize;
+    canvas.drawCircle(Offset(20 * pixelSize, dropY), pixelSize * 0.8, sweatPaint);
   }
 
   /// Zzz 浮遊エフェクト
   void _drawZzzEffect(Canvas canvas, double pixelSize, double anim) {
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
-    final progress = anim; // 0.0 to 1.0
+    final progress = anim;
     final alpha = (math.sin(progress * math.pi) * 255).clamp(0, 255).toInt();
 
     final zOffset = Offset(
-      (11 + progress * 2) * pixelSize,
-      (4 - progress * 4) * pixelSize,
+      (17 + progress * 3) * pixelSize,
+      (6 - progress * 5) * pixelSize,
     );
 
     textPainter.text = TextSpan(
       text: 'z',
       style: TextStyle(
-        fontSize: pixelSize * 3,
+        fontSize: pixelSize * 4,
         fontWeight: FontWeight.bold,
-        color: const Color(0xFF7E57C2).withAlpha(alpha),
+        color: const Color(0xFF5C6BC0).withAlpha(alpha),
       ),
     );
     textPainter.layout();
@@ -769,38 +634,37 @@ class _PixelCharacterPainter extends CustomPainter {
   /// 音符 ♪ ♫ エフェクト
   void _drawMusicNotes(Canvas canvas, double pixelSize, double anim) {
     final notePaint = Paint()..color = const Color(0xFFFF4081);
-    final noteY = (2 - math.sin(anim * math.pi * 2).abs() * 3) * pixelSize;
-    final noteX1 = (3 + math.sin(anim * math.pi * 4) * 1.5) * pixelSize;
-    final noteX2 = (12 - math.sin(anim * math.pi * 4) * 1.5) * pixelSize;
+    final noteY = (4 - math.sin(anim * math.pi * 2).abs() * 4) * pixelSize;
+    final noteX1 = (4 + math.sin(anim * math.pi * 4) * 2.0) * pixelSize;
+    final noteX2 = (19 - math.sin(anim * math.pi * 4) * 2.0) * pixelSize;
 
     // 音符1 ♪
-    canvas.drawCircle(Offset(noteX1, noteY), pixelSize * 0.8, notePaint);
-    canvas.drawRect(Rect.fromLTWH(noteX1 + pixelSize * 0.4, noteY - pixelSize * 2, pixelSize * 0.4, pixelSize * 2), notePaint);
+    canvas.drawCircle(Offset(noteX1, noteY), pixelSize * 1.0, notePaint);
+    canvas.drawRect(Rect.fromLTWH(noteX1 + pixelSize * 0.5, noteY - pixelSize * 2.5, pixelSize * 0.5, pixelSize * 2.5), notePaint);
 
     // 音符2 ♫
-    canvas.drawCircle(Offset(noteX2, noteY + pixelSize), pixelSize * 0.7, notePaint);
-    canvas.drawRect(Rect.fromLTWH(noteX2 + pixelSize * 0.3, noteY - pixelSize, pixelSize * 0.3, pixelSize * 1.8), notePaint);
+    canvas.drawCircle(Offset(noteX2, noteY + pixelSize * 1.5), pixelSize * 0.9, notePaint);
+    canvas.drawRect(Rect.fromLTWH(noteX2 + pixelSize * 0.4, noteY - pixelSize * 1.0, pixelSize * 0.4, pixelSize * 2.5), notePaint);
   }
 
   /// お気に入りスタンプ胸バッジ合成描画 (F-14)
   void _drawChestBadge(Canvas canvas, double pixelSize, Stamp stamp) {
-    final badgeCenter = Offset(8 * pixelSize, 9.5 * pixelSize);
-    final double badgeRadius = pixelSize * 1.6;
+    final badgeCenter = Offset(12 * pixelSize, 14 * pixelSize);
+    final double badgeRadius = pixelSize * 2.2;
 
     // 1. ゴールドバッジ外枠
     final goldPaint = Paint()..color = const Color(0xFFFFD700);
     final borderPaint = Paint()
       ..color = const Color(0xFFFFA000)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
+      ..strokeWidth = 1.0;
     canvas.drawCircle(badgeCenter, badgeRadius, goldPaint);
     canvas.drawCircle(badgeCenter, badgeRadius, borderPaint);
 
-    // 2. スタンプのミニチュアモチーフ（星 / クラウン / ハート等のドット）
+    // 2. スタンプのミニチュア星モチーフ
     final motifPaint = Paint()..color = const Color(0xFFD32F2F);
-    final double miniPx = pixelSize * 0.4;
+    final double miniPx = pixelSize * 0.5;
 
-    // 3x3 のミニチュアシンボル
     final miniMatrix = [
       [0, 1, 0],
       [1, 1, 1],
@@ -824,8 +688,678 @@ class _PixelCharacterPainter extends CustomPainter {
     }
   }
 
+  /// 24x24ドット（48x48精密マッピング）の2〜2.5頭身種族マトリクス
+  List<String> _getSpeciesMatrix24(int speciesId, bool isEvolved) {
+    switch (speciesId % 24) {
+      // 1. 🐾 動物系
+      case 0: // ミケネコ (Kitty)
+        return [
+          '........................',
+          '..AAA..............AAA..',
+          '..AAAA............AAAA..',
+          '..AOSSA..........ASSOA..',
+          '..AOOBBBAAAAAAAABBBOA...',
+          '..AOBBBBBBBBBBBBBBBOA...',
+          '..OBBBBBBBBBBBBBBBBBO...',
+          '..OBBEEBBBBBBBBEEBBBO...',
+          '..OBBPEBBBMIMBBPEBBBO...',
+          '..OBBBBBBBMCMMBBBBBBO...',
+          '..OOBBBBCBBBBBCCBBBOO...',
+          '...OOBBBBBBBBBBBBBOO....',
+          '....OOOOOOOOOOOOOOO.....',
+          '.....OBBBWWWWWWBBBO.TT..',
+          '....OBBBBWWWWWWBBBBO.T..',
+          '....OBBBBWWWWWWBBBBO.T..',
+          '....OBBBBBBBBBBBBBBO.TT.',
+          '....OBBBBBBBBBBBBBBO..T.',
+          '.....OBBBBBBBBBBBBO..TT.',
+          '......OOOOOOOOOOOO......',
+          '.......OFFO...OFFO......',
+          '.......OFFO...OFFO......',
+          '........OO.....OO.......',
+          '........................',
+        ];
+      case 1: // しばいぬ (Puppy)
+        return [
+          '........................',
+          '...AAA............AAA...',
+          '..AAAAA..........AAAAA..',
+          '..AOOSSA........ASSOOA..',
+          '..AOBBBBAAAAAAAABBBBOA..',
+          '..OBBBBBBBBBBBBBBBBBO...',
+          '..OBBBBBBBBBBBBBBBBBO...',
+          '..OBBEEBBBBBBBBEEBBBO...',
+          '..OBBPEBBBBMIBBPEBBBO...',
+          '..OBBBBBBBMIMMBBBBBBO...',
+          '..OOBBCBBBBBBBBCBBOO....',
+          '...OOBBBBBBBBBBBBBOO....',
+          '....OOOOOOOOOOOOOOO.....',
+          '.....OBBBWWWWWWBBBO..TT.',
+          '....OBBBBWWWWWWBBBBO.TT.',
+          '....OBBBBWWWWWWBBBBO.T..',
+          '....OBBBBBBBBBBBBBBO.TT.',
+          '....OBBBBBBBBBBBBBBO..T.',
+          '.....OBBBBBBBBBBBBO.....',
+          '......OOOOOOOOOOOO......',
+          '.......OFFO...OFFO......',
+          '.......OFFO...OFFO......',
+          '........OO.....OO.......',
+          '........................',
+        ];
+      case 2: // ロップウサギ (Bunny)
+        return [
+          '........................',
+          '..AAA..............AAA..',
+          '..AAAA............AAAA..',
+          '..ASSOA..........AOSSA..',
+          '..ASSOOBBBBBBBBOOSSOA...',
+          '..ASSOBBBBBBBBBBOOSSA...',
+          '..ASSOBEEBBBBEEBOOSSA...',
+          '..AOSOBPEBBBBPEBOOSSA...',
+          '..AOSOBBBMIMBBBOOSSA....',
+          '..AOOBBBCBBBBCBBOOO.....',
+          '...OOBBBBBBBBBBBBO......',
+          '....OOOOOOOOOOOOOO......',
+          '.....OBBBWWWWWWBBBO.....',
+          '....OBBBBWWWWWWBBBBO....',
+          '....OBBBBWWWWWWBBBBO.T..',
+          '....OBBBBWWWWWWBBBBO.TT.',
+          '....OBBBBBBBBBBBBBBO....',
+          '.....OBBBBBBBBBBBBO.....',
+          '......OOOOOOOOOOOO......',
+          '.......OFFO...OFFO......',
+          '.......OFFO...OFFO......',
+          '........OO.....OO.......',
+          '........................',
+          '........................',
+        ];
+      case 3: // こぐま (Bear)
+        return [
+          '........................',
+          '..AAAA............AAAA..',
+          '.AAAAAA..........AAAAAA.',
+          '.AOSSOA..........AOSSOA.',
+          '.AOOBBBBAAAAAAAABBBBOA..',
+          '..OBBBBBBBBBBBBBBBBBO...',
+          '..OBBBBBBBBBBBBBBBBBO...',
+          '..OBBEEBBBBBBBBEEBBBO...',
+          '..OBBPEBBBMIMBBPEBBBO...',
+          '..OBBBBBBBMIMMBBBBBBO...',
+          '..OOBBCBBBMIMBBCBBOO....',
+          '...OOBBBBBBBBBBBBBOO....',
+          '....OOOOOOOOOOOOOOO.....',
+          '....OBBBBBWWWWBBBBBO....',
+          '...OBBBBBBWWWWBBBBBBO...',
+          '...OBBBBBBWWWWBBBBBBO...',
+          '...OBBBBBBBBBBBBBBBBO...',
+          '...OBBBBBBBBBBBBBBBBO...',
+          '....OBBBBBBBBBBBBBBO....',
+          '.....OOOOOOOOOOOOOO.....',
+          '......OFFO....OFFO......',
+          '......OFFO....OFFO......',
+          '.......OO......OO.......',
+          '........................',
+        ];
+      case 4: // こぎつね (Fox)
+        return [
+          '........................',
+          '..AAAA............AAAA..',
+          '.AAAAAA..........AAAAAA.',
+          '.AOSSSOA........AOSSSOA.',
+          '.AOOBBBBBAAAAAABBBBBOA..',
+          '..OBBBBBBBBBBBBBBBBBO...',
+          '..OBBEEBBBBBBBBEEBBBO...',
+          '..OBBPEBBBMIMBBPEBBBO...',
+          '..OBWWBBBBMCMMBBBWBOO...',
+          '..OOBWWWCBBBBCWWWOO.TT..',
+          '...OOBBBWWWWWBBBBO.TTT..',
+          '....OOOOOOOOOOOOOO.TTT..',
+          '.....OBBBWWWWWWBBBOTTT..',
+          '....OBBBBWWWWWWBBBOTTT..',
+          '....OBBBBWWWWWWBBBOTT...',
+          '....OBBBBBBBBBBBBBOT....',
+          '.....OBBBBBBBBBBBBO.....',
+          '......OOOOOOOOOOOO......',
+          '.......OFFO...OFFO......',
+          '.......OFFO...OFFO......',
+          '........OO.....OO.......',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 5: // パンダ (Panda)
+        return [
+          '........................',
+          '..AAAA............AAAA..',
+          '.AAAAAA..........AAAAAA.',
+          '.AOSSOA..........AOSSOA.',
+          '.AOOBBBBAAAAAAAABBBBOA..',
+          '..OBBBBBBBBBBBBBBBBBO...',
+          '..OBBSSBBBBBBBBSSBBBO...',
+          '..OBSSEBBBBBBBBSSEBBO...',
+          '..OBSPEBBBMIMBBSPEBBO...',
+          '..OBBSSBBBMCMMBBSSBBO...',
+          '..OOBBCBBBBBBBBCBBOO....',
+          '...OOBBBBBBBBBBBBBOO....',
+          '....OOOOOOOOOOOOOOO.....',
+          '....OSSSBBWWWWBBSSSO....',
+          '...OSSSSSBWWWWBBSSSSO...',
+          '...OSSSSSBWWWWBBSSSSO...',
+          '...OSSSBBBBBBBBBBSSSO...',
+          '....OBBBBBBBBBBBBBBO....',
+          '.....OBBBBBBBBBBBBO.....',
+          '......OOOOOOOOOOOO......',
+          '......OFFO....OFFO......',
+          '......OFFO....OFFO......',
+          '.......OO......OO.......',
+          '........................',
+        ];
+
+      // 2. 🕊️ 鳥・飛行系
+      case 6: // ヒヨコ (Chicky)
+        return [
+          '........................',
+          '..........AAAA..........',
+          '.........AAAAAA.........',
+          '........OOBBBBOO........',
+          '.......OBBBBBBBBO.......',
+          '......OBBBBBBBBBBO......',
+          '.....OBBBEEBBEEBBBO.....',
+          '.....OBBBPEBMPEBBBO.....',
+          '.....OBBBBCMMMCBBBO.....',
+          '......OBBBBBBBBBBO......',
+          '.......OOBBBBBBOO.......',
+          '......OBBBBBBBBBBO......',
+          '.....OBBBWWWWWWBBBO.....',
+          '....TOBBBWWWWWWBBBOT....',
+          '....TOBBBWWWWWWBBBOT....',
+          '....TOBBBBBBBBBBBBOT....',
+          '.....TOBBBBBBBBBBO......',
+          '......OOOOOOOOOO........',
+          '........OFF..FF.........',
+          '.......OFFF..FFF........',
+          '........OO....OO........',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 7: // ペンギン (Penguin)
+        return [
+          '........................',
+          '........OOOOOOOO........',
+          '.......OBBBBBBBBO.......',
+          '......OBBBBBBBBBBO......',
+          '.....OBBBEEBBEEBBBO.....',
+          '.....OBBBPEBMPEBBBO.....',
+          '.....OBBBSCMMCSBBBO.....',
+          '.....OBBBSSMMSSBBBO.....',
+          '......OBBBBBBBBBBO......',
+          '.....TOBBWWWWWWBBOT.....',
+          '....TTOBBWWWWWWBBOTT....',
+          '....TTOBBWWWWWWBBOTT....',
+          '....TTOBBWWWWWWBBOTT....',
+          '.....TOBBWWWWWWBBOT.....',
+          '......OBBWWWWWWBBO......',
+          '.......OBBBBBBBBO.......',
+          '........OOOOOOOO........',
+          '........OFF..FF.........',
+          '.......OFFF..FFF........',
+          '........OO....OO........',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 8: // フクロウ (Owl)
+        return [
+          '........................',
+          '...AA..............AA...',
+          '..AAAA............AAAA..',
+          '..AOSSOA........AOSSOA..',
+          '..AOOBBBAAAAAAAABBBOA...',
+          '..OBBOOOBBBBBBOOOBBO....',
+          '..OBOEEEOBBBBOEEEOBO....',
+          '..OBOEPEOBMMOBEPEOBO....',
+          '..OBOEEEOBMMOBEEEOBO....',
+          '..OBBOOOBBCBBBOOOBBO....',
+          '...OOBBBBBBBBBBBBBO.....',
+          '....OOOOOOOOOOOOOO......',
+          '....TOBBWWWWWWBBOT......',
+          '...TTOBBWWWWWWBBOTT.....',
+          '...TTOBBWWWWWWBBOTT.....',
+          '...TTOBBBBBBBBBBOTT.....',
+          '....TOBBBBBBBBBBOT......',
+          '.....OOOOOOOOOOOO.......',
+          '.......OFF....OFF.......',
+          '......OFFF....OFFF......',
+          '.......OO......OO.......',
+          '........................',
+          '........................',
+          '........................',
+        ];
+
+      // 3. 🐟 水棲系
+      case 9: // あまがえる (Froggy)
+        return [
+          '........................',
+          '..OOO..............OOO..',
+          '.OEEEO............OEEEO.',
+          '.OEPEO...AAAAAA...OEPEO.',
+          '.OEEEO..ABBBBBBA..OEEEO.',
+          '..OOO.ABBBBBBBBBBA.OOO..',
+          '....OBBBBBBBBBBBBBBO....',
+          '...OBBBBBBBBBBBBBBBBO...',
+          '...OBBCBBBMIMMMBCBBBO...',
+          '...OBBBBBBBBBBBBBBBBO...',
+          '....OOBBBBBBBBBBBBBOO...',
+          '.....OOOOOOOOOOOOOO.....',
+          '.....OBBBWWWWWWBBBO.....',
+          '....OBBBBWWWWWWBBBBO....',
+          '...FOBBBBWWWWWWBBBBOF...',
+          '...FOBBBBBBBBBBBBBBOF...',
+          '....OBBBBBBBBBBBBBBO....',
+          '.....OOOOOOOOOOOOOO.....',
+          '......OFFO....OFFO......',
+          '.....OFFFO....OFFFO.....',
+          '......OO........OO......',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 10: // クラゲぼうや (Jelly)
+        return [
+          '........................',
+          '........OOOOOOOO........',
+          '......OOBBBBBBBBOO......',
+          '.....OBBBBBBBBBBBBO.....',
+          '....OBBBBBBBBBBBBBBBO...',
+          '...OBBEEBBBBBBBBEEBBBO..',
+          '...OBBPEBBBMIMBBPEBBBO..',
+          '...OBBCBBBBBBBBCBBBOO...',
+          '...OOBBBBBBBBBBBBBBOO...',
+          '....OOOOOOOOOOOOOOOO....',
+          '.....O..O..O..O..O......',
+          '.....B..B..B..B..B......',
+          '.....S..S..S..S..S......',
+          '.....B..B..B..B..B......',
+          '.....S..S..S..S..S......',
+          '.....B..B..B..B..B......',
+          '......S..S..S..S..S.....',
+          '.......O..O..O..O.......',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 11: // タコまる (Octy)
+        return [
+          '........................',
+          '........OOOOOOOO........',
+          '......OOBBBBBBBBOO......',
+          '.....OBBBBBBBBBBBBO.....',
+          '....OBBBBBBBBBBBBBBBO...',
+          '...OBBEEBBBBBBBBEEBBBO..',
+          '...OBBPEBBBOOOOBPEBBBO..',
+          '...OBBCBBBOOMMOOBBBOO...',
+          '...OOBBBBBBOOOOBBBBOO...',
+          '....OOOOOOOOOOOOOOOO....',
+          '...OFF..FF..FF..FF......',
+          '..OFFF.OFF.OFF.OFFF.....',
+          '..OFF..OFF.OFF..OFF.....',
+          '..OO...OO..OO...OO......',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+
+      // 4. 🌿 植物系
+      case 12: // プチトマト (Tomaty)
+        return [
+          '........................',
+          '.........AAAAA..........',
+          '........AAAAAAA.........',
+          '.......AA.AAA.AA........',
+          '......OOBBBBBBBOO.......',
+          '....OOBBBBBBBBBBBOO.....',
+          '...OBBEEBBBBBBBBEEBBO...',
+          '...OBBPEBBBMIMBBPEBBO...',
+          '...OBBBBBBBMCMMBBBBBO...',
+          '...OBBCBBBBBBBBCBBBOO...',
+          '...OOBBBBBBBBBBBBBBOO...',
+          '....OBBBBBBBBBBBBBBBO...',
+          '....OBBBBBBBBBBBBBBBO...',
+          '....OBBBBBBBBBBBBBBBO...',
+          '.....OBBBBBBBBBBBBO.....',
+          '......OOOOOOOOOOOO......',
+          '.......OFFO...OFFO......',
+          '.......OFFO...OFFO......',
+          '........OO.....OO.......',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 13: // サボテンくん (Cactus)
+        return [
+          '........................',
+          '...........AA...........',
+          '..........AAAA..........',
+          '........OOOOOOOO........',
+          '..OO...OBBBBBBBBO...OO..',
+          '.OBBO..OBBBBBBBBO..OBBO.',
+          '.OBBO.OBBEEBBEEBBO.OBBO.',
+          '.OBBO.OBBPEBMPEBBO.OBBO.',
+          '.OBBO.OBBBCMMMCBBO.OBBO.',
+          '..OOO.OBBBBBBBBBBO.OOO..',
+          '....OOOBBBBBBBBBBOOO....',
+          '.....OBBBBBBBBBBBO......',
+          '.....OBBBBBBBBBBBO......',
+          '.....OBBBBBBBBBBBO......',
+          '.....OBBBBBBBBBBBO......',
+          '......OOOOOOOOOO........',
+          '.......OFF....OFF.......',
+          '.......OFF....OFF.......',
+          '........OO....OO........',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 14: // キノコちゃん (Shroom)
+        return [
+          '........................',
+          '........OOOOOOOO........',
+          '......OOBBWWWWBBBOO.....',
+          '....OOBBBBBWWBBBBBBOO...',
+          '...OBBBWWBBBBBBWWBBBBO..',
+          '..OBBBBBBBWWBBBBBBBBBBO.',
+          '..OBWWBBBBBBBBBBBBWWBBBO',
+          '..OOOOOOOOOOOOOOOOOOOOOO',
+          '......OBBEEBEEBBO.......',
+          '......OBBPEBPEBBO.......',
+          '......OBBCBMBMCBBO......',
+          '......OBBBBBBBBBBO......',
+          '.......OBBBWWBBBO.......',
+          '.......OBBBWWBBBO.......',
+          '........OOOOOOOO........',
+          '.......OFFO..OFFO.......',
+          '........OO....OO........',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+
+      // 5. 👾 モンスター系
+      case 15: // ぷるぷるスライム (Slimey)
+        return [
+          '........................',
+          '...........AA...........',
+          '..........AAAA..........',
+          '.........OOBBBO.........',
+          '........OBBBBBBO........',
+          '.......OBBBBBBBBO.......',
+          '......OBBBBBBBBBBO......',
+          '.....OBBEEBBBBEEBBBO....',
+          '.....OBBPEBBBMPEBBBO....',
+          '....OBBBBCBMMBCBBBBOO...',
+          '...OOBBBBBBBBBBBBBBBOO..',
+          '..OBBBBBBBBBBBBBBBBBBBO.',
+          '..OBBBBBBBBBBBBBBBBBBBO.',
+          '...OOOOOOOOOOOOOOOOOO...',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 16: // おばけちゃん (Ghosty)
+        return [
+          '........................',
+          '........OOOOOOOO........',
+          '......OOBBBBBBBBOO......',
+          '.....OBBBBBBBBBBBBO.....',
+          '....OBBBBBBBBBBBBBBBO...',
+          '...OBBEEBBBBBBBBEEBBBO..',
+          '...OBBPEBBBMIMBBPEBBBO..',
+          '...OBBCBBBBBBBBCBBBOO...',
+          '...OOBBBBBBBBBBBBBBOO...',
+          '....OBBBBBBBBBBBBBBBO...',
+          '....OBBBBBBBBBBBBBBBO...',
+          '....OBBBBBBBBBBBBBBBO...',
+          '.....OBB.OBB.OBB.OBO....',
+          '......OO..OO..OO..O.....',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 17: // コバコモドキ (Mimic)
+        return [
+          '........................',
+          '......OOOOOOOOOOOO......',
+          '.....OBBBBBBBBBBBBO.....',
+          '....OBBBBAAAABBBBBO.....',
+          '....OBBBBAAAABBBBBO.....',
+          '....OOOOOOOOOOOOOOO.....',
+          '....OMMMMMMMMMMMMMO.....',
+          '....OMMEEEEMMEEEEMO.....',
+          '....OMMEPEOMMEPEOMM.....',
+          '....OMMMMMMMMMMMMMO.....',
+          '....OBBBBAAAABBBBBO.....',
+          '.....OBBBBBBBBBBBBO.....',
+          '......OOOOOOOOOOOO......',
+          '.......OFFO..OFFO.......',
+          '........OO....OO........',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+
+      // 6. 🐲 ファンタジー系
+      case 18: // プチドラゴン (Drake)
+        return [
+          '........................',
+          '..AA...AAAAAA...AA......',
+          '..AAAA.AAAAAA.AAAA......',
+          '..AOOSSAAAAAASSOOA......',
+          '..AOOBBBBBBBBBBBOA......',
+          '..OBBBBBBBBBBBBBBO..TT..',
+          '..OBBEEBBBBBBEEBBO.TTT..',
+          '..OBBPEBBBMIBPEBBO.TT...',
+          '..OBBCBBBMIMBBCBBO.TT...',
+          '..OOBBBBBBBBBBBBBO.TTT..',
+          '...OOBBBBBBBBBBBOO.TT...',
+          '....OOOOOOOOOOOOO..TT...',
+          '.....OBBBWWWWBBBO...T...',
+          '....OBBBBWWWWBBBBO......',
+          '....OBBBBWWWWBBBBO......',
+          '....OBBBBBBBBBBBBO......',
+          '.....OBBBBBBBBBBO.......',
+          '......OOOOOOOOOO........',
+          '.......OFFO..OFFO.......',
+          '.......OFFO..OFFO.......',
+          '........OO....OO........',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 19: // ユニコーン (Unicorn)
+        return [
+          '...........AA...........',
+          '..........AAAA..........',
+          '..AAA....AAAAAA...AAA...',
+          '..AAAA..AOSSSOA..AAAA...',
+          '..AOOSSAOBBBBBOASSOOA...',
+          '..AOOBBBBBBBBBBBOA......',
+          '..OBBBBBBBBBBBBBBO......',
+          '..OBBEEBBBBBBEEBBO......',
+          '..OBBPEBBBMIBPEBBO.TT...',
+          '..OBBCBBBMIMBBCBBO.TTT..',
+          '..OOBBBBBBBBBBBBBO.TTT..',
+          '...OOBBBBBBBBBBBOO.TT...',
+          '....OOOOOOOOOOOOO...T...',
+          '.....OBBBWWWWBBBO...T...',
+          '....OBBBBWWWWBBBBO......',
+          '....OBBBBWWWWBBBBO......',
+          '....OBBBBBBBBBBBBO......',
+          '.....OBBBBBBBBBBO.......',
+          '......OOOOOOOOOO........',
+          '.......OFFO..OFFO.......',
+          '.......OFFO..OFFO.......',
+          '........OO....OO........',
+          '........................',
+          '........................',
+        ];
+
+      // 7. 🧚 人型・妖精系
+      case 20: // もりの妖精 (Pixie)
+        return [
+          '........................',
+          '..........AAAA..........',
+          '.........AAAAAA.........',
+          '........AAOSSOAA........',
+          '...AA..AOBBBBBBOA..AA...',
+          '..AAAAOBBBBBBBBBBOAAAA..',
+          '..AOOBBEEBBBBEEBBOOA....',
+          '...OBBPEBBBMIBPEBBO.....',
+          '...OBBCBBBMIMBBCBBO.....',
+          '....OOBBBBBBBBBBBO......',
+          '....TTOOBBBBBBBOOTT.....',
+          '...TTT.OBBWWWBBO.TTT....',
+          '...TT.OBBBWWWBBO..TT....',
+          '......OBBBWWWBBO........',
+          '.......OBBBBBBBO........',
+          '........OOOOOOO.........',
+          '.........OFFOFF.........',
+          '.........OFFOFF.........',
+          '..........OO.OO.........',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 21: // ちび勇者 (Hero)
+        return [
+          '........................',
+          '........AAAAAAAA........',
+          '.......AAAAAAAAAA.......',
+          '......AAOSSSSSSOAA......',
+          '......AOBBBBBBBBOA......',
+          '......OBBEEBBEEBBO......',
+          '......OBBPEBPEBBOO......',
+          '......OBBCBMBMCBBO......',
+          '.......OBBBBBBBBO.......',
+          '....TOOBBBWWWWBBBO......',
+          '...TTOOBBBWWWWBBBOAA....',
+          '...TTOOBBBWWWWBBBOAAAA..',
+          '...TTOOBBBBBBBBBBO.AA...',
+          '....TOOBBBBBBBBBBO......',
+          '......OOOOOOOOOO........',
+          '.......OFFO..OFFO.......',
+          '.......OFFO..OFFO.......',
+          '........OO....OO........',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+
+      // 8. 🤖 特殊・コズミック系
+      case 22: // レトロロボ (Robo)
+        return [
+          '........................',
+          '...........AA...........',
+          '...........AA...........',
+          '........OOOOOOOO........',
+          '.......OSSSSSSSSO.......',
+          '......OSBBBBBBBBSS......',
+          '.....OSBEEBBBBEEBSO.....',
+          '.....OSBPEBMIMPEBSO.....',
+          '.....OSBBBMMMMBBBSO.....',
+          '.....OSSSSSSSSSSSSO.....',
+          '......O..O....O..O......',
+          '.....OSBBWWWWWWBSO......',
+          '....FOSBBWWWWWWBSOF.....',
+          '....FOSBBWWWWWWBSOF.....',
+          '.....OSBBBBBBBBBSO......',
+          '......OSSSSSSSSSO.......',
+          '.......OFFO..OFFO.......',
+          '.......OFFO..OFFO.......',
+          '........OO....OO........',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+      case 23: // ほしの子 (Starlet)
+      default:
+        return [
+          '........................',
+          '...........AA...........',
+          '..........AAAA..........',
+          '.........AAAAAA.........',
+          '..AAAA..OOBBBBOO..AAAA..',
+          '...AAAAOBBBBBBBBOAAAA...',
+          '....AOBBEEBBEEBBBOA.....',
+          '....OBBBPEBMPEBBBBO.....',
+          '....OBBBCBMMMCBBBBO.....',
+          '....AOBBBBBBBBBBBOA.....',
+          '...AAAAOBBWWWWBOAAAA....',
+          '..AAAA..OBWWWWBO..AAAA..',
+          '.........OBBBBO.........',
+          '........OBB..BBO........',
+          '.......OBBO..OBBO.......',
+          '......OBB......BBO......',
+          '......OO........OO......',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+          '........................',
+        ];
+    }
+  }
+
   @override
-  bool shouldRepaint(covariant _PixelCharacterPainter oldDelegate) {
+  bool shouldRepaint(covariant _PixelCharacterPainter48 oldDelegate) {
     return oldDelegate.species.id != species.id ||
         oldDelegate.growthState != growthState ||
         oldDelegate.actionState != actionState ||

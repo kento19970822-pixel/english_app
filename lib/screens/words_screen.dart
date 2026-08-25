@@ -1,9 +1,10 @@
-// コード管理番号: VER-20260824-43
+// コード管理番号: VER-20260825-08
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../db/app_database.dart';
 import '../services/tts_service.dart';
+import '../widgets/pixel_character_widget.dart';
 import '../widgets/sticky_section_header.dart';
 import '../widgets/word_card_tile.dart';
 
@@ -508,6 +509,10 @@ class _WordsScreenState extends State<WordsScreen> {
                               ),
                             ),
                           ),
+                          if (_sortMode == 'chap')
+                            SliverToBoxAdapter(
+                              child: _buildChapterCharacterBanner(section),
+                            ),
                           SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
@@ -569,6 +574,122 @@ class _WordsScreenState extends State<WordsScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildChapterCharacterBanner(WordSection section) {
+    if (section.words.isEmpty) return const SizedBox.shrink();
+    final chapter = section.words.first.chapter;
+    final speciesIndex = chapter - 1;
+    final species = getCharacterSpecies(chapter);
+    final double rate = (section.memorizedCount / section.words.length) * 100.0;
+    final growthState = PixelCharacterWidget.stateFromRate(rate, true);
+    final isCleared = rate >= 80.0;
+    final isLocked = growthState == CharacterGrowthState.locked;
+
+    String statusText;
+    Color statusColor;
+    if (isLocked || rate <= 0) {
+      statusText = '🔒 未暗記 (0%)';
+      statusColor = _textSecondary;
+    } else if (isCleared) {
+      statusText = '🌟 進化マスター';
+      statusColor = const Color(0xFF6A1B9A);
+    } else if (rate >= 50.0) {
+      statusText = '😊 元気 (${rate.toInt()}%)';
+      statusColor = Colors.green.shade700;
+    } else {
+      statusText = '🥀 元気ない (${rate.toInt()}%)';
+      statusColor = Colors.deepOrange;
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _borderColor),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          PixelCharacterWidget(
+            speciesIndex: speciesIndex,
+            growthState: growthState,
+            actionState: isCleared ? CharacterActionState.walk : CharacterActionState.idle,
+            size: 42,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Chapter $chapter: ${isLocked ? '？？？？？' : species.japaneseName}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isLocked ? _textSecondary : _textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      species.category.icon,
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                    const Spacer(),
+                    Text(
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: (rate / 100.0).clamp(0.0, 1.0),
+                          backgroundColor: const Color(0xFFEFEAE0),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isCleared ? const Color(0xFF8E24AA) : _primaryAccent,
+                          ),
+                          minHeight: 5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${rate.toInt()}% (${section.memorizedCount}/${section.words.length})',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: _textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

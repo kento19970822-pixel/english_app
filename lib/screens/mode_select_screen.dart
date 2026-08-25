@@ -25,6 +25,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
   int selectedLevel = 1; // 1: 初級, 2: 中級, 3: 上級 (UI上の3区分)
   int selectedChapter = 1;
 
+  List<ChapterProgressesData> _allChapterProgresses = [];
   List<ChapterProgressesData> _currentLevelChapters = [];
   bool _isLoadingChapters = true;
   Stamp? _favoriteStamp;
@@ -77,6 +78,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
     if (mounted) {
       setState(() {
         _favoriteStamp = favStamp;
+        _allChapterProgresses = allProgresses;
         _currentLevelChapters = filtered;
         if (!preserveSelection || !filtered.any((cp) => cp.chapter == selectedChapter)) {
           selectedChapter = latestUnlocked;
@@ -84,6 +86,15 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
         _isLoadingChapters = false;
       });
     }
+  }
+
+  CharacterGrowthState _getBuddyGrowthState() {
+    final buddyId = BuddyService.instance.selectedSpeciesId;
+    final matching = _allChapterProgresses.where(
+      (cp) => cp.chapter == (buddyId + 1),
+    ).firstOrNull;
+    if (matching == null) return CharacterGrowthState.locked;
+    return PixelCharacterWidget.stateFromRate(matching.memorizedRate, matching.isUnlocked);
   }
 
   Future<void> _startGame() async {
@@ -288,7 +299,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                                             const SizedBox(width: 8),
                                             // F-13: 章ドットキャラクター（定着率連動）
                                             PixelCharacterWidget(
-                                              speciesIndex: (cp.chapter - 1) % 12,
+                                              speciesIndex: cp.chapter - 1,
                                               growthState: PixelCharacterWidget.stateFromRate(
                                                 cp.memorizedRate,
                                                 isUnlocked,
@@ -404,7 +415,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                 children: [
                   PixelCharacterWidget(
                     speciesIndex: BuddyService.instance.selectedSpeciesId,
-                    growthState: CharacterGrowthState.healthy,
+                    growthState: _getBuddyGrowthState(),
                     actionState: CharacterActionState.idle,
                     favoriteStamp: _favoriteStamp,
                     size: 38,
@@ -419,7 +430,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                         Row(
                           children: [
                             Text(
-                              '相棒: ${kCharacterSpeciesList[BuddyService.instance.selectedSpeciesId].japaneseName}',
+                              '相棒: ${getCharacterSpecies(BuddyService.instance.selectedSpeciesId + 1).japaneseName}',
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
