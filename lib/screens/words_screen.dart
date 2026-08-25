@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260825-08
+// コード管理番号: VER-20260826-01
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -630,8 +630,12 @@ class WordsScreenState extends State<WordsScreen> {
     final chapter = section.words.first.chapter;
     final speciesIndex = chapter - 1;
     final species = getCharacterSpecies(chapter);
-    final int targetCount = section.words.where((w) => w.retentionPoint >= 70).length;
-    final double rate = (targetCount / section.words.length) * 100.0;
+
+    // フィルター状態に関わらず、チャプター全体の全単語を基準に定着度と成長段階を算出
+    final chapterAllWords = _allWords.where((w) => w.chapter == chapter).toList();
+    final int totalWordsInChapter = chapterAllWords.isNotEmpty ? chapterAllWords.length : section.words.length;
+    final int targetCount = chapterAllWords.where((w) => w.retentionPoint >= 70).length;
+    final double rate = totalWordsInChapter > 0 ? (targetCount / totalWordsInChapter) * 100.0 : 0.0;
     final growthState = PixelCharacterWidget.stateFromRate(rate, true);
     final isCleared = rate >= 80.0;
     final isLocked = growthState == CharacterGrowthState.locked;

@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260824-42
+// コード管理番号: VER-20260826-01
 import 'dart:async';
 import 'dart:math';
 
@@ -17,6 +17,9 @@ class WordModel {
   final String japanese;
   final int level;
   final int chapter;
+  final int retentionPoint;
+  final bool isMemorized;
+  final bool isRestricted;
   bool isFavorite;
 
   WordModel({
@@ -25,6 +28,9 @@ class WordModel {
     required this.japanese,
     required this.level,
     required this.chapter,
+    this.retentionPoint = 0,
+    this.isMemorized = false,
+    this.isRestricted = false,
     this.isFavorite = false,
   });
 
@@ -57,6 +63,9 @@ class WordModel {
       japanese: driftWord.japanese,
       level: parsedLevel,
       chapter: driftWord.chapter,
+      retentionPoint: driftWord.retentionPoint,
+      isMemorized: driftWord.isMemorized,
+      isRestricted: driftWord.isRestricted,
       isFavorite: driftWord.isFavorite,
     );
   }
@@ -115,6 +124,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   List<String> leftChoices = [];
   Set<String> leftDisabledChoices = {};
   late AnimationController _leftDropController;
+  DateTime? _leftQuestionStartTime;
   bool isLeftStarted = false;
   bool leftMistaken = false;
   String? leftFeedback;
@@ -123,6 +133,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   List<String> rightChoices = [];
   Set<String> rightDisabledChoices = {};
   late AnimationController _rightDropController;
+  DateTime? _rightQuestionStartTime;
   bool rightMistaken = false;
   String? rightFeedback;
 
@@ -222,7 +233,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       }
 
       if (fileName.isNotEmpty) {
-        await _seAudioPlayer.stop();
+        try {
+          await _seAudioPlayer.stop();
+        } catch (_) {}
         await _seAudioPlayer.play(AssetSource(fileName));
       }
     } catch (e) {
@@ -247,6 +260,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _leftStartTimer?.cancel();
     _leftStartTimer = null;
 
+    _leftQuestionStartTime = null;
+    _rightQuestionStartTime = null;
+
     _leftDropController.stop();
     _leftDropController.reset();
     _rightDropController.stop();
@@ -258,17 +274,28 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     List<WordModel> targetWords = [];
     if (currentMode == 'learning') {
+      // 1. 学習モード: 選択チャプター（selectedChapter）の全単語を抽出
       targetWords = allWords
-          .where(
-            (w) => w.level == selectedLevel && w.chapter == selectedChapter,
-          )
+          .where((w) => w.chapter == selectedChapter)
           .toList();
-    } else {
-      targetWords = allWords.where((w) => w.level == selectedLevel).toList();
-    }
 
-    if (targetWords.length < 5) {
-      targetWords = List.from(allWords);
+      // 単語数が極端に少ない場合の安全なフォールバック（同レベルから補充）
+      if (targetWords.length < 5) {
+        final sameLevel = allWords.where((w) => w.level == selectedLevel).toList();
+        targetWords = sameLevel.isNotEmpty ? sameLevel : List.from(allWords);
+      }
+
+      // 未暗記（80pt未満 / isMemorized == false）の単語を優先して前方に配置し、全単語を学習可能に
+      final unmemorized = targetWords.where((w) => !w.isMemorized).toList()..shuffle();
+      final memorized = targetWords.where((w) => w.isMemorized).toList()..shuffle();
+      targetWords = [...unmemorized, ...memorized];
+    } else {
+      // 2. チャレンジモード: 選択中レベルの全単語をシャッフル
+      targetWords = allWords.where((w) => w.level == selectedLevel).toList();
+      if (targetWords.length < 5) {
+        targetWords = List.from(allWords);
+      }
+      targetWords.shuffle();
     }
 
     if (targetWords.isEmpty) {
@@ -290,7 +317,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       isGameOver = false;
       isPaused = false;
       isLeftStarted = false;
-      questionQueue = List.from(targetWords)..shuffle();
+      questionQueue = List.from(targetWords);
       mistakenWords.clear();
       _processedWordIds.clear(); // F-05: 1ゲーム1変動フラグを初期化
 
@@ -427,10 +454,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     _playAudio(nextWord);
 
+    final now = DateTime.now();
     if (isLeft) {
+      _leftQuestionStartTime = now;
       _leftDropController.reset();
       _leftDropController.forward();
     } else {
+      _rightQuestionStartTime = now;
       _rightDropController.reset();
       _rightDropController.forward();
     }
@@ -443,7 +473,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     if (targetWord == null || isPaused || !isGameStarted) return;
 
     if (selectedChoice == targetWord.japanese) {
-      final double progress = controller.value;
+      // 端末/ブラウザのTicker跳躍に左右されない実経過時間ベースの正確な進捗計算
+      final startTime = isLeft ? _leftQuestionStartTime : _rightQuestionStartTime;
+      double progress = controller.value;
+      if (startTime != null) {
+        final elapsedMs = DateTime.now().difference(startTime).inMilliseconds;
+        final realProgress = (elapsedMs / (dropDurationSeconds * 1000.0)).clamp(0.0, 1.0);
+        progress = realProgress;
+      }
+
       final result = RetentionService.calculateScoreAndRetention(
         dropProgress: progress,
         isCorrect: true,
@@ -500,7 +538,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         _nextQuestion(isLeft: isLeft);
       });
     } else {
-      final progress = controller.value;
+      final startTime = isLeft ? _leftQuestionStartTime : _rightQuestionStartTime;
+      double progress = controller.value;
+      if (startTime != null) {
+        final elapsedMs = DateTime.now().difference(startTime).inMilliseconds;
+        progress = (elapsedMs / (dropDurationSeconds * 1000.0)).clamp(0.0, 1.0);
+      }
+
       final result = RetentionService.calculateScoreAndRetention(
         dropProgress: progress,
         isCorrect: false,
@@ -535,8 +579,22 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _handleTimeOut({required bool isLeft}) {
+    if (!isGameStarted || isGameOver || isPaused) return;
     final targetWord = isLeft ? leftWord : rightWord;
-    if (targetWord == null || !isGameStarted) return;
+    if (targetWord == null) return;
+
+    // Safari等のTicker跳躍/誤完了ガード（落下開始から実時間で最低40%以上経過していない異常トリガーは無視して復元）
+    final startTime = isLeft ? _leftQuestionStartTime : _rightQuestionStartTime;
+    if (startTime != null) {
+      final elapsedMs = DateTime.now().difference(startTime).inMilliseconds;
+      if (elapsedMs < (dropDurationSeconds * 1000 * 0.4).toInt()) {
+        final controller = isLeft ? _leftDropController : _rightDropController;
+        final correctProgress = (elapsedMs / (dropDurationSeconds * 1000.0)).clamp(0.0, 1.0);
+        controller.value = correctProgress;
+        controller.forward();
+        return;
+      }
+    }
 
     _playSE('timeout');
     _recordMistake(targetWord);

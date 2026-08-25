@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260824-41
+// コード管理番号: VER-20260826-01
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -160,6 +160,8 @@ class TtsService {
       await _flutterTts.speak(cleanText);
     } catch (e) {
       debugPrint("TtsService speak error: $e");
+      // リセットと再試行
+      _isInitialized = false;
     }
   }
 
