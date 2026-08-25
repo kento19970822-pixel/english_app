@@ -1213,73 +1213,77 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           ),
 
           // 常に画面最下部に固定表示されるボトムアクションバー（左: 選択画面へ, 右: 再挑戦）
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFBF7EE),
-              border: Border(top: BorderSide(color: Color(0xFFE5DEC9), width: 1)),
-            ),
-            child: Row(
-              children: [
-                // 左: 選択画面へ
-                Expanded(
-                  child: SizedBox(
-                    height: 44,
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                      label: const FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text('選択画面へ', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF5F9E98),
-                        side: const BorderSide(color: Color(0xFF5F9E98), width: 1.5),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+          SafeArea(
+            top: false,
+            bottom: true,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFBF7EE),
+                border: Border(top: BorderSide(color: Color(0xFFE5DEC9), width: 1)),
+              ),
+              child: Row(
+                children: [
+                  // 左: 選択画面へ
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                        label: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text('選択画面へ', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF5F9E98),
+                          side: const BorderSide(color: Color(0xFF5F9E98), width: 1.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                        onPressed: () {
+                          widget.onGameStateChanged?.call(false);
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
+                        },
                       ),
-                      onPressed: () {
-                        widget.onGameStateChanged?.call(false);
-                        if (Navigator.canPop(context)) {
-                          Navigator.pop(context);
-                        }
-                      },
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                // 右: 再挑戦
-                Expanded(
-                  child: SizedBox(
-                    height: 44,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.refresh_rounded, size: 18),
-                      label: const FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text('再挑戦', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5F9E98),
-                        foregroundColor: Colors.white,
-                        elevation: 1,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  const SizedBox(width: 10),
+                  // 右: 再挑戦
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text('再挑戦', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF5F9E98),
+                          foregroundColor: Colors.white,
+                          elevation: 1,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isGameOver = false;
+                            isGameStarted = true;
+                            remainingTime = totalGameDuration;
+                          });
+                          _startCountdownSequence();
+                        },
                       ),
-                      onPressed: () {
-                        setState(() {
-                          isGameOver = false;
-                          isGameStarted = true;
-                          remainingTime = totalGameDuration;
-                        });
-                        _startCountdownSequence();
-                      },
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -1476,10 +1480,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     isPlaceholder || disabledChoices.contains(choice);
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  padding: const EdgeInsets.symmetric(vertical: 2.5),
                   child: SizedBox(
                     width: double.infinity,
-                    height: 30,
+                    height: 36,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         disabledBackgroundColor: isPlaceholder
@@ -1505,9 +1509,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               : Colors.transparent,
                           width: 1,
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       onPressed: isDisabled
@@ -1523,7 +1527,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           child: Text(
                             choice,
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 13,
                               fontWeight: FontWeight.bold,
                               decoration: (!isPlaceholder && isDisabled)
                                   ? TextDecoration.lineThrough

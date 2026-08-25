@@ -1,10 +1,13 @@
-// コード管理番号: VER-20260824-51
+// コード管理番号: VER-20260825-17
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
 import '../services/buddy_service.dart';
 import '../widgets/pixel_character_widget.dart';
+import 'calendar_screen.dart';
+import 'character_gallery_screen.dart';
 import 'game_screen.dart';
+import 'stamp_gallery_screen.dart';
 
 class ModeSelectScreen extends StatefulWidget {
   final AppDatabase database;
@@ -144,13 +147,59 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'ゲーム選択',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: _textPrimary,
-                      ),
+                    Row(
+                      children: [
+                        const Text(
+                          'ゲーム選択',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: _textPrimary,
+                          ),
+                        ),
+                        const Spacer(),
+                        _buildQuickActionBtn(
+                          icon: Icons.calendar_month_rounded,
+                          tooltip: '学習カレンダー',
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CalendarScreen(database: widget.database),
+                              ),
+                            );
+                            _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+                          },
+                        ),
+                        const SizedBox(width: 6),
+                        _buildQuickActionBtn(
+                          icon: Icons.stars_rounded,
+                          tooltip: 'スタンプ図鑑',
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => StampGalleryScreen(database: widget.database),
+                              ),
+                            );
+                            _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+                          },
+                        ),
+                        const SizedBox(width: 6),
+                        _buildQuickActionBtn(
+                          icon: Icons.pets_rounded,
+                          tooltip: 'キャラクター図鑑',
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CharacterGalleryScreen(database: widget.database),
+                              ),
+                            );
+                            _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+                          },
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 10),
 
@@ -423,72 +472,91 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
+                    child: InkWell(
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CharacterGalleryScreen(database: widget.database),
+                          ),
+                        );
+                        _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              '相棒: ${getCharacterSpecies(BuddyService.instance.selectedSpeciesId + 1).japaneseName}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: _textPrimary,
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  '相棒: ${getCharacterSpecies(BuddyService.instance.selectedSpeciesId + 1).japaneseName}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: _textPrimary,
+                                  ),
+                                ),
+                                const Spacer(),
+                                const Text(
+                                  '図鑑変更 ➔',
+                                  style: TextStyle(fontSize: 10, color: _primaryAccent, fontWeight: FontWeight.bold),
+                                ),
+                              ],
                             ),
-                            const Spacer(),
-                            const Text(
-                              'タップでハミング♪',
-                              style: TextStyle(fontSize: 10, color: _primaryAccent, fontWeight: FontWeight.bold),
+                            const SizedBox(height: 2),
+                            Text(
+                              selectedMode == 'learning'
+                                  ? 'Ch.$selectedChapter の暗記クリアを目指そう！'
+                                  : '制限時間1分間でスコアアタックに挑戦！',
+                              style: const TextStyle(fontSize: 11, color: _textSecondary),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          selectedMode == 'learning'
-                              ? 'Ch.$selectedChapter の暗記クリアを目指そう！'
-                              : '制限時間1分間でスコアアタックに挑戦！',
-                          style: const TextStyle(fontSize: 11, color: _textSecondary),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // 常時下部に固定配置された開始ボタン（スクロール不要で即座に押せる）
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              decoration: const BoxDecoration(
-                color: _bgColor,
-                border: Border(top: BorderSide(color: _borderColor)),
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 46,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    backgroundColor: selectedMode == 'learning' ? _primaryAccent : _secondaryAccent,
-                    foregroundColor: Colors.white,
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+            // 常時下部に固定配置された開始ボタン（スクロール不要で即座に押せる・iPhone Safe Area対応）
+            SafeArea(
+              top: false,
+              bottom: true,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                decoration: const BoxDecoration(
+                  color: _bgColor,
+                  border: Border(top: BorderSide(color: _borderColor)),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      backgroundColor: selectedMode == 'learning' ? _primaryAccent : _secondaryAccent,
+                      foregroundColor: Colors.white,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  onPressed: _startGame,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      selectedMode == 'learning'
-                          ? 'Chapter $selectedChapter を学習開始'
-                          : 'チャレンジを開始',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
+                    onPressed: _startGame,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        selectedMode == 'learning'
+                            ? 'Chapter $selectedChapter を学習開始'
+                            : 'チャレンジを開始',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                   ),
@@ -496,6 +564,32 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionBtn({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: _cardColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _borderColor),
+            ),
+            child: Icon(icon, size: 20, color: _primaryAccent),
+          ),
         ),
       ),
     );

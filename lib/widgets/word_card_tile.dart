@@ -253,10 +253,10 @@ class _WordCardTileState extends State<WordCardTile> {
                       tooltip: '発音を聴く',
                       onPressed: widget.onSpeak,
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                     ),
                     Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEFEAE0),
@@ -283,7 +283,7 @@ class _WordCardTileState extends State<WordCardTile> {
                       ),
                       onPressed: widget.onToggleFavorite,
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                     ),
                   ],
                 ),

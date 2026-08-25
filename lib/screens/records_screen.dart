@@ -100,9 +100,9 @@ class _RecordsScreenState extends State<RecordsScreen> {
                   _buildMenuCard(
                     title: 'スタンプ図鑑',
                     subtitle: '毎日の初回クリアで獲得したドット絵スタンプ',
-                    icon: Icons.verified_rounded,
+                    icon: Icons.stars_rounded,
                     accentColor: const Color(0xFFD4B86A),
-                    badgeText: 'F-11/F-12',
+                    badgeText: '全24種',
                     onTap: () {
                       Navigator.push(
                         context,
@@ -119,10 +119,10 @@ class _RecordsScreenState extends State<RecordsScreen> {
                   // 3. キャラクター図鑑
                   _buildMenuCard(
                     title: 'キャラクター図鑑',
-                    subtitle: '解放された章ドットキャラの確認＆相棒設定',
-                    icon: Icons.cruelty_free_rounded, // かわいい生き物アイコン
+                    subtitle: '全374チャプターのドット絵キャラ＆相棒設定',
+                    icon: Icons.pets_rounded,
                     accentColor: const Color(0xFF88A0A8),
-                    badgeText: 'F-12/F-14',
+                    badgeText: '全374体',
                     onTap: () {
                       Navigator.push(
                         context,

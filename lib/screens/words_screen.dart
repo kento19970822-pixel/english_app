@@ -571,6 +571,9 @@ class _WordsScreenState extends State<WordsScreen> {
                         ],
                       );
                     }),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: 24),
+                  ),
                 ],
               ),
             ),
