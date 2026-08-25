@@ -166,11 +166,14 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                     automaticallyImplyLeading: false,
                     backgroundColor: _bgColor,
                     elevation: 0,
-                    toolbarHeight: 206,
+                    toolbarHeight: 285,
+                    expandedHeight: 285,
+                    collapsedHeight: 285,
                     flexibleSpace: FlexibleSpaceBar(
+                      collapseMode: CollapseMode.pin,
                       background: Container(
                         color: _bgColor,
-                        padding: const EdgeInsets.fromLTRB(16.0, 10.0, 16.0, 4.0),
+                        padding: const EdgeInsets.fromLTRB(16.0, 6.0, 16.0, 4.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           mainAxisSize: MainAxisSize.min,
@@ -501,17 +504,37 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                                               ),
                                               const Spacer(),
                                               const Text(
+                                                '図鑑変更 ➔',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: _primaryAccent,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            selectedMode == 'learning'
+                                                ? (isBuddyLocked
+                                                    ? 'Ch.${buddySpecies.chapter} の暗記クリアで解放！'
+                                                    : 'Ch.$selectedChapter の暗記クリアを目指そう！')
+                                                : '制限時間1分間でスコアアタックに挑戦！',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: _textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              selectedMode == 'learning'
-                                  ? 'Ch.$selectedChapter の暗記クリアを目指そう！'
-                                  : '制限時間1分間でスコアアタックに挑戦！',
-                              style: const TextStyle(fontSize: 11, color: _textSecondary),
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                       ),
                     ),
                   ),
