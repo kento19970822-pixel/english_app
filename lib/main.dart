@@ -4,8 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'db/app_database.dart';
 import 'screens/mode_select_screen.dart';
-import 'screens/words_screen.dart';
 import 'screens/records_screen.dart';
+import 'screens/title_screen.dart';
+import 'screens/words_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,8 +17,27 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final AppDatabase _database;
+
+  @override
+  void initState() {
+    super.initState();
+    _database = AppDatabase();
+  }
+
+  @override
+  void dispose() {
+    _database.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +54,7 @@ class MyApp extends StatelessWidget {
           surface: const Color(0xFFFFFDF9),
         ),
       ),
-      home: const MainHomeScreen(),
+      home: TitleScreen(database: _database),
     );
   }
 }
