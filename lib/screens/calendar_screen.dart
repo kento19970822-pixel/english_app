@@ -125,6 +125,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     const SizedBox(height: 12),
                     _buildCalendarCard(),
                     const SizedBox(height: 16),
+                    _buildDailyMemorizedStatsCard(),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -406,6 +408,323 @@ class _CalendarScreenState extends State<CalendarScreen> {
               );
             },
           ),
+        ],
+      ),
+    );
+  }
+
+  /// 日ごとの新規暗記数・達成推移を視覚化したカード (F-15)
+  Widget _buildDailyMemorizedStatsCard() {
+    final daysInMonth = DateUtils.getDaysInMonth(_focusedMonth.year, _focusedMonth.month);
+    int totalMemorizedInMonth = 0;
+    int activeDaysCount = 0;
+    int maxDailyMemorized = 0;
+    final List<Map<String, dynamic>> dailyStats = [];
+
+    for (int day = 1; day <= daysInMonth; day++) {
+      final date = DateTime(_focusedMonth.year, _focusedMonth.month, day);
+      final dateStr = date.toIso8601String().split('T')[0];
+      final record = _dailyRecordsMap[dateStr];
+      final memCount = record?.memorizedCount ?? 0;
+      final playCount = record?.playedCount ?? 0;
+
+      if (memCount > 0) {
+        totalMemorizedInMonth += memCount;
+        activeDaysCount++;
+        if (memCount > maxDailyMemorized) {
+          maxDailyMemorized = memCount;
+        }
+      }
+
+      dailyStats.add({
+        'day': day,
+        'date': date,
+        'dateStr': dateStr,
+        'memorizedCount': memCount,
+        'playedCount': playCount,
+      });
+    }
+
+    final activeDays = dailyStats.where((d) => (d['memorizedCount'] as int) > 0 || (d['playedCount'] as int) > 0).toList()
+      ..sort((a, b) => (b['day'] as int).compareTo(a['day'] as int));
+
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _borderColor),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.bar_chart_rounded, color: _primaryAccent, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                '${_focusedMonth.month}月の新規暗記数推移',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // サマリーチップ
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFA5D6A7)),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text('新規暗記合計', style: TextStyle(fontSize: 11, color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$totalMemorizedInMonth 語',
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF3E0),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFFCC80)),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text('暗記達成日数', style: TextStyle(fontSize: 11, color: Color(0xFFE65100), fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$activeDaysCount 日',
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFFBF360C)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEDE7F6),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFCE93D8)),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text('1日最高記録', style: TextStyle(fontSize: 11, color: Color(0xFF6A1B9A), fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$maxDailyMemorized 語',
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF4A148C)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // 視覚的日別バーチャート
+          const Text(
+            '日別新規暗記グラフ',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: _textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 95,
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF6F2E7),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _borderColor),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: List.generate(daysInMonth, (index) {
+                    final day = index + 1;
+                    final stat = dailyStats[index];
+                    final count = stat['memorizedCount'] as int;
+                    final maxH = constraints.maxHeight - 22;
+                    final barHeight = maxDailyMemorized > 0 && count > 0
+                        ? (count / maxDailyMemorized * maxH).clamp(6.0, maxH)
+                        : 0.0;
+
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 0.5),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            if (count > 0)
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  '$count',
+                                  style: const TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF2E7D32),
+                                  ),
+                                ),
+                              ),
+                            Container(
+                              height: barHeight,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: count > 0 ? const Color(0xFF4CAF50) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              day % 5 == 1 || day == daysInMonth ? '$day' : '·',
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: day % 5 == 1 ? FontWeight.bold : FontWeight.normal,
+                                color: _textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // 日別詳細ログリスト
+          if (activeDays.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              alignment: Alignment.center,
+              child: const Column(
+                children: [
+                  Icon(Icons.emoji_events_outlined, color: Colors.grey, size: 32),
+                  SizedBox(height: 6),
+                  Text(
+                    'この月の新規暗記記録はまだありません。\nゲームをクリアして新しい単語を暗記しよう！',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: _textSecondary),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            const Text(
+              '日別暗記・学習履歴',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: _textSecondary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            ...activeDays.take(10).map((stat) {
+              final date = stat['date'] as DateTime;
+              final mem = stat['memorizedCount'] as int;
+              final play = stat['playedCount'] as int;
+              final weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+              final wStr = weekdays[date.weekday - 1];
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _bgColor,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _borderColor),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      '${date.month}/${date.day}($wStr)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: date.weekday == 7
+                            ? Colors.red.shade600
+                            : (date.weekday == 6 ? Colors.blue.shade600 : _textPrimary),
+                      ),
+                    ),
+                    const Spacer(),
+                    if (mem > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFA5D6A7)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.check_circle_rounded, size: 13, color: Color(0xFF2E7D32)),
+                            const SizedBox(width: 4),
+                            Text(
+                              '+$mem 語 暗記',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1B5E20),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      const Text('暗記 0語', style: TextStyle(fontSize: 11, color: _textSecondary)),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFEBE9),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'プレイ $play回',
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
         ],
       ),
     );

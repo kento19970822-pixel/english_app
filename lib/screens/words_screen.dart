@@ -51,6 +51,8 @@ class _WordsScreenState extends State<WordsScreen> {
   String _searchQuery = '';
 
   bool _isLoading = true;
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollToTop = false;
 
   // パステルテーマカラー
   static const Color _bgColor = Color(0xFFFBF7EE);
@@ -64,8 +66,27 @@ class _WordsScreenState extends State<WordsScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _initTts();
     _loadWords();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final show = _scrollController.offset > 300;
+    if (show != _showScrollToTop) {
+      setState(() => _showScrollToTop = show);
+    }
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   @override
@@ -302,6 +323,8 @@ class _WordsScreenState extends State<WordsScreen> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     TtsService.instance.stop();
     super.dispose();
   }
@@ -310,11 +333,28 @@ class _WordsScreenState extends State<WordsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bgColor,
+      floatingActionButton: _showScrollToTop
+          ? FloatingActionButton.small(
+              onPressed: _scrollToTop,
+              backgroundColor: _primaryAccent,
+              foregroundColor: Colors.white,
+              elevation: 3,
+              tooltip: '最上部へスクロール',
+              child: const Icon(Icons.keyboard_arrow_up_rounded, size: 24),
+            )
+          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: _primaryAccent))
           : SafeArea(
-              child: CustomScrollView(
-                slivers: [
+              child: Scrollbar(
+                controller: _scrollController,
+                thumbVisibility: true,
+                interactive: true,
+                thickness: 6.0,
+                radius: const Radius.circular(3),
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  slivers: [
                   // 1. スクロールで出入りする可変ヘッダー
                   SliverAppBar(
                     floating: true,
@@ -577,6 +617,7 @@ class _WordsScreenState extends State<WordsScreen> {
                 ],
               ),
             ),
+          ),
     );
   }
 

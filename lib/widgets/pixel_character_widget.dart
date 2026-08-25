@@ -25,32 +25,58 @@ enum CharacterActionState {
 
 /// キャラクターの8大系統
 enum CharacterCategory {
-  animal('動物系', '🐾', 1, 75),
-  bird('鳥・飛行系', '🕊️', 76, 115),
-  aquatic('水棲系', '🐟', 116, 155),
-  plant('植物・自然系', '🌿', 156, 195),
-  monster('モンスター系', '👾', 196, 270),
-  fantasy('ファンタジー系', '🐲', 271, 320),
-  humanoid('人型・妖精系', '🧚', 321, 355),
-  special('特殊・コズミック系', '🤖', 356, 374);
+  animal('動物系', '🐾'),
+  bird('鳥・飛行系', '🕊️'),
+  aquatic('水棲系', '🐟'),
+  plant('植物・自然系', '🌿'),
+  monster('モンスター系', '👾'),
+  fantasy('ファンタジー系', '🐲'),
+  humanoid('人型・妖精系', '🧚'),
+  special('特殊・コズミック系', '🤖');
 
   final String label;
   final String icon;
-  final int startChapter;
-  final int endChapter;
-  const CharacterCategory(this.label, this.icon, this.startChapter, this.endChapter);
+  const CharacterCategory(this.label, this.icon);
 
   static CharacterCategory fromChapter(int chapter) {
-    if (chapter <= 75) return CharacterCategory.animal;
-    if (chapter <= 115) return CharacterCategory.bird;
-    if (chapter <= 155) return CharacterCategory.aquatic;
-    if (chapter <= 195) return CharacterCategory.plant;
-    if (chapter <= 270) return CharacterCategory.monster;
-    if (chapter <= 320) return CharacterCategory.fantasy;
-    if (chapter <= 355) return CharacterCategory.humanoid;
-    return CharacterCategory.special;
+    final idx = (chapter - 1).clamp(0, kTotalChapterCount - 1);
+    return _kChapterCategories[idx];
   }
 }
+
+/// 374チャプターの系統均等・ごちゃまぜ決定論的マッピング (固定シードで完全一意)
+final List<CharacterCategory> _kChapterCategories = () {
+  final List<CharacterCategory> pool = [
+    ...List.filled(75, CharacterCategory.animal),
+    ...List.filled(40, CharacterCategory.bird),
+    ...List.filled(40, CharacterCategory.aquatic),
+    ...List.filled(40, CharacterCategory.plant),
+    ...List.filled(75, CharacterCategory.monster),
+    ...List.filled(50, CharacterCategory.fantasy),
+    ...List.filled(35, CharacterCategory.humanoid),
+    ...List.filled(19, CharacterCategory.special),
+  ];
+  final rng = math.Random(20260825);
+  for (int i = pool.length - 1; i > 0; i--) {
+    final j = rng.nextInt(i + 1);
+    final temp = pool[i];
+    pool[i] = pool[j];
+    pool[j] = temp;
+  }
+  return pool;
+}();
+
+/// 系統内でのインデックスオフセット
+final List<int> _kChapterCategoryOffsets = () {
+  final Map<CharacterCategory, int> counts = {};
+  final List<int> offsets = [];
+  for (final cat in _kChapterCategories) {
+    final current = counts[cat] ?? 0;
+    offsets.add(current);
+    counts[cat] = current + 1;
+  }
+  return offsets;
+}();
 
 /// キャラクター種族メタデータ (48x48 高精細ドットモデル)
 class CharacterSpecies {
@@ -182,42 +208,34 @@ const List<Map<String, dynamic>> _kSpecialMotifs = [
 CharacterSpecies getCharacterSpecies(int chapter) {
   final clampedChap = chapter.clamp(1, kTotalChapterCount);
   final id = clampedChap - 1;
-  final category = CharacterCategory.fromChapter(clampedChap);
+  final category = _kChapterCategories[id];
+  final offsetInCat = _kChapterCategoryOffsets[id];
 
   List<Map<String, dynamic>> motifList;
-  int offsetInCat;
   switch (category) {
     case CharacterCategory.animal:
       motifList = _kAnimalMotifs;
-      offsetInCat = clampedChap - category.startChapter;
       break;
     case CharacterCategory.bird:
       motifList = _kBirdMotifs;
-      offsetInCat = clampedChap - category.startChapter;
       break;
     case CharacterCategory.aquatic:
       motifList = _kAquaticMotifs;
-      offsetInCat = clampedChap - category.startChapter;
       break;
     case CharacterCategory.plant:
       motifList = _kPlantMotifs;
-      offsetInCat = clampedChap - category.startChapter;
       break;
     case CharacterCategory.monster:
       motifList = _kMonsterMotifs;
-      offsetInCat = clampedChap - category.startChapter;
       break;
     case CharacterCategory.fantasy:
       motifList = _kFantasyMotifs;
-      offsetInCat = clampedChap - category.startChapter;
       break;
     case CharacterCategory.humanoid:
       motifList = _kHumanoidMotifs;
-      offsetInCat = clampedChap - category.startChapter;
       break;
     case CharacterCategory.special:
       motifList = _kSpecialMotifs;
-      offsetInCat = clampedChap - category.startChapter;
       break;
   }
 

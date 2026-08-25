@@ -17,7 +17,7 @@ class TtsService {
 
   /// 初期化：最適なネイティブ英語音声を自動検出してバインド
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized && _selectedVoiceName != null) return;
 
     try {
       await _flutterTts.setLanguage("en-US");
@@ -26,7 +26,16 @@ class TtsService {
       await _flutterTts.setPitch(1.0);
       await _flutterTts.setVolume(1.0);
 
-      // 利用可能な音声一覧を取得して最適なニューラル/ナチュラル音声を選択
+      await _selectAndSetBestVoice();
+    } catch (e) {
+      debugPrint("TtsService Init Error: $e");
+    } finally {
+      _isInitialized = true;
+    }
+  }
+
+  Future<void> _selectAndSetBestVoice() async {
+    try {
       final dynamic rawVoices = await _flutterTts.getVoices;
       if (rawVoices is List && rawVoices.isNotEmpty) {
         final bestVoice = selectBestVoice(rawVoices);
@@ -37,14 +46,12 @@ class TtsService {
           });
           _selectedVoiceName = bestVoice['name'];
           debugPrint(
-            "🔊 TtsService: 最適なネイティブ音声を適用しました -> ${_selectedVoiceName ?? 'デフォルト'}",
+            "🔊 TtsService: 最適なネイティブ英語音声を適用しました -> ${_selectedVoiceName ?? 'デフォルト'}",
           );
         }
       }
     } catch (e) {
-      debugPrint("TtsService Init Error: $e");
-    } finally {
-      _isInitialized = true;
+      debugPrint("TtsService Voice Selection Error: $e");
     }
   }
 
@@ -60,7 +67,7 @@ class TtsService {
       final name = (rawVoice['name'] ?? '').toString();
       final locale = (rawVoice['locale'] ?? '').toString();
 
-      // 英語以外の言語はスキップ
+      // 英語以外の言語（日本語等）は完全に除外
       final cleanLocale = locale.toLowerCase().replaceAll('_', '-');
       if (!cleanLocale.startsWith('en')) {
         continue;
@@ -70,16 +77,16 @@ class TtsService {
 
       // 1. ロケール優先度
       if (cleanLocale == 'en-us') {
-        score += 30; // アメリカ英語を最優先
+        score += 40; // アメリカ英語を最優先
       } else if (cleanLocale == 'en-gb') {
-        score += 25; // イギリス英語を第2優先
+        score += 30; // イギリス英語を第2優先
       } else if (cleanLocale.startsWith('en')) {
-        score += 10;
+        score += 15;
       }
 
       final lowerName = name.toLowerCase();
 
-      // 2. 高音質ニューラル / ナチュラルキーワード
+      // 2. 高音質ニューラル / ナチュラル / 拡張キーワード
       if (lowerName.contains('neural') || lowerName.contains('natural')) {
         score += 100; // 最上位ニューラル音声 (Windows Cortana / Android Neural / Azure)
       }
@@ -87,43 +94,49 @@ class TtsService {
         score += 90; // Google Wavenet
       }
       if (lowerName.contains('premium') || lowerName.contains('enhanced')) {
-        score += 80; // iOS / macOS 高音質拡張
+        score += 80; // iOS / macOS 高音質拡張 (Enhanced / Premium)
       }
       if (lowerName.contains('siri')) {
-        score += 70; // Apple Siri
+        score += 70; // Apple Siri 音声
       }
 
-      // 3. 定評のある高品質ネイティブスピーカー名
-      // Windows Natural Voices: Jenny, Guy, Aria, Steffan, Ryan, Sonia
-      if (lowerName.contains('jenny') ||
+      // 3. 定評のある高品質ネイティブスピーカー名（iOS / Windows / Android / Chrome）
+      if (lowerName.contains('ava') ||
+          lowerName.contains('samantha') ||
+          lowerName.contains('allison') ||
+          lowerName.contains('susan') ||
+          lowerName.contains('karen') ||
+          lowerName.contains('moira') ||
+          lowerName.contains('tessa') ||
+          lowerName.contains('daniel') ||
+          lowerName.contains('oliver') ||
+          lowerName.contains('stephanie') ||
+          lowerName.contains('alex') ||
+          lowerName.contains('jenny') ||
           lowerName.contains('aria') ||
           lowerName.contains('guy') ||
           lowerName.contains('steffan') ||
           lowerName.contains('sonia') ||
           lowerName.contains('ryan')) {
         score += 50;
-      }
-      // Apple / Windows Standard High Quality: Samantha, Alex, Zira, Hazel, George
-      else if (lowerName.contains('samantha') ||
-          lowerName.contains('alex') ||
-          lowerName.contains('zira') ||
+      } else if (lowerName.contains('zira') ||
           lowerName.contains('george') ||
-          lowerName.contains('hazel')) {
-        score += 30;
-      } else if (lowerName.contains('david') || lowerName.contains('mark')) {
-        score += 10;
+          lowerName.contains('hazel') ||
+          lowerName.contains('david') ||
+          lowerName.contains('mark')) {
+        score += 20;
       }
 
       // 4. ネットワーク高音質 (Android network/online)
       if (lowerName.contains('network') || lowerName.contains('online')) {
-        score += 20;
+        score += 25;
       }
 
       if (score > bestScore) {
         bestScore = score;
         bestVoice = {
           'name': name,
-          'locale': locale,
+          'locale': locale.isNotEmpty ? locale : 'en-US',
         };
       }
     }
@@ -137,10 +150,13 @@ class TtsService {
     if (cleanText.isEmpty) return;
 
     try {
-      if (!_isInitialized) {
+      if (!_isInitialized || _selectedVoiceName == null) {
         await initialize();
       }
       await _flutterTts.stop();
+      // 常に英語(en-US)を強制適用
+      await _flutterTts.setLanguage("en-US");
+      await _flutterTts.setSpeechRate(0.48);
       await _flutterTts.speak(cleanText);
     } catch (e) {
       debugPrint("TtsService speak error: $e");
