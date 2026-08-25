@@ -140,12 +140,18 @@ class _WordCardTileState extends State<WordCardTile> {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            setState(() {
-              final current = _overrideShowJapanese ?? widget.showJapanese;
-              _overrideShowJapanese = !current;
-            });
-          },
+          onTap: widget.showJapanese
+              ? null
+              : () {
+                  final currentlyVisible = _overrideShowJapanese ?? false;
+                  final willShow = !currentlyVisible;
+                  setState(() {
+                    _overrideShowJapanese = willShow;
+                  });
+                  if (willShow) {
+                    widget.onSpeak();
+                  }
+                },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
@@ -186,41 +192,71 @@ class _WordCardTileState extends State<WordCardTile> {
                             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                             decoration: BoxDecoration(
                               color: indicatorColor.withAlpha(35),
-                              borderRadius: BorderRadius.circular(5),
-                              border: Border.all(color: indicatorColor.withAlpha(120), width: 1),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: indicatorColor, width: 1),
                             ),
                             child: Text(
                               '$pt pt',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: indicatorColor == const Color(0xFFDCD4BE)
-                                    ? _textSecondary
-                                    : (indicatorColor == const Color(0xFFE6A23C)
-                                        ? Colors.amber.shade900
-                                        : indicatorColor),
+                                color: isMemorized ? const Color(0xFF2E7D32) : _textPrimary,
                               ),
                             ),
                           ),
+                          if (isMemorized)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8F5E9),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                '✓ 覚えた',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ),
                           if (widget.word.phonetic != null &&
                               widget.word.phonetic!.isNotEmpty)
                             Text(
                               widget.word.phonetic!,
                               style: const TextStyle(
-                                color: _textSecondary,
                                 fontSize: 12,
+                                color: _textSecondary,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          if (widget.word.category.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFEAE0),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                widget.word.category,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: _textSecondary,
+                                ),
                               ),
                             ),
                           if (isRestricted)
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
+                                horizontal: 4,
                                 vertical: 1,
                               ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFF3E0),
                                 borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: Colors.orange.shade300),
                               ),
                               child: const Text(
                                 '⚠️ 本日上限70pt',
@@ -237,7 +273,7 @@ class _WordCardTileState extends State<WordCardTile> {
                       Text(
                         isJapaneseVisible
                             ? widget.word.japanese
-                            : '•••••• (長押しで表示)',
+                            : '•••••• (タップで表示)',
                         style: TextStyle(
                           fontSize: 14,
                           color: isJapaneseVisible ? _textPrimary : _textSecondary.withAlpha(150),
