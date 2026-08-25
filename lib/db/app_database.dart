@@ -280,7 +280,7 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// 手動チェック / 右スワイプ: 暗記済み(80pt)化 (F-08/F-10)
+  /// 手動チェック / 右スワイプ: 暗記済み(80pt)化 ＆ 制限解除 (F-08/F-10/F-14)
   Future<void> markAsMemorizedManual(int id) async {
     final word = await (select(
       words,
@@ -291,12 +291,36 @@ class AppDatabase extends _$AppDatabase {
       WordsCompanion(
         retentionPoint: const Value(80),
         isMemorized: const Value(true),
+        isRestricted: const Value(false),
         lastStudiedAt: Value(DateTime.now()),
       ),
     );
 
     if (!wasMemorized) {
       await incrementDailyMemorizedCount();
+    }
+  }
+
+  /// 暗記フラグ一括リセット: 全単語の暗記フラグ・定着度・制限フラグを初期状態にリセット (F-09/F-15)
+  Future<void> resetAllWordsMemorized() async {
+    await update(words).write(
+      const WordsCompanion(
+        retentionPoint: Value(0),
+        isMemorized: Value(false),
+        isRestricted: Value(false),
+      ),
+    );
+
+    // 全チャプター進捗の暗記達成率を0%に更新（Ch.1のみ解放、他は未解放に再設定）
+    final allCp = await getAllChapterProgresses();
+    for (final cp in allCp) {
+      await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter))).write(
+        ChapterProgressesCompanion(
+          memorizedRate: const Value(0.0),
+          isUnlocked: Value(cp.chapter == 1),
+          isCleared: const Value(false),
+        ),
+      );
     }
   }
 

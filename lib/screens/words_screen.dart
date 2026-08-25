@@ -49,6 +49,7 @@ class WordsScreenState extends State<WordsScreen> {
   String _selectedCategory = 'ALL'; // 'ALL', 'General'...
   bool _showJapanese = true;
   String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   bool _isLoading = true;
   final ScrollController _scrollController = ScrollController();
@@ -86,6 +87,88 @@ class WordsScreenState extends State<WordsScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
+    }
+  }
+
+  /// タブ再押下時などの画面表示初期化 (項目12)
+  void resetFiltersAndScrollToTop() {
+    setState(() {
+      _searchController.clear();
+      _searchQuery = '';
+      _filterUnlearned = false;
+      _filterFavorite = false;
+      _selectedCefr = 'ALL';
+      _selectedChap = 0;
+      _selectedAz = 'ALL';
+      _selectedCategory = 'ALL';
+      _sortMode = 'chap';
+      _showJapanese = true;
+    });
+    _applyFilterAndGrouping();
+    _scrollToTop();
+  }
+
+  /// 暗記フラグ・定着度の一括リセット確認ダイアログ (項目15)
+  Future<void> _showResetAllMemorizedDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: _cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Color(0xFFD9534F), size: 24),
+            SizedBox(width: 8),
+            Text(
+              '暗記フラグの一括リセット',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _textPrimary),
+            ),
+          ],
+        ),
+        content: const Text(
+          'すべての単語の暗記フラグ（覚えた）および定着度ポイントを0pt（未暗記）に一括リセットします。\n\n※この操作は取り消せません。\n※お気に入り登録した単語はそのまま保持されます。',
+          style: TextStyle(fontSize: 13, color: _textSecondary, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('キャンセル', style: TextStyle(color: _textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD9534F),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('リセット実行'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() => _isLoading = true);
+      try {
+        await widget.database.resetAllWordsMemorized();
+        await _loadWords();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('全単語の暗記フラグと定着度をリセットしました'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('リセット中にエラーが発生しました: $e')),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -329,6 +412,7 @@ class WordsScreenState extends State<WordsScreen> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _searchController.dispose();
     TtsService.instance.stop();
     super.dispose();
   }
@@ -382,7 +466,7 @@ class WordsScreenState extends State<WordsScreen> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                // 検索バー ＆ DBリフレッシュ
+                                // 検索バー ＆ 暗記リセット ＆ DBリフレッシュ
                                 Row(
                                   children: [
                                     Expanded(
@@ -394,24 +478,45 @@ class WordsScreenState extends State<WordsScreen> {
                                           border: Border.all(color: _borderColor),
                                         ),
                                         child: TextField(
+                                          controller: _searchController,
                                           textAlignVertical: TextAlignVertical.center,
-                                          decoration: const InputDecoration(
+                                          decoration: InputDecoration(
                                             hintText: '英単語または和訳で検索...',
-                                            hintStyle: TextStyle(fontSize: 13, color: _textSecondary),
-                                            prefixIcon: Icon(Icons.search_rounded, size: 20, color: _textSecondary),
+                                            hintStyle: const TextStyle(fontSize: 13, color: _textSecondary),
+                                            prefixIcon: const Icon(Icons.search_rounded, size: 20, color: _textSecondary),
+                                            suffixIcon: _searchController.text.isNotEmpty
+                                                ? IconButton(
+                                                    icon: const Icon(Icons.cancel_rounded, size: 18, color: _textSecondary),
+                                                    onPressed: () {
+                                                      _searchController.clear();
+                                                      setState(() => _searchQuery = '');
+                                                      _onFilterChanged();
+                                                    },
+                                                    padding: EdgeInsets.zero,
+                                                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                                  )
+                                                : null,
                                             border: InputBorder.none,
                                             isDense: true,
-                                            contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                                            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
                                           ),
                                           style: const TextStyle(fontSize: 14, color: _textPrimary),
                                           onChanged: (val) {
-                                            _searchQuery = val;
+                                            setState(() => _searchQuery = val);
                                             _onFilterChanged();
                                           },
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: 4),
+                                    IconButton(
+                                      icon: const Icon(Icons.restart_alt_rounded, color: Color(0xFFD9534F)),
+                                      tooltip: '暗記フラグ一括リセット',
+                                      onPressed: _isLoading ? null : _showResetAllMemorizedDialog,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                                    ),
+                                    const SizedBox(width: 2),
                                     IconButton(
                                       icon: const Icon(Icons.sync_rounded, color: _primaryAccent),
                                       tooltip: 'DB完全再構築',
@@ -573,6 +678,7 @@ class WordsScreenState extends State<WordsScreen> {
                                       _allWords[idx] = _allWords[idx].copyWith(
                                         retentionPoint: 80,
                                         isMemorized: true,
+                                        isRestricted: false,
                                       );
                                       _onFilterChanged();
                                     }
@@ -580,7 +686,7 @@ class WordsScreenState extends State<WordsScreen> {
                                       ScaffoldMessenger.of(context).clearSnackBars();
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text('「${word.english}」を暗記済みに設定しました'),
+                                          content: Text('「${word.english}」を暗記済みに設定しました（制限解除）'),
                                           duration: const Duration(seconds: 1),
                                         ),
                                       );

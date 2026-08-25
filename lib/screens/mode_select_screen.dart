@@ -22,10 +22,10 @@ class ModeSelectScreen extends StatefulWidget {
   });
 
   @override
-  State<ModeSelectScreen> createState() => _ModeSelectScreenState();
+  State<ModeSelectScreen> createState() => ModeSelectScreenState();
 }
 
-class _ModeSelectScreenState extends State<ModeSelectScreen> {
+class ModeSelectScreenState extends State<ModeSelectScreen> {
   String selectedMode = 'learning'; // 'learning' or 'challenge'
   int selectedLevel = 1; // 1: 初級, 2: 中級, 3: 上級 (UI上の3区分)
   int selectedChapter = 1;
@@ -34,6 +34,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
   List<ChapterProgressesData> _currentLevelChapters = [];
   bool _isLoadingChapters = true;
   Stamp? _favoriteStamp;
+  final ScrollController _scrollController = ScrollController();
 
   // 定数カラーパレット
   static const Color _bgColor = Color(0xFFFBF7EE);
@@ -48,6 +49,23 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
   void initState() {
     super.initState();
     _loadChaptersForLevel(selectedLevel);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// 同じタブを再タップした際の最上部スクロール初期化 (項目12)
+  void resetScrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   /// 画面復帰時などに最新チャプター解放状況を再ロード
@@ -156,6 +174,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
           children: [
             Expanded(
               child: CustomScrollView(
+                controller: _scrollController,
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   // スクロール時に隠れ、下スクロール（引き下げ）で単語帳同様に再表示されるフローティングヘッダー (項目6)

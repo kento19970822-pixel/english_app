@@ -52,6 +52,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   bool _isGameStarted = false;
   final GlobalKey<RecordsScreenState> _recordsKey = GlobalKey<RecordsScreenState>();
   final GlobalKey<WordsScreenState> _wordsKey = GlobalKey<WordsScreenState>();
+  final GlobalKey<ModeSelectScreenState> _modeSelectKey = GlobalKey<ModeSelectScreenState>();
 
   @override
   void initState() {
@@ -101,6 +102,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       ModeSelectScreen(
+        key: _modeSelectKey,
         database: _database,
         onGameStateChanged: _onGameStateChanged,
         onOpenRecordsSubView: _onOpenRecordsSubView,
@@ -124,16 +126,27 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
               backgroundColor: const Color(0xFFFFFDF9),
               indicatorColor: const Color(0xFF5F9E98).withAlpha(50),
               onDestinationSelected: (int index) {
-                if (index == 1) {
-                  // 単語帳タブ選択時は最新の定着度ポイント・暗記フラグを即時再読み込み
-                  _wordsKey.currentState?.refreshWords();
-                } else if (index == 2) {
-                  // 記録タブへの遷移時は常に記録メニュートップ（ホーム状態）を表示
-                  _recordsKey.currentState?.closeSubView();
+                if (index == _selectedIndex) {
+                  // 画面表示中に同じタブを再押下した場合はスクロール位置・フィルターを初期状態にリセット (項目12)
+                  if (index == 0) {
+                    _modeSelectKey.currentState?.resetScrollToTop();
+                  } else if (index == 1) {
+                    _wordsKey.currentState?.resetFiltersAndScrollToTop();
+                  } else if (index == 2) {
+                    _recordsKey.currentState?.closeSubView();
+                  }
+                } else {
+                  if (index == 1) {
+                    // 単語帳タブ選択時は最新の定着度ポイント・暗記フラグを即時再読み込み
+                    _wordsKey.currentState?.refreshWords();
+                  } else if (index == 2) {
+                    // 記録タブへの遷移時は常に記録メニュートップ（ホーム状態）を表示
+                    _recordsKey.currentState?.closeSubView();
+                  }
+                  setState(() {
+                    _selectedIndex = index;
+                  });
                 }
-                setState(() {
-                  _selectedIndex = index;
-                });
               },
               destinations: const [
                 NavigationDestination(
