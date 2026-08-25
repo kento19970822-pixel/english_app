@@ -468,6 +468,12 @@ class AppDatabase extends _$AppDatabase {
     return streak;
   }
 
+  /// 累計学習日数（プレイまたは新規暗記を行ったユニーク日数）の算出 (F-15)
+  Future<int> calculateTotalStudiedDays() async {
+    final allRecords = await select(dailyRecords).get();
+    return allRecords.where((r) => r.playedCount > 0 || r.memorizedCount > 0).length;
+  }
+
   /// ゲーム履歴の追加 ＆ 日別プレイ回数加算
   Future<int> addGameHistory(int score, int level) async {
     await incrementDailyPlayedCount();

@@ -26,6 +26,7 @@ class RecordsScreen extends StatefulWidget {
 
 class RecordsScreenState extends State<RecordsScreen> {
   int _streakDays = 0;
+  int _totalStudiedDays = 0;
   bool _isLoading = true;
   String? _currentSubView;
 
@@ -53,9 +54,11 @@ class RecordsScreenState extends State<RecordsScreen> {
 
   Future<void> _loadSummary() async {
     final streak = await widget.database.calculateStreak();
+    final totalDays = await widget.database.calculateTotalStudiedDays();
     if (mounted) {
       setState(() {
         _streakDays = streak;
+        _totalStudiedDays = totalDays;
         _isLoading = false;
       });
     }
@@ -255,6 +258,7 @@ class RecordsScreenState extends State<RecordsScreen> {
       ),
       child: Row(
         children: [
+          // 連続日数アイコン
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
@@ -307,6 +311,38 @@ class RecordsScreenState extends State<RecordsScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // 累計学習日数バッジ (F-15)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFA5D6A7)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '累計学習日数',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2E7D32),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$_totalStudiedDays 日',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1B5E20),
                   ),
                 ),
               ],

@@ -119,6 +119,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   // F-05: 1ゲーム1変動原則（セッション中に既にDB反映・ポイント評価を行った単語IDを記録）
   final Set<int> _processedWordIds = {};
+  int _correctCount = 0;
+  int _totalAnsweredCount = 0;
 
   WordModel? leftWord;
   List<String> leftChoices = [];
@@ -314,6 +316,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       remainingTime = totalGameDuration;
       score = 0;
       combo = 0;
+      _correctCount = 0;
+      _totalAnsweredCount = 0;
       isGameOver = false;
       isPaused = false;
       isLeftStarted = false;
@@ -507,6 +511,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       setState(() {
         score += addScore;
         combo += 1;
+        _correctCount += 1;
+        _totalAnsweredCount += 1;
         final fb = "${result['feedbackText']} (+$addScore)";
         if (isLeft) {
           leftFeedback = fb;
@@ -565,6 +571,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
       setState(() {
         combo = 0;
+        _totalAnsweredCount += 1;
         if (isLeft) {
           leftDisabledChoices.add(selectedChoice);
           leftMistaken = true;
@@ -611,6 +618,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     setState(() {
       combo = 0;
+      _totalAnsweredCount += 1;
       if (isLeft) {
         leftFeedback = "タイムオーバー!";
       } else {
@@ -1135,6 +1143,69 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // 正解単語数・ミス単語数・正答率サマリーチップ (F-03/F-07)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE8F5E9),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: const Color(0xFFA5D6A7)),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Text('正解単語数', style: TextStyle(fontSize: 10, color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 2),
+                                      Text('$_correctCount 語', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20))),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFEBEE),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: const Color(0xFFEF9A9A)),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Text('ミス単語数', style: TextStyle(fontSize: 10, color: Color(0xFFC62828), fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 2),
+                                      Text('${mistakenWords.length} 語', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFFB71C1C))),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE3F2FD),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: const Color(0xFF90CAF9)),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Text('正答率', style: TextStyle(fontSize: 10, color: Color(0xFF1565C0), fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${_totalAnsweredCount > 0 ? ((_correctCount / _totalAnsweredCount) * 100).toInt() : 100}%',
+                                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           if (isLearning) ...[
                             const SizedBox(height: 10),
