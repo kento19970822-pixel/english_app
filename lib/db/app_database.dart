@@ -566,21 +566,21 @@ class AppDatabase extends _$AppDatabase {
     return anyChapter.isNotEmpty ? anyChapter.first.chapter : 1;
   }
 
-  /// チャプター内の暗記フラグ率（0.0〜100.0%）を計算
+  /// チャプター内の70pt以上単語達成率（0.0〜100.0%）を計算 (F-15: クリア判定基準)
   Future<double> calculateChapterMemorizedRate(int chapter) async {
     final wordsInChapter = await (select(words)
           ..where((t) => t.chapter.equals(chapter)))
         .get();
     if (wordsInChapter.isEmpty) return 0.0;
 
-    final memorizedCount = wordsInChapter.where((w) => w.isMemorized).length;
-    return (memorizedCount / wordsInChapter.length) * 100.0;
+    final targetCount = wordsInChapter.where((w) => w.retentionPoint >= 70).length;
+    return (targetCount / wordsInChapter.length) * 100.0;
   }
 
-  /// 【学習モードクリア時】暗記フラグ率が90%超の場合にクリア判定・次チャプター解放 (F-15)
+  /// 【学習モードクリア時】70pt以上の単語が90%以上の場合にクリア判定・次チャプター解放 (F-15)
   Future<Map<String, dynamic>> checkAndUnlockNextChapter(int currentChapter) async {
     final rate = await calculateChapterMemorizedRate(currentChapter);
-    final isCleared = rate > 90.0; // 90%超（90%ちょうどは含まない）
+    final isCleared = rate >= 90.0; // 70pt以上が90%以上（100単語中90単語以上）
 
     // 現在のチャプター進捗を更新
     final currentProgress = await (select(chapterProgresses)

@@ -36,11 +36,20 @@ class _WordCardTileState extends State<WordCardTile> {
   static const Color _textSecondary = Color(0xFF6B726E);
   static const Color _borderColor = Color(0xFFE5DEC9);
 
+  Color _getRetentionColor(int pt, bool isMem) {
+    if (isMem || pt >= 80) return const Color(0xFF4CAF50); // 🟢 80〜100pt: 暗記達成
+    if (pt >= 50) return const Color(0xFFE6A23C); // 🟡 50〜79pt: 定着中（高）
+    if (pt > 0) return const Color(0xFFECA882); // 🟠 1〜49pt: 学習初期
+    return const Color(0xFFDCD4BE); // ⚪ 0pt: 未学習
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isJapaneseVisible = widget.showJapanese || _isHolding;
     final bool isMemorized = widget.word.isMemorized;
     final bool isRestricted = widget.word.isRestricted;
+    final int pt = widget.word.retentionPoint;
+    final Color indicatorColor = _getRetentionColor(pt, isMemorized);
 
     return Dismissible(
       key: ValueKey('word_card_${widget.word.id}'),
@@ -134,17 +143,13 @@ class _WordCardTileState extends State<WordCardTile> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // 暗記済みインジケータ
+                // 定着度ポイント4段階カラーインジケータ (緑:80pt+, 黄:50-79pt, 橙:1-49pt, 灰:0pt)
                 Container(
-                  width: 8,
-                  height: 38,
+                  width: 6,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: isMemorized
-                        ? _primaryAccent
-                        : (widget.word.retentionPoint > 0
-                            ? _secondaryAccent
-                            : Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(4),
+                    color: indicatorColor,
+                    borderRadius: BorderRadius.circular(3),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -166,6 +171,27 @@ class _WordCardTileState extends State<WordCardTile> {
                               fontWeight: FontWeight.bold,
                               color: _textPrimary,
                               letterSpacing: 0.2,
+                            ),
+                          ),
+                          // 定着度ポイントバッジ（数値＆カラー表示）
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: indicatorColor.withAlpha(35),
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(color: indicatorColor.withAlpha(120), width: 1),
+                            ),
+                            child: Text(
+                              '$pt pt',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: indicatorColor == const Color(0xFFDCD4BE)
+                                    ? _textSecondary
+                                    : (indicatorColor == const Color(0xFFE6A23C)
+                                        ? Colors.amber.shade900
+                                        : indicatorColor),
+                              ),
                             ),
                           ),
                           if (widget.word.phonetic != null &&

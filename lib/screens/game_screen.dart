@@ -1109,8 +1109,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                           fit: BoxFit.scaleDown,
                                           child: Text(
                                             isCleared
-                                                ? 'Ch.$selectedChapter MASTER! (${rate.toInt()}%) 🎉'
-                                                : 'Ch.$selectedChapter 暗記率: ${rate.toInt()}% (目標: >90%)',
+                                                ? 'Ch.$selectedChapter MASTER! (70pt以上: ${rate.toInt()}%) 🎉'
+                                                : 'Ch.$selectedChapter 70pt以上: ${rate.toInt()}% (解放条件: 90%以上)',
                                             style: TextStyle(
                                               fontSize: 13,
                                               fontWeight: FontWeight.bold,

@@ -218,7 +218,7 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                         Expanded(
                           child: _buildModeCard(
                             title: '学習モード',
-                            subtitle: '章ごと集中学習\n(暗記90%超で次章解放)',
+                            subtitle: '章ごと集中学習\n(70pt以上90%で次章解放)',
                             icon: Icons.school_rounded,
                             modeKey: 'learning',
                             accentColor: _primaryAccent,
@@ -272,11 +272,19 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                               color: _textPrimary,
                             ),
                           ),
-                          Text(
-                            'クリア条件: 暗記率 > 90%',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: _textSecondary,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _primaryAccent.withAlpha(25),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              '解放条件: 70pt以上の単語が90%以上',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: _primaryAccent,
+                              ),
                             ),
                           ),
                         ],
@@ -398,10 +406,11 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                                               )
                                             else if (isUnlocked && cp.memorizedRate > 0)
                                               Text(
-                                                '暗記率: ${cp.memorizedRate.toInt()}%',
+                                                '70pt以上: ${cp.memorizedRate.toInt()}%',
                                                 style: const TextStyle(
                                                   fontSize: 11,
                                                   color: _textSecondary,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
                                               )
                                             else if (!isUnlocked)

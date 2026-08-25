@@ -585,7 +585,8 @@ class _WordsScreenState extends State<WordsScreen> {
     final chapter = section.words.first.chapter;
     final speciesIndex = chapter - 1;
     final species = getCharacterSpecies(chapter);
-    final double rate = (section.memorizedCount / section.words.length) * 100.0;
+    final int targetCount = section.words.where((w) => w.retentionPoint >= 70).length;
+    final double rate = (targetCount / section.words.length) * 100.0;
     final growthState = PixelCharacterWidget.stateFromRate(rate, true);
     final isCleared = rate >= 80.0;
     final isLocked = growthState == CharacterGrowthState.locked;
@@ -593,16 +594,16 @@ class _WordsScreenState extends State<WordsScreen> {
     String statusText;
     Color statusColor;
     if (isLocked || rate <= 0) {
-      statusText = '🔒 未暗記 (0%)';
+      statusText = '🔒 未学習 (0%)';
       statusColor = _textSecondary;
     } else if (isCleared) {
-      statusText = '🌟 進化マスター';
+      statusText = '🌟 進化マスター ($targetCount/100語)';
       statusColor = const Color(0xFF6A1B9A);
     } else if (rate >= 50.0) {
-      statusText = '😊 元気 (${rate.toInt()}%)';
+      statusText = '😊 元気 ($targetCount/100語)';
       statusColor = Colors.green.shade700;
     } else {
-      statusText = '🥀 元気ない (${rate.toInt()}%)';
+      statusText = '🥀 70pt以上: $targetCount語';
       statusColor = Colors.deepOrange;
     }
 
