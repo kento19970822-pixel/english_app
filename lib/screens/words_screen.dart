@@ -31,10 +31,10 @@ class WordsScreen extends StatefulWidget {
   const WordsScreen({super.key, required this.database});
 
   @override
-  State<WordsScreen> createState() => _WordsScreenState();
+  State<WordsScreen> createState() => WordsScreenState();
 }
 
-class _WordsScreenState extends State<WordsScreen> {
+class WordsScreenState extends State<WordsScreen> {
   List<Word> _allWords = [];
   List<WordSection> _groupedSections = [];
   int _totalFilteredCount = 0;
@@ -122,6 +122,10 @@ class _WordsScreenState extends State<WordsScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> refreshWords() async {
+    await _refreshWordsSilent();
   }
 
   Future<void> _refreshWordsSilent() async {

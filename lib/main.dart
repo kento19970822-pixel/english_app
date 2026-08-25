@@ -51,6 +51,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   int _selectedIndex = 0;
   bool _isGameStarted = false;
   final GlobalKey<RecordsScreenState> _recordsKey = GlobalKey<RecordsScreenState>();
+  final GlobalKey<WordsScreenState> _wordsKey = GlobalKey<WordsScreenState>();
 
   @override
   void initState() {
@@ -83,6 +84,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     setState(() {
       _isGameStarted = isStarted;
     });
+    // ゲーム終了時に単語帳の最新状態をバックグラウンド即時同期
+    if (!isStarted) {
+      _wordsKey.currentState?.refreshWords();
+    }
   }
 
   void _onOpenRecordsSubView(String subView) {
@@ -100,7 +105,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         onGameStateChanged: _onGameStateChanged,
         onOpenRecordsSubView: _onOpenRecordsSubView,
       ),
-      WordsScreen(database: _database),
+      WordsScreen(
+        key: _wordsKey,
+        database: _database,
+      ),
       RecordsScreen(
         key: _recordsKey,
         database: _database,
@@ -116,8 +124,11 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
               backgroundColor: const Color(0xFFFFFDF9),
               indicatorColor: const Color(0xFF5F9E98).withAlpha(50),
               onDestinationSelected: (int index) {
-                if (index == 2 && _selectedIndex == 2) {
-                  // 記録タブがすでに選択されている場合、サブビューからトップメニューへ戻る
+                if (index == 1) {
+                  // 単語帳タブ選択時は最新の定着度ポイント・暗記フラグを即時再読み込み
+                  _wordsKey.currentState?.refreshWords();
+                } else if (index == 2) {
+                  // 記録タブへの遷移時は常に記録メニュートップ（ホーム状態）を表示
                   _recordsKey.currentState?.closeSubView();
                 }
                 setState(() {
@@ -133,7 +144,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                 NavigationDestination(
                   icon: Icon(Icons.menu_book_outlined),
                   selectedIcon: Icon(Icons.menu_book),
-                  label: '単語一覧',
+                  label: '単語帳',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.insights_outlined),
