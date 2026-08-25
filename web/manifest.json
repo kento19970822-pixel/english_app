@@ -1,11 +1,11 @@
 {
-    "name": "english_app",
-    "short_name": "english_app",
+    "name": "英単語ゲーム - ドット絵×忘却曲線",
+    "short_name": "英単語ゲーム",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FBF7EE",
+    "theme_color": "#5F9E98",
+    "description": "2レーン落下式アクションと科学的忘却曲線モデルを融合させた英単語学習アプリ",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
