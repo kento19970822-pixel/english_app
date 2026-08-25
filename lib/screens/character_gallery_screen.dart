@@ -8,10 +8,12 @@ import '../widgets/pixel_character_widget.dart';
 /// キャラクター図鑑画面 (F-12: 全374チャプター1:1固有キャラクター・8大系統フィルター)
 class CharacterGalleryScreen extends StatefulWidget {
   final AppDatabase database;
+  final VoidCallback? onBack;
 
   const CharacterGalleryScreen({
     super.key,
     required this.database,
+    this.onBack,
   });
 
   @override
@@ -107,7 +109,13 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _textPrimary),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (widget.onBack != null) {
+              widget.onBack!();
+            } else if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
         ),
       ),
       body: _isLoading

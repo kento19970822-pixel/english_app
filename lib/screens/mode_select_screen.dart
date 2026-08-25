@@ -11,12 +11,14 @@ import 'stamp_gallery_screen.dart';
 
 class ModeSelectScreen extends StatefulWidget {
   final AppDatabase database;
-  final Function(bool isStarted)? onGameStateChanged;
+  final ValueChanged<bool>? onGameStateChanged;
+  final ValueChanged<String>? onOpenRecordsSubView;
 
   const ModeSelectScreen({
     super.key,
     required this.database,
     this.onGameStateChanged,
+    this.onOpenRecordsSubView,
   });
 
   @override
@@ -161,42 +163,51 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                         _buildQuickActionBtn(
                           icon: Icons.calendar_month_rounded,
                           tooltip: '学習カレンダー',
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CalendarScreen(database: widget.database),
-                              ),
-                            );
-                            _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+                          onTap: () {
+                            if (widget.onOpenRecordsSubView != null) {
+                              widget.onOpenRecordsSubView!('calendar');
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CalendarScreen(database: widget.database),
+                                ),
+                              ).then((_) => _loadChaptersForLevel(selectedLevel, preserveSelection: true));
+                            }
                           },
                         ),
                         const SizedBox(width: 6),
                         _buildQuickActionBtn(
                           icon: Icons.stars_rounded,
                           tooltip: 'スタンプ図鑑',
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => StampGalleryScreen(database: widget.database),
-                              ),
-                            );
-                            _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+                          onTap: () {
+                            if (widget.onOpenRecordsSubView != null) {
+                              widget.onOpenRecordsSubView!('stamp');
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => StampGalleryScreen(database: widget.database),
+                                ),
+                              ).then((_) => _loadChaptersForLevel(selectedLevel, preserveSelection: true));
+                            }
                           },
                         ),
                         const SizedBox(width: 6),
                         _buildQuickActionBtn(
                           icon: Icons.pets_rounded,
                           tooltip: 'キャラクター図鑑',
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CharacterGalleryScreen(database: widget.database),
-                              ),
-                            );
-                            _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+                          onTap: () {
+                            if (widget.onOpenRecordsSubView != null) {
+                              widget.onOpenRecordsSubView!('character');
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CharacterGalleryScreen(database: widget.database),
+                                ),
+                              ).then((_) => _loadChaptersForLevel(selectedLevel, preserveSelection: true));
+                            }
                           },
                         ),
                       ],
@@ -482,14 +493,17 @@ class _ModeSelectScreenState extends State<ModeSelectScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: InkWell(
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CharacterGalleryScreen(database: widget.database),
-                          ),
-                        );
-                        _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+                      onTap: () {
+                        if (widget.onOpenRecordsSubView != null) {
+                          widget.onOpenRecordsSubView!('character');
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CharacterGalleryScreen(database: widget.database),
+                            ),
+                          ).then((_) => _loadChaptersForLevel(selectedLevel, preserveSelection: true));
+                        }
                       },
                       borderRadius: BorderRadius.circular(8),
                       child: Padding(

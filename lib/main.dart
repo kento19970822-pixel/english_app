@@ -45,6 +45,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   late final AppDatabase _database;
   int _selectedIndex = 0;
   bool _isGameStarted = false;
+  final GlobalKey<RecordsScreenState> _recordsKey = GlobalKey<RecordsScreenState>();
 
   @override
   void initState() {
@@ -79,15 +80,26 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     });
   }
 
+  void _onOpenRecordsSubView(String subView) {
+    setState(() {
+      _selectedIndex = 2;
+    });
+    _recordsKey.currentState?.openSubView(subView);
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       ModeSelectScreen(
         database: _database,
         onGameStateChanged: _onGameStateChanged,
+        onOpenRecordsSubView: _onOpenRecordsSubView,
       ),
       WordsScreen(database: _database),
-      RecordsScreen(database: _database),
+      RecordsScreen(
+        key: _recordsKey,
+        database: _database,
+      ),
     ];
 
     return Scaffold(
@@ -99,6 +111,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
               backgroundColor: const Color(0xFFFFFDF9),
               indicatorColor: const Color(0xFF5F9E98).withAlpha(50),
               onDestinationSelected: (int index) {
+                if (index == 2 && _selectedIndex == 2) {
+                  // 記録タブがすでに選択されている場合、サブビューからトップメニューへ戻る
+                  _recordsKey.currentState?.closeSubView();
+                }
                 setState(() {
                   _selectedIndex = index;
                 });

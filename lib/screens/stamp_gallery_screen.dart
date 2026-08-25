@@ -7,8 +7,9 @@ import '../widgets/pixel_stamp_widget.dart';
 /// スタンプ図鑑画面 (F-12)
 class StampGalleryScreen extends StatefulWidget {
   final AppDatabase database;
+  final VoidCallback? onBack;
 
-  const StampGalleryScreen({super.key, required this.database});
+  const StampGalleryScreen({super.key, required this.database, this.onBack});
 
   @override
   State<StampGalleryScreen> createState() => _StampGalleryScreenState();
@@ -99,7 +100,13 @@ class _StampGalleryScreenState extends State<StampGalleryScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Color(0xFF2C302E)),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (widget.onBack != null) {
+              widget.onBack!();
+            } else if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
         ),
         actions: [
           // Phase切り替えドロップダウン

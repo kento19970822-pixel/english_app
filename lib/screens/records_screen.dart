@@ -10,21 +10,44 @@ import 'stamp_gallery_screen.dart';
 /// カレンダー、スタンプ図鑑、キャラクター図鑑への導線を提供
 class RecordsScreen extends StatefulWidget {
   final AppDatabase database;
+  final String? initialSubView;
+  final ValueChanged<String?>? onSubViewChanged;
 
-  const RecordsScreen({super.key, required this.database});
+  const RecordsScreen({
+    super.key,
+    required this.database,
+    this.initialSubView,
+    this.onSubViewChanged,
+  });
 
   @override
-  State<RecordsScreen> createState() => _RecordsScreenState();
+  State<RecordsScreen> createState() => RecordsScreenState();
 }
 
-class _RecordsScreenState extends State<RecordsScreen> {
+class RecordsScreenState extends State<RecordsScreen> {
   int _streakDays = 0;
   bool _isLoading = true;
-
+  String? _currentSubView;
 
   @override
   void initState() {
     super.initState();
+    _currentSubView = widget.initialSubView;
+    _loadSummary();
+  }
+
+  void openSubView(String viewKey) {
+    setState(() {
+      _currentSubView = viewKey;
+    });
+    widget.onSubViewChanged?.call(viewKey);
+  }
+
+  void closeSubView() {
+    setState(() {
+      _currentSubView = null;
+    });
+    widget.onSubViewChanged?.call(null);
     _loadSummary();
   }
 
@@ -40,6 +63,41 @@ class _RecordsScreenState extends State<RecordsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_currentSubView == 'calendar') {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) closeSubView();
+        },
+        child: CalendarScreen(
+          database: widget.database,
+          onBack: closeSubView,
+        ),
+      );
+    } else if (_currentSubView == 'stamp') {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) closeSubView();
+        },
+        child: StampGalleryScreen(
+          database: widget.database,
+          onBack: closeSubView,
+        ),
+      );
+    } else if (_currentSubView == 'character') {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) closeSubView();
+        },
+        child: CharacterGalleryScreen(
+          database: widget.database,
+          onBack: closeSubView,
+        ),
+      );
+    }
+
     const bgColor = Color(0xFFFBF7EE);
     const primaryColor = Color(0xFF5F9E98);
     const secondaryColor = Color(0xFFECA882);
@@ -84,15 +142,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                     icon: Icons.calendar_month_rounded,
                     accentColor: primaryColor,
                     badgeText: '日別達成',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              CalendarScreen(database: widget.database),
-                        ),
-                      ).then((_) => _loadSummary());
-                    },
+                    onTap: () => openSubView('calendar'),
                   ),
                   const SizedBox(height: 16),
 
@@ -103,16 +153,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                     icon: Icons.stars_rounded,
                     accentColor: const Color(0xFFD4B86A),
                     badgeText: '全24種',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => StampGalleryScreen(
-                            database: widget.database,
-                          ),
-                        ),
-                      ).then((_) => _loadSummary());
-                    },
+                    onTap: () => openSubView('stamp'),
                   ),
                   const SizedBox(height: 16),
 
@@ -123,16 +164,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
                     icon: Icons.pets_rounded,
                     accentColor: const Color(0xFF88A0A8),
                     badgeText: '全374体',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CharacterGalleryScreen(
-                            database: widget.database,
-                          ),
-                        ),
-                      ).then((_) => _loadSummary());
-                    },
+                    onTap: () => openSubView('character'),
                   ),
                   const SizedBox(height: 24),
 

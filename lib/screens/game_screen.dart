@@ -1491,7 +1491,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // 4択選択肢エリア（広々としたタッチターゲット・快適なタップ領域）
+          // 4択選択肢エリア（広々としたタッチターゲット・快適なタップ領域：高さを1.4倍の59pxに拡大）
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6),
             decoration: const BoxDecoration(
@@ -1506,10 +1506,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                     isPlaceholder || disabledChoices.contains(choice);
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3.0),
+                  padding: const EdgeInsets.symmetric(vertical: 3.5),
                   child: SizedBox(
                     width: double.infinity,
-                    height: 42,
+                    height: 59,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         disabledBackgroundColor: isPlaceholder
@@ -1536,9 +1536,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                               : (isDisabled ? Colors.red.shade300 : const Color(0xFFDCD4BE)),
                           width: 1.2,
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       onPressed: isDisabled
@@ -1554,7 +1554,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           child: Text(
                             choice,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
                               decoration: (!isPlaceholder && isDisabled)
                                   ? TextDecoration.lineThrough

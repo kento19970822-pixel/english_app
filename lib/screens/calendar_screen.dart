@@ -7,8 +7,9 @@ import '../widgets/pixel_stamp_widget.dart';
 
 class CalendarScreen extends StatefulWidget {
   final AppDatabase database;
+  final VoidCallback? onBack;
 
-  const CalendarScreen({super.key, required this.database});
+  const CalendarScreen({super.key, required this.database, this.onBack});
 
   @override
   State<CalendarScreen> createState() => _CalendarScreenState();
@@ -88,6 +89,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Scaffold(
       backgroundColor: _bgColor,
       appBar: AppBar(
+        leading: (widget.onBack != null || Navigator.canPop(context))
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: _textPrimary),
+                onPressed: () {
+                  if (widget.onBack != null) {
+                    widget.onBack!();
+                  } else if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
+              )
+            : null,
         title: const Text(
           '学習カレンダー',
           style: TextStyle(
