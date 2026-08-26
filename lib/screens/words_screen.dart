@@ -788,14 +788,14 @@ class WordsScreenState extends State<WordsScreen> {
   }
 
   double _calculateItemExtent(int index) {
-    if (index >= _flatListItems.length) return 180.0;
+    if (index >= _flatListItems.length) return 168.0;
     switch (_flatListItems[index].type) {
       case WordListItemType.header:
         return 48.0;
       case WordListItemType.banner:
         return 82.0;
       case WordListItemType.card:
-        return 180.0;
+        return 168.0;
     }
   }
 

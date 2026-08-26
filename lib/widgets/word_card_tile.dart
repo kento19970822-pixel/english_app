@@ -121,6 +121,7 @@ class _WordCardTileState extends State<WordCardTile> {
         ),
       ),
       child: Container(
+        height: double.infinity,
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
           color: _cardColor,
@@ -133,9 +134,9 @@ class _WordCardTileState extends State<WordCardTile> {
           ),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x0A000000),
-              blurRadius: 6,
-              offset: Offset(0, 2),
+              color: Color(0x08000000),
+              blurRadius: 4,
+              offset: Offset(0, 1.5),
             ),
           ],
         ),
@@ -157,7 +158,7 @@ class _WordCardTileState extends State<WordCardTile> {
                   }
                 },
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+            padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -167,11 +168,11 @@ class _WordCardTileState extends State<WordCardTile> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     curve: Curves.easeOutCubic,
-                    width: _isPressed ? 8 : 5,
-                    height: _isPressed ? 60 : 52,
+                    width: _isPressed ? 7 : 5,
+                    height: _isPressed ? 56 : 48,
                     decoration: BoxDecoration(
                       color: indicatorColor,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(3),
                       boxShadow: _isPressed
                           ? [
                               BoxShadow(
