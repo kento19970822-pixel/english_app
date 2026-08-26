@@ -249,38 +249,41 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildModeCard(
-                                    title: '学習モード',
-                                    subtitle: '章ごと集中学習\n(70pt以上90%で次章解放)',
-                                    icon: Icons.school_rounded,
-                                    modeKey: 'learning',
-                                    accentColor: _primaryAccent,
+                            IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: _buildModeCard(
+                                      title: '学習モード',
+                                      subtitle: '章ごと集中学習\n暗記で次章解放',
+                                      icon: Icons.school_rounded,
+                                      modeKey: 'learning',
+                                      accentColor: _primaryAccent,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: _buildModeCard(
-                                    title: '弱点克服',
-                                    subtitle: '誤答・低定着の\n苦手単語を特訓',
-                                    icon: Icons.healing_rounded,
-                                    modeKey: 'weakness',
-                                    accentColor: const Color(0xFFD9534F),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: _buildModeCard(
+                                      title: '弱点克服',
+                                      subtitle: '誤答・低定着の\n苦手単語を特訓',
+                                      icon: Icons.healing_rounded,
+                                      modeKey: 'weakness',
+                                      accentColor: const Color(0xFFD9534F),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: _buildModeCard(
-                                    title: 'チャレンジ',
-                                    subtitle: '1分間/100問\n全単語ランダム',
-                                    icon: Icons.bolt_rounded,
-                                    modeKey: 'challenge',
-                                    accentColor: _secondaryAccent,
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: _buildModeCard(
+                                      title: 'チャレンジ',
+                                      subtitle: '1分間/100問\n全単語ランダム',
+                                      icon: Icons.bolt_rounded,
+                                      modeKey: 'challenge',
+                                      accentColor: _secondaryAccent,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 10),
 
@@ -785,10 +788,15 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
               ),
             ),
             const SizedBox(height: 2),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 9, color: _textSecondary, height: 1.2),
+            SizedBox(
+              height: 24,
+              child: Center(
+                child: Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 9, color: _textSecondary, height: 1.2),
+                ),
+              ),
             ),
           ],
         ),

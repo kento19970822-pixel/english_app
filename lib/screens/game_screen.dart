@@ -289,13 +289,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     if (customWords != null && customWords.isNotEmpty) {
       currentMode = 'revenge';
       _currentRevengeTargetWords = List<WordModel>.from(customWords);
-      targetWords = List.from(customWords);
-      if (targetWords.length < 5) {
-        final expandedList = <WordModel>[];
-        while (expandedList.length < 20) {
-          expandedList.addAll(customWords);
-        }
-        targetWords = expandedList;
+      targetWords = List.from(customWords)..shuffle();
+      while (targetWords.length < 30) {
+        final refill = List<WordModel>.from(customWords)..shuffle();
+        targetWords.addAll(refill);
       }
     } else {
       _currentRevengeTargetWords.clear();
@@ -500,6 +497,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _isLeftProcessing = false;
     } else {
       _isRightProcessing = false;
+    }
+
+    if (questionQueue.isEmpty && currentMode == 'revenge' && _currentRevengeTargetWords.isNotEmpty && !isGameOver && isGameStarted) {
+      // リベンジモード: 1分間最後まで特訓を継続するため自動でシャッフル補充
+      final refill = List<WordModel>.from(_currentRevengeTargetWords)..shuffle();
+      questionQueue.addAll(refill);
     }
 
     if (questionQueue.isEmpty || isGameOver || !isGameStarted) {

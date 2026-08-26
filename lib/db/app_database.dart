@@ -548,18 +548,33 @@ class AppDatabase extends _$AppDatabase {
     final sortedChapters = chapterLevelMap.keys.toList()..sort();
     if (sortedChapters.isEmpty) return;
 
+    // 各難易度グループ（初級: lvl 1,2 / 中級: lvl 3,4 / 上級: lvl 5,6）の先頭チャプターを特定
+    int? firstOfLvl1;
+    int? firstOfLvl2;
+    int? firstOfLvl3;
+    for (final ch in sortedChapters) {
+      final lvl = chapterLevelMap[ch]!;
+      if (lvl == 1 || lvl == 2) {
+        firstOfLvl1 ??= ch;
+      } else if (lvl == 3 || lvl == 4) {
+        firstOfLvl2 ??= ch;
+      } else if (lvl == 5 || lvl == 6) {
+        firstOfLvl3 ??= ch;
+      }
+    }
+    final initialUnlocked = {firstOfLvl1, firstOfLvl2, firstOfLvl3}.whereType<int>().toSet();
+
     await batch((batch) {
       for (final ch in sortedChapters) {
         final lvl = chapterLevelMap[ch]!;
-        // 初期状態: 通しチャプター1、または各難易度系列の最初のチャプターを解放
-        final isFirstOfAnyLevel = (ch == 1);
+        final isInitiallyUnlocked = initialUnlocked.contains(ch);
 
         batch.insert(
           chapterProgresses,
           ChapterProgressesCompanion.insert(
             chapter: Value(ch),
             level: Value(lvl),
-            isUnlocked: Value(isFirstOfAnyLevel),
+            isUnlocked: Value(isInitiallyUnlocked),
             isCleared: const Value(false),
             memorizedRate: const Value(0.0),
           ),
@@ -572,10 +587,31 @@ class AppDatabase extends _$AppDatabase {
   /// 全チャプターの進行状況を取得
   Future<List<ChapterProgressesData>> getAllChapterProgresses() async {
     await initChapterProgresses();
-    return (select(chapterProgresses)..orderBy([
+    final list = await (select(chapterProgresses)..orderBy([
           (t) => OrderingTerm(expression: t.chapter, mode: OrderingMode.asc),
         ]))
         .get();
+
+    // 既存DBでも各難易度グループの先頭チャプターが確実に解放されていることを保証
+    final lvl1First = list.where((cp) => cp.level == 1 || cp.level == 2).firstOrNull;
+    final lvl2First = list.where((cp) => cp.level == 3 || cp.level == 4).firstOrNull;
+    final lvl3First = list.where((cp) => cp.level == 5 || cp.level == 6).firstOrNull;
+
+    bool needUpdate = false;
+    for (final firstCp in [lvl1First, lvl2First, lvl3First]) {
+      if (firstCp != null && !firstCp.isUnlocked) {
+        await (update(chapterProgresses)..where((t) => t.chapter.equals(firstCp.chapter)))
+            .write(const ChapterProgressesCompanion(isUnlocked: Value(true)));
+        needUpdate = true;
+      }
+    }
+    if (needUpdate) {
+      return (select(chapterProgresses)..orderBy([
+            (t) => OrderingTerm(expression: t.chapter, mode: OrderingMode.asc),
+          ]))
+          .get();
+    }
+    return list;
   }
 
   /// 弱点克服モード用: プレイ経験のある単語から誤答・低定着の単語を苦手度順に抽出
