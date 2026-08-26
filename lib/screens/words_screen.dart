@@ -48,12 +48,14 @@ class WordSection {
 
 class _SectionOffsetRange {
   final WordSection section;
+  final WordSection? nextSection;
   final double startOffset;
   final double endOffset;
   final double nextHeaderOffset;
 
   const _SectionOffsetRange({
     required this.section,
+    this.nextSection,
     required this.startOffset,
     required this.endOffset,
     required this.nextHeaderOffset,
@@ -61,11 +63,13 @@ class _SectionOffsetRange {
 }
 
 class _StickyHeaderState {
-  final WordSection section;
+  final WordSection currentSection;
+  final WordSection? nextSection;
   final double pushOffset;
 
   const _StickyHeaderState({
-    required this.section,
+    required this.currentSection,
+    this.nextSection,
     required this.pushOffset,
   });
 }
@@ -92,18 +96,45 @@ class _SingleStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
     return ValueListenableBuilder<_StickyHeaderState?>(
       valueListenable: stickyNotifier,
       builder: (context, state, _) {
-        final section = state?.section ?? defaultSection;
+        final current = state?.currentSection ?? defaultSection;
+        final next = state?.nextSection;
         final pushOffset = state?.pushOffset ?? 0.0;
 
         return ClipRect(
-          child: Transform.translate(
-            offset: Offset(0, pushOffset),
-            child: StickySectionHeader(
-              title: section.title,
-              subtitle: section.subtitle,
-              totalCount: section.words.length,
-              memorizedCount: section.memorizedCount,
-              sortMode: sortMode,
+          child: SizedBox(
+            height: 48.0,
+            child: Stack(
+              children: [
+                // 現在のチャプターバー（上方向へスムーズに押し出されスライドアウト）
+                Positioned(
+                  top: pushOffset,
+                  left: 0,
+                  right: 0,
+                  height: 48.0,
+                  child: StickySectionHeader(
+                    title: current.title,
+                    subtitle: current.subtitle,
+                    totalCount: current.words.length,
+                    memorizedCount: current.memorizedCount,
+                    sortMode: sortMode,
+                  ),
+                ),
+                // 次のチャプターバー（下方向から押し上げられスムーズにスライドイン）
+                if (next != null && pushOffset < 0)
+                  Positioned(
+                    top: pushOffset + 48.0,
+                    left: 0,
+                    right: 0,
+                    height: 48.0,
+                    child: StickySectionHeader(
+                      title: next.title,
+                      subtitle: next.subtitle,
+                      totalCount: next.words.length,
+                      memorizedCount: next.memorizedCount,
+                      sortMode: sortMode,
+                    ),
+                  ),
+              ],
             ),
           ),
         );
@@ -189,7 +220,8 @@ class WordsScreenState extends State<WordsScreen> {
     if (!_scrollController.hasClients || _sectionOffsetRanges.isEmpty) {
       if (_firstSection != null) {
         _stickyHeaderNotifier.value = _StickyHeaderState(
-          section: _firstSection!,
+          currentSection: _firstSection!,
+          nextSection: null,
           pushOffset: 0.0,
         );
       } else {
@@ -221,12 +253,14 @@ class WordsScreenState extends State<WordsScreen> {
       final distanceToNext = matched.nextHeaderOffset - offset;
       final pushOffset = (distanceToNext < 48.0) ? (distanceToNext - 48.0) : 0.0;
       _stickyHeaderNotifier.value = _StickyHeaderState(
-        section: matched.section,
+        currentSection: matched.section,
+        nextSection: matched.nextSection,
         pushOffset: pushOffset,
       );
     } else if (_firstSection != null) {
       _stickyHeaderNotifier.value = _StickyHeaderState(
-        section: _firstSection!,
+        currentSection: _firstSection!,
+        nextSection: null,
         pushOffset: 0.0,
       );
     }
@@ -510,12 +544,6 @@ class WordsScreenState extends State<WordsScreen> {
       final section = sections[i];
       final sectionStart = currentOffset;
 
-      // セクション0は固定のSliverPersistentHeaderで表示されるため、リスト内ヘッダーはセクション1以降に追加
-      if (i > 0) {
-        flatItems.add(WordListItem.header(section));
-        currentOffset += 48.0;
-      }
-
       if (_sortMode == 'chap') {
         flatItems.add(WordListItem.banner(section));
         currentOffset += 82.0;
@@ -523,13 +551,15 @@ class WordsScreenState extends State<WordsScreen> {
 
       for (final w in section.words) {
         flatItems.add(WordListItem.card(w, section));
-        currentOffset += 168.0;
+        currentOffset += 196.0;
       }
 
       final sectionEnd = currentOffset;
+      final nextSection = (i < sections.length - 1) ? sections[i + 1] : null;
       final nextHeaderStart = (i < sections.length - 1) ? sectionEnd : double.infinity;
       ranges.add(_SectionOffsetRange(
         section: section,
+        nextSection: nextSection,
         startOffset: sectionStart,
         endOffset: sectionEnd,
         nextHeaderOffset: nextHeaderStart,
@@ -949,14 +979,14 @@ class WordsScreenState extends State<WordsScreen> {
   }
 
   double _calculateItemExtent(int index) {
-    if (index >= _flatListItems.length) return 168.0;
+    if (index >= _flatListItems.length) return 196.0;
     switch (_flatListItems[index].type) {
       case WordListItemType.header:
         return 48.0;
       case WordListItemType.banner:
         return 82.0;
       case WordListItemType.card:
-        return 168.0;
+        return 196.0;
     }
   }
 

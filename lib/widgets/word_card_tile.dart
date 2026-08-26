@@ -193,7 +193,7 @@ class _WordCardTileState extends State<WordCardTile> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // 1行目: 英単語 ＋ 定着度ポイント ＋ 暗記バッジ ＆ 上部操作ボタン（音声/Ch/お気に入り）
+                      // 1行目: 英単語 ＋ 定着度ポイント ＆ 上部操作ボタン（音声/Ch/お気に入り）
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -230,24 +230,6 @@ class _WordCardTileState extends State<WordCardTile> {
                                     ),
                                   ),
                                 ),
-                                if (isMemorized) ...[
-                                  const SizedBox(width: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE8F5E9),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Text(
-                                      '✓ 覚えた',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF2E7D32),
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ],
                             ),
                           ),
@@ -302,11 +284,12 @@ class _WordCardTileState extends State<WordCardTile> {
                         ],
                       ),
 
-                      // 2行目: 発音記号 ＆ カテゴリ ＆ 制限フラグ（常に2行目に固定配置）
+                      // 2行目: 発音記号 ＆ カテゴリ ＆ 暗記バッジ（覚えた） ＆ 制限フラグ（常に2行目に固定配置）
                       if ((widget.word.phonetic != null && widget.word.phonetic!.isNotEmpty) ||
                           widget.word.category.isNotEmpty ||
+                          isMemorized ||
                           isRestricted) ...[
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 2),
                         Row(
                           children: [
                             if (widget.word.phonetic != null && widget.word.phonetic!.isNotEmpty) ...[
@@ -337,6 +320,24 @@ class _WordCardTileState extends State<WordCardTile> {
                               ),
                               const SizedBox(width: 6),
                             ],
+                            if (isMemorized) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE8F5E9),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  '✓ 覚えた',
+                                  style: TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF2E7D32),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                            ],
                             if (isRestricted)
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
@@ -358,25 +359,26 @@ class _WordCardTileState extends State<WordCardTile> {
                       ],
 
                       // 3行目: 日本語訳（タップ切り替え）
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
                         isJapaneseVisible
                             ? widget.word.japanese
                             : '•••••• (タップで表示)',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w500,
                           color: isJapaneseVisible ? _textPrimary : _textSecondary.withAlpha(150),
                           fontStyle: isJapaneseVisible
                               ? FontStyle.normal
                               : FontStyle.italic,
+                          height: 1.25,
                         ),
                       ),
 
                       // 4行目: 例文 ＆ 例文訳（存在する場合、はみ出しなく自然に全行表示）
                       if (widget.word.example != null &&
                           widget.word.example!.trim().isNotEmpty) ...[
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
@@ -384,22 +386,22 @@ class _WordCardTileState extends State<WordCardTile> {
                             Text(
                               widget.word.example!,
                               style: const TextStyle(
-                                fontSize: 12.5,
+                                fontSize: 12.0,
                                 fontStyle: FontStyle.italic,
                                 color: Color(0xFF555B58),
-                                height: 1.35,
+                                height: 1.3,
                               ),
                             ),
                             if (isJapaneseVisible &&
                                 widget.word.exampleJp != null &&
                                 widget.word.exampleJp!.trim().isNotEmpty) ...[
-                              const SizedBox(height: 3),
+                              const SizedBox(height: 2),
                               Text(
                                 widget.word.exampleJp!,
                                 style: const TextStyle(
-                                  fontSize: 11.5,
+                                  fontSize: 11.0,
                                   color: Color(0xFF7A827E),
-                                  height: 1.35,
+                                  height: 1.3,
                                 ),
                               ),
                             ],
