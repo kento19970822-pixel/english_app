@@ -70,6 +70,54 @@ class _StickyHeaderState {
   });
 }
 
+class _SingleStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final ValueNotifier<_StickyHeaderState?> stickyNotifier;
+  final String sortMode;
+  final WordSection defaultSection;
+
+  _SingleStickyHeaderDelegate({
+    required this.stickyNotifier,
+    required this.sortMode,
+    required this.defaultSection,
+  });
+
+  @override
+  double get minExtent => 48.0;
+
+  @override
+  double get maxExtent => 48.0;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return ValueListenableBuilder<_StickyHeaderState?>(
+      valueListenable: stickyNotifier,
+      builder: (context, state, _) {
+        final section = state?.section ?? defaultSection;
+        final pushOffset = state?.pushOffset ?? 0.0;
+
+        return ClipRect(
+          child: Transform.translate(
+            offset: Offset(0, pushOffset),
+            child: StickySectionHeader(
+              title: section.title,
+              subtitle: section.subtitle,
+              totalCount: section.words.length,
+              memorizedCount: section.memorizedCount,
+              sortMode: sortMode,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _SingleStickyHeaderDelegate oldDelegate) {
+    return oldDelegate.sortMode != sortMode ||
+        oldDelegate.defaultSection != defaultSection;
+  }
+}
+
 class WordsScreen extends StatefulWidget {
   final AppDatabase database;
 
@@ -84,6 +132,7 @@ class WordsScreenState extends State<WordsScreen> {
   List<WordListItem> _flatListItems = [];
   List<_SectionOffsetRange> _sectionOffsetRanges = [];
   final ValueNotifier<_StickyHeaderState?> _stickyHeaderNotifier = ValueNotifier(null);
+  WordSection? _firstSection;
   int _totalFilteredCount = 0;
 
   // ソート・フィルター状態
@@ -138,17 +187,17 @@ class WordsScreenState extends State<WordsScreen> {
 
   void _updateStickyHeader() {
     if (!_scrollController.hasClients || _sectionOffsetRanges.isEmpty) {
-      _stickyHeaderNotifier.value = null;
+      if (_firstSection != null) {
+        _stickyHeaderNotifier.value = _StickyHeaderState(
+          section: _firstSection!,
+          pushOffset: 0.0,
+        );
+      } else {
+        _stickyHeaderNotifier.value = null;
+      }
       return;
     }
-    final offset = _scrollController.offset;
-    const double appBarHeight = 154.0;
-    if (offset < appBarHeight) {
-      _stickyHeaderNotifier.value = null;
-      return;
-    }
-
-    final sliverListOffset = offset - appBarHeight;
+    final offset = _scrollController.offset.clamp(0.0, double.infinity);
 
     // Binary search for active section range
     int low = 0;
@@ -158,10 +207,10 @@ class WordsScreenState extends State<WordsScreen> {
     while (low <= high) {
       final mid = (low + high) ~/ 2;
       final range = _sectionOffsetRanges[mid];
-      if (sliverListOffset >= range.startOffset && sliverListOffset < range.endOffset) {
+      if (offset >= range.startOffset && offset < range.endOffset) {
         matched = range;
         break;
-      } else if (sliverListOffset < range.startOffset) {
+      } else if (offset < range.startOffset) {
         high = mid - 1;
       } else {
         low = mid + 1;
@@ -169,14 +218,17 @@ class WordsScreenState extends State<WordsScreen> {
     }
 
     if (matched != null) {
-      final distanceToNext = matched.nextHeaderOffset - sliverListOffset;
+      final distanceToNext = matched.nextHeaderOffset - offset;
       final pushOffset = (distanceToNext < 48.0) ? (distanceToNext - 48.0) : 0.0;
       _stickyHeaderNotifier.value = _StickyHeaderState(
         section: matched.section,
         pushOffset: pushOffset,
       );
-    } else {
-      _stickyHeaderNotifier.value = null;
+    } else if (_firstSection != null) {
+      _stickyHeaderNotifier.value = _StickyHeaderState(
+        section: _firstSection!,
+        pushOffset: 0.0,
+      );
     }
   }
 
@@ -458,8 +510,11 @@ class WordsScreenState extends State<WordsScreen> {
       final section = sections[i];
       final sectionStart = currentOffset;
 
-      flatItems.add(WordListItem.header(section));
-      currentOffset += 48.0;
+      // セクション0は固定のSliverPersistentHeaderで表示されるため、リスト内ヘッダーはセクション1以降に追加
+      if (i > 0) {
+        flatItems.add(WordListItem.header(section));
+        currentOffset += 48.0;
+      }
 
       if (_sortMode == 'chap') {
         flatItems.add(WordListItem.banner(section));
@@ -483,6 +538,7 @@ class WordsScreenState extends State<WordsScreen> {
 
     _flatListItems = flatItems;
     _sectionOffsetRanges = ranges;
+    _firstSection = sections.isNotEmpty ? sections.first : null;
     _updateStickyHeader();
   }
 
@@ -597,10 +653,8 @@ class WordsScreenState extends State<WordsScreen> {
           : SafeArea(
               child: CustomFastScrollbar(
                 controller: _scrollController,
-                child: Stack(
-                  children: [
-                    CustomScrollView(
-                      controller: _scrollController,
+                child: CustomScrollView(
+                  controller: _scrollController,
                   slivers: [
                   // 1. スクロールで出入りする可変ヘッダー
                   SliverAppBar(
@@ -792,7 +846,18 @@ class WordsScreenState extends State<WordsScreen> {
                     ),
                   ),
 
-                  // 2. 単語リスト（フラット仮想化リストによる超高速描画）
+                  // 2. 吸い付きスティッキーヘッダー（検索バー直下に自動配置され位置重複ゼロ）
+                  if (_firstSection != null)
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _SingleStickyHeaderDelegate(
+                        stickyNotifier: _stickyHeaderNotifier,
+                        sortMode: _sortMode,
+                        defaultSection: _firstSection!,
+                      ),
+                    ),
+
+                  // 3. 単語リスト（フラット仮想化リストによる超高速描画）
                   if (_flatListItems.isEmpty)
                     const SliverFillRemaining(
                       child: Center(
@@ -878,33 +943,8 @@ class WordsScreenState extends State<WordsScreen> {
                   ),
                 ],
               ),
-              // 浮遊吸い付きスティッキーヘッダー（チャプターバーの吸い付き・入れ替えアニメーション）
-              ValueListenableBuilder<_StickyHeaderState?>(
-                valueListenable: _stickyHeaderNotifier,
-                builder: (context, state, _) {
-                  if (state == null) return const SizedBox.shrink();
-                  return Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 48.0,
-                    child: Transform.translate(
-                      offset: Offset(0, state.pushOffset),
-                      child: StickySectionHeader(
-                        title: state.section.title,
-                        subtitle: state.section.subtitle,
-                        totalCount: state.section.words.length,
-                        memorizedCount: state.section.memorizedCount,
-                        sortMode: _sortMode,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
