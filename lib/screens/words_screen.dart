@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../db/app_database.dart';
 import '../services/buddy_service.dart';
 import '../services/tts_service.dart';
+import '../widgets/custom_fast_scrollbar.dart';
 import '../widgets/pixel_character_widget.dart';
 import '../widgets/sticky_section_header.dart';
 import '../widgets/word_card_tile.dart';
@@ -470,12 +471,8 @@ class WordsScreenState extends State<WordsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: _primaryAccent))
           : SafeArea(
-              child: Scrollbar(
+              child: CustomFastScrollbar(
                 controller: _scrollController,
-                thumbVisibility: true,
-                interactive: true,
-                thickness: 6.0,
-                radius: const Radius.circular(3),
                 child: CustomScrollView(
                   controller: _scrollController,
                   slivers: [

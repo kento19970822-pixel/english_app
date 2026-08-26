@@ -157,133 +157,205 @@ class _WordCardTileState extends State<WordCardTile> {
                   }
                 },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 定着度ポイント4段階カラーインジケータ（タップ中インタラクション拡大対応）
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  curve: Curves.easeOutCubic,
-                  width: _isPressed ? 10 : 6,
-                  height: _isPressed ? 48 : 44,
-                  decoration: BoxDecoration(
-                    color: indicatorColor,
-                    borderRadius: BorderRadius.circular(4),
-                    boxShadow: _isPressed
-                        ? [
-                            BoxShadow(
-                              color: indicatorColor.withAlpha(120),
-                              blurRadius: 6,
-                              spreadRadius: 1,
-                            ),
-                          ]
-                        : null,
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    curve: Curves.easeOutCubic,
+                    width: _isPressed ? 8 : 5,
+                    height: _isPressed ? 52 : 46,
+                    decoration: BoxDecoration(
+                      color: indicatorColor,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: _isPressed
+                          ? [
+                              BoxShadow(
+                                color: indicatorColor.withAlpha(120),
+                                blurRadius: 6,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : null,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
 
-                // 単語・発音・和訳エリア
+                // 単語・発音・和訳・例文エリア
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 6,
-                        runSpacing: 2,
+                      // 1行目: 英単語 ＋ 定着度ポイント ＋ 暗記バッジ ＆ 上部操作ボタン（音声/Ch/お気に入り）
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            widget.word.english,
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              color: _textPrimary,
-                              letterSpacing: 0.2,
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    widget.word.english,
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold,
+                                      color: _textPrimary,
+                                      letterSpacing: 0.2,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                // 定着度ポイントバッジ
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color: indicatorColor.withAlpha(35),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: indicatorColor, width: 1),
+                                  ),
+                                  child: Text(
+                                    '$pt pt',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: isMemorized ? const Color(0xFF2E7D32) : _textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                if (isMemorized) ...[
+                                  const SizedBox(width: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE8F5E9),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      '✓ 覚えた',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2E7D32),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
-                          // 定着度ポイントバッジ（数値＆カラー表示）
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                            decoration: BoxDecoration(
-                              color: indicatorColor.withAlpha(35),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: indicatorColor, width: 1),
-                            ),
-                            child: Text(
-                              '$pt pt',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: isMemorized ? const Color(0xFF2E7D32) : _textPrimary,
+
+                          // 上部操作ボタン群（カード上部・英単語の高さに配置）
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.volume_up_rounded,
+                                  color: _primaryAccent,
+                                  size: 20,
+                                ),
+                                tooltip: '発音を聴く',
+                                onPressed: widget.onSpeak,
+                                padding: const EdgeInsets.all(4),
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                               ),
-                            ),
+                              Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 2),
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFEAE0),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'Ch.${widget.word.chapter}',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: _textSecondary,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  widget.word.isFavorite
+                                      ? Icons.star_rounded
+                                      : Icons.star_border_rounded,
+                                  color: widget.word.isFavorite
+                                      ? Colors.amber.shade700
+                                      : const Color(0xFFC0B8A5),
+                                  size: 22,
+                                ),
+                                onPressed: widget.onToggleFavorite,
+                                padding: const EdgeInsets.all(4),
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                              ),
+                            ],
                           ),
-                          if (isMemorized)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE8F5E9),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                '✓ 覚えた',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2E7D32),
-                                ),
-                              ),
-                            ),
-                          if (widget.word.phonetic != null &&
-                              widget.word.phonetic!.isNotEmpty)
-                            Text(
-                              widget.word.phonetic!,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: _textSecondary,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          if (widget.word.category.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 1,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEFEAE0),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                widget.word.category,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: _textSecondary,
-                                ),
-                              ),
-                            ),
-                          if (isRestricted)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 1,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFF3E0),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                '⚠️ 本日上限70pt',
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepOrange,
-                                ),
-                              ),
-                            ),
                         ],
                       ),
+
+                      // 2行目: 発音記号 ＆ カテゴリ ＆ 制限フラグ（常に2行目に固定配置）
+                      if ((widget.word.phonetic != null && widget.word.phonetic!.isNotEmpty) ||
+                          widget.word.category.isNotEmpty ||
+                          isRestricted) ...[
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            if (widget.word.phonetic != null && widget.word.phonetic!.isNotEmpty) ...[
+                              Text(
+                                widget.word.phonetic!,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: _textSecondary,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            if (widget.word.category.isNotEmpty) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFEAE0),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  widget.word.category,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: _textSecondary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            if (isRestricted)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF3E0),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  '⚠️ 本日上限70pt',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepOrange,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+
+                      // 3行目: 日本語訳（タップ切り替え）
                       const SizedBox(height: 4),
                       Text(
                         isJapaneseVisible
@@ -297,6 +369,8 @@ class _WordCardTileState extends State<WordCardTile> {
                               : FontStyle.italic,
                         ),
                       ),
+
+                      // 4行目: 例文（存在する場合）
                       if (widget.word.example != null &&
                           widget.word.example!.trim().isNotEmpty) ...[
                         const SizedBox(height: 5),
@@ -323,54 +397,6 @@ class _WordCardTileState extends State<WordCardTile> {
                       ],
                     ],
                   ),
-                ),
-
-                // 発音ボタン・レベルバッジ・お気に入りボタン
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.volume_up_rounded,
-                        color: _primaryAccent,
-                        size: 22,
-                      ),
-                      tooltip: '発音を聴く',
-                      onPressed: widget.onSpeak,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFEAE0),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'Ch.${widget.word.chapter}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: _textSecondary,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        widget.word.isFavorite
-                            ? Icons.star_rounded
-                            : Icons.star_border_rounded,
-                        color: widget.word.isFavorite
-                            ? Colors.amber.shade700
-                            : const Color(0xFFC0B8A5),
-                        size: 24,
-                      ),
-                      onPressed: widget.onToggleFavorite,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    ),
-                  ],
                 ),
               ],
             ),

@@ -65,36 +65,58 @@ class RecordsScreenState extends State<RecordsScreen> {
     }
   }
 
+  Widget _buildSwipeBackWrapper({required Widget child}) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) closeSubView();
+      },
+      child: Stack(
+        children: [
+          child,
+          // 画面左端（幅32px）からのスワイプバック判定エリア
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 32,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity != null && details.primaryVelocity! > 200) {
+                  closeSubView();
+                }
+              },
+              onHorizontalDragUpdate: (details) {
+                if (details.primaryDelta != null && details.primaryDelta! > 12) {
+                  closeSubView();
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_currentSubView == 'calendar') {
-      return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (!didPop) closeSubView();
-        },
+      return _buildSwipeBackWrapper(
         child: CalendarScreen(
           database: widget.database,
           onBack: closeSubView,
         ),
       );
     } else if (_currentSubView == 'stamp') {
-      return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (!didPop) closeSubView();
-        },
+      return _buildSwipeBackWrapper(
         child: StampGalleryScreen(
           database: widget.database,
           onBack: closeSubView,
         ),
       );
     } else if (_currentSubView == 'character') {
-      return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (!didPop) closeSubView();
-        },
+      return _buildSwipeBackWrapper(
         child: CharacterGalleryScreen(
           database: widget.database,
           onBack: closeSubView,

@@ -486,7 +486,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                   ),
                                   SizedBox(height: 6),
                                   Text(
-                                    '過去の誤答履歴、定着度ポイント（50pt未満）、未暗記状態をリアルタイム集計し、あなたの苦手な単語を最優先で100問連続出題します。',
+                                    '過去の誤答履歴、定着度ポイント（50pt未満）、未暗記状態をリアルタイム集計し、苦手な単語上位15語を1分間最後まで集中反復出題します。',
                                     style: TextStyle(fontSize: 12, color: _textSecondary, height: 1.4),
                                   ),
                                 ],

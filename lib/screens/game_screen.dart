@@ -99,7 +99,8 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
+class _GameScreenState extends State<GameScreen>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final double totalGameDuration = 60.0;
   final int dropDurationSeconds = 8;
 
@@ -110,6 +111,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   bool isGameOver = false;
   bool isPaused = false;
   bool isLoading = true;
+  bool _isTimeUpShowing = false;
 
   late int selectedLevel;
   late int selectedChapter;
@@ -122,6 +124,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   List<WordModel> questionQueue = [];
   List<WordModel> mistakenWords = [];
   List<WordModel> _currentRevengeTargetWords = [];
+  List<WordModel> _currentWeaknessTargetWords = [];
   Set<int> favoriteWordIds = {};
 
   // F-05: 1ゲーム1変動原則（セッション中に既にDB反映・ポイント評価を行った単語IDを記録）
@@ -162,6 +165,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     selectedLevel = widget.initialLevel;
     selectedChapter = widget.initialChapter;
     currentMode = widget.mode;
@@ -313,7 +317,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       final memorized = targetWords.where((w) => w.isMemorized).toList()..shuffle();
       targetWords = [...unmemorized, ...memorized];
     } else if (currentMode == 'weakness') {
-      // 2. 弱点克服モード: プレイ経験のある単語（回答回数 > 0 または 定着度変動あり）から苦手単語を抽出
+      // 2. 弱点克服モード: プレイ経験のある単語から苦手単語上位15語を抽出
       final filtered = allWords.where((w) => w.level == selectedLevel).toList();
       final pool = filtered.isNotEmpty ? filtered : List<WordModel>.from(allWords);
 
@@ -321,10 +325,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         return (w.wrongCount + w.correctCount > 0) || w.retentionPoint > 0;
       }).toList();
 
+      List<WordModel> baseWeaknessList = [];
       if (played.isEmpty) {
         // プレイ経験がまだない場合のフォールバック: 未暗記単語を安全に補充
         final unmemorized = pool.where((w) => !w.isMemorized).toList()..shuffle();
-        targetWords = unmemorized.take(100).toList();
+        baseWeaknessList = unmemorized.take(15).toList();
       } else {
         // 弱点候補: 誤答経験あり(wrongCount > 0)、または未暗記/定着度80pt未満
         final weaknessCandidates = played.where((w) {
@@ -341,17 +346,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           return MapEntry<WordModel, int>(w, weaknessScore);
         }).toList();
         scored.sort((a, b) => b.value.compareTo(a.value));
-        var rawWeaknessList = scored.map<WordModel>((e) => e.key).take(100).toList();
+        baseWeaknessList = scored.map<WordModel>((e) => e.key).take(15).toList();
+      }
 
-        // 出題対象が極端に少ない（1〜4件）場合: 集中特訓のため反復ループして補充
-        if (rawWeaknessList.isNotEmpty && rawWeaknessList.length < 5) {
-          final expandedList = <WordModel>[];
-          while (expandedList.length < 20) {
-            expandedList.addAll(rawWeaknessList);
-          }
-          rawWeaknessList = expandedList;
-        }
-        targetWords = rawWeaknessList;
+      _currentWeaknessTargetWords = List<WordModel>.from(baseWeaknessList);
+      targetWords = List.from(baseWeaknessList)..shuffle();
+      while (targetWords.length < 30 && baseWeaknessList.isNotEmpty) {
+        final refill = List<WordModel>.from(baseWeaknessList)..shuffle();
+        targetWords.addAll(refill);
       }
     } else {
       // 3. チャレンジモード: 選択中レベルの全単語をシャッフル
@@ -499,10 +501,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       _isRightProcessing = false;
     }
 
-    if (questionQueue.isEmpty && currentMode == 'revenge' && _currentRevengeTargetWords.isNotEmpty && !isGameOver && isGameStarted) {
-      // リベンジモード: 1分間最後まで特訓を継続するため自動でシャッフル補充
-      final refill = List<WordModel>.from(_currentRevengeTargetWords)..shuffle();
-      questionQueue.addAll(refill);
+    if (questionQueue.isEmpty && !isGameOver && isGameStarted) {
+      if (currentMode == 'revenge' && _currentRevengeTargetWords.isNotEmpty) {
+        // リベンジモード: 1分間最後まで特訓を継続するため自動でシャッフル補充
+        final refill = List<WordModel>.from(_currentRevengeTargetWords)..shuffle();
+        questionQueue.addAll(refill);
+      } else if (currentMode == 'weakness' && _currentWeaknessTargetWords.isNotEmpty) {
+        // 弱点克服モード: 15単語を1分間最後まで特訓を継続するため自動でシャッフル補充
+        final refill = List<WordModel>.from(_currentWeaknessTargetWords)..shuffle();
+        questionQueue.addAll(refill);
+      }
     }
 
     if (questionQueue.isEmpty || isGameOver || !isGameStarted) {
@@ -558,7 +566,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     final targetWord = isLeft ? leftWord : rightWord;
     final controller = isLeft ? _leftDropController : _rightDropController;
 
-    if (targetWord == null || isPaused || !isGameStarted) {
+    if (targetWord == null || isPaused || !isGameStarted || _isEnding || _isTimeUpShowing || isGameOver) {
       if (isLeft) {
         _isLeftProcessing = false;
       } else {
@@ -909,24 +917,25 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _isEnding = true;
     _resetAndStopAll();
 
-    // 即座にリザルト画面状態へ遷移（ポーズボタンや落下処理の即時停止）
+    // 1. タイムアップ演出開始（中央に「TIME UP!」ポップアップ、操作ロック）
     if (mounted) {
       setState(() {
         remainingTime = 0.0;
-        isGameOver = true;
+        _isTimeUpShowing = true;
         isPaused = false;
-        isGameStarted = false;
       });
     }
 
-    // F-10: 本日のプレイ回数加算と学習履歴の保存
+    // 1.2秒間のタイムアップ待機（回答タップ連打によるリザルト画面ボタン誤タップを100%防止）
+    await Future.delayed(const Duration(milliseconds: 1200));
+
+    // 2. DB処理（学習履歴保存、チャプター解放、スタンプ判定）
     try {
       await widget.database.addGameHistory(score, selectedLevel);
     } catch (e) {
       debugPrint("addGameHistory error: $e");
     }
 
-    // F-15: 学習モードの場合、チャプター暗記率判定および次チャプター解放処理を実行
     Map<String, dynamic>? unlockResult;
     try {
       if (currentMode == 'learning') {
@@ -936,7 +945,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       debugPrint("checkAndUnlockNextChapter error: $e");
     }
 
-    // F-11/F-12: 当日初回クリア時のスタンプ判定 & 獲得演出
     Stamp? awardedStamp;
     try {
       final stampService = StampService(database: widget.database);
@@ -945,8 +953,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       debugPrint("Daily Stamp Award Error: $e");
     }
 
+    // 3. リザルト画面へスムーズに遷移
     if (mounted) {
       setState(() {
+        _isTimeUpShowing = false;
+        isGameOver = true;
+        isGameStarted = false;
         _unlockResult = unlockResult;
       });
 
@@ -977,7 +989,19 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden) {
+      if (isGameStarted && !isGameOver && !isPaused && !_isEnding && !_isTimeUpShowing) {
+        _togglePause();
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _resetAndStopAll();
     _countdownAnimController.dispose();
     _leftDropController.dispose();
@@ -997,7 +1021,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         ? '学習モード (Ch.$selectedChapter)'
         : (currentMode == 'revenge'
             ? 'ミス単語リベンジ (${_currentRevengeTargetWords.length}語)'
-            : (currentMode == 'weakness' ? '弱点克服モード (100語)' : 'チャレンジモード'));
+            : (currentMode == 'weakness' ? '弱点克服モード (15語)' : 'チャレンジモード'));
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -1153,12 +1177,75 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           ),
                           if (_countdownText != null)
                             _buildCountdownOverlay(),
+                          if (_isTimeUpShowing)
+                            _buildTimeUpOverlay(),
                         ],
                       ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTimeUpOverlay() {
+    return Container(
+      color: Colors.black.withAlpha(120),
+      alignment: Alignment.center,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.5, end: 1.0),
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.elasticOut,
+        builder: (context, scale, child) {
+          return Transform.scale(
+            scale: scale,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFDF9),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFD9534F), width: 3),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 16,
+                    offset: Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.timer_off_rounded,
+                    color: Color(0xFFD9534F),
+                    size: 44,
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    'TIME UP!',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFD9534F),
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    '制限時間終了',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C302E),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
