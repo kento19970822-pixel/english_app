@@ -3,10 +3,10 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 import '../db/app_database.dart';
 import '../services/retention_service.dart';
+import '../services/sound_service.dart';
 import '../services/stamp_service.dart';
 import '../services/tts_service.dart';
 import '../widgets/stamp_reward_dialog.dart';
@@ -118,7 +118,6 @@ class _GameScreenState extends State<GameScreen>
   late String currentMode;
 
   Timer? gameTimer;
-  late AudioPlayer _seAudioPlayer;
 
   List<WordModel> allWords = [];
   List<WordModel> questionQueue = [];
@@ -170,7 +169,6 @@ class _GameScreenState extends State<GameScreen>
     selectedChapter = widget.initialChapter;
     currentMode = widget.mode;
 
-    _seAudioPlayer = AudioPlayer();
     _initTts();
 
     _countdownAnimController = AnimationController(
@@ -240,23 +238,11 @@ class _GameScreenState extends State<GameScreen>
     await TtsService.instance.speak(word.english);
   }
 
-  void _playSE(String type) async {
-    try {
-      String fileName = "";
-      if (type == 'correct' || type.startsWith('correct_')) {
-        fileName = "sounds/correct.mp3";
-      } else if (type == 'wrong' || type == 'timeout') {
-        fileName = "sounds/wrong.mp3";
-      }
-
-      if (fileName.isNotEmpty) {
-        try {
-          await _seAudioPlayer.stop();
-        } catch (_) {}
-        await _seAudioPlayer.play(AssetSource(fileName));
-      }
-    } catch (e) {
-      debugPrint("SE Play Error: $e");
+  void _playSE(String type) {
+    if (type == 'correct' || type.startsWith('correct_')) {
+      SoundService.instance.playCorrect();
+    } else if (type == 'wrong' || type == 'timeout') {
+      SoundService.instance.playWrong();
     }
   }
 
@@ -1006,7 +992,6 @@ class _GameScreenState extends State<GameScreen>
     _countdownAnimController.dispose();
     _leftDropController.dispose();
     _rightDropController.dispose();
-    _seAudioPlayer.dispose();
     TtsService.instance.stop();
     super.dispose();
   }

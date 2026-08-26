@@ -33,6 +33,11 @@ class AppDatabase extends _$AppDatabase {
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
+      await customStatement('CREATE INDEX IF NOT EXISTS idx_words_chapter ON words (chapter);');
+      await customStatement('CREATE INDEX IF NOT EXISTS idx_words_cefr ON words (cefr);');
+      await customStatement('CREATE INDEX IF NOT EXISTS idx_words_memorized ON words (is_memorized);');
+      await customStatement('CREATE INDEX IF NOT EXISTS idx_words_favorite ON words (is_favorite);');
+      await customStatement('CREATE INDEX IF NOT EXISTS idx_words_restricted ON words (is_restricted);');
     },
   );
 
@@ -68,10 +73,15 @@ class AppDatabase extends _$AppDatabase {
   /// ※is_memorized フラグは自動では外さず手動更新用に保持する
   Future<int> syncDailyForgettingAndRestrictions() async {
     final now = DateTime.now();
-    final allWordsList = await select(words).get();
-    int updatedCount = 0;
+    // 変更対象となり得るのは「過去に学習履歴がある単語」または「現在制限中の単語」のみ（3.1万件全取得を回避）
+    final candidates = await (select(words)
+          ..where((t) => t.lastStudiedAt.isNotNull() | t.isRestricted.equals(true)))
+        .get();
+    if (candidates.isEmpty) return 0;
 
-    for (final word in allWordsList) {
+    final List<Map<String, dynamic>> updates = [];
+
+    for (final word in candidates) {
       bool needUpdate = false;
       int newPoint = word.retentionPoint;
       bool newIsRestricted = word.isRestricted;
@@ -98,20 +108,34 @@ class AppDatabase extends _$AppDatabase {
         needUpdate = true;
       }
 
-      // 変更がある場合のみDB更新
       if (needUpdate) {
-        await (update(words)..where((t) => t.id.equals(word.id))).write(
-          WordsCompanion(
-            retentionPoint: Value(newPoint),
-            isRestricted: Value(newIsRestricted),
-            lastRestrictedDate: Value(newLastRestrictedDate),
-          ),
-        );
-        updatedCount++;
+        updates.add({
+          'id': word.id,
+          'point': newPoint,
+          'restricted': newIsRestricted,
+          'date': newLastRestrictedDate,
+        });
       }
     }
 
-    return updatedCount;
+    if (updates.isEmpty) return 0;
+
+    // バッチトランザクションで一括更新
+    await batch((batch) {
+      for (final item in updates) {
+        batch.update(
+          words,
+          WordsCompanion(
+            retentionPoint: Value(item['point'] as int),
+            isRestricted: Value(item['restricted'] as bool),
+            lastRestrictedDate: Value(item['date'] as DateTime?),
+          ),
+          where: (t) => t.id.equals(item['id'] as int),
+        );
+      }
+    });
+
+    return updates.length;
   }
 
   /// 【案B実装】学習モード用出題単語取得 (章指定)

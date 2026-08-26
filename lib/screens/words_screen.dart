@@ -4,30 +4,12 @@ import 'package:flutter/services.dart';
 
 import '../db/app_database.dart';
 import '../services/buddy_service.dart';
+import '../services/sound_service.dart';
 import '../services/tts_service.dart';
 import '../widgets/custom_fast_scrollbar.dart';
 import '../widgets/pixel_character_widget.dart';
 import '../widgets/sticky_section_header.dart';
 import '../widgets/word_card_tile.dart';
-
-enum WordListItemType { header, banner, card }
-
-class WordListItem {
-  final WordListItemType type;
-  final WordSection? section;
-  final Word? word;
-
-  const WordListItem.header(this.section)
-      : type = WordListItemType.header,
-        word = null;
-
-  const WordListItem.banner(this.section)
-      : type = WordListItemType.banner,
-        word = null;
-
-  const WordListItem.card(this.word, this.section)
-      : type = WordListItemType.card;
-}
 
 /// 単語セクションデータクラス
 class WordSection {
@@ -103,6 +85,7 @@ class WordsScreenState extends State<WordsScreen> {
   bool _showJapanese = true;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   bool _isLoading = true;
   final ScrollController _scrollController = ScrollController();
@@ -123,6 +106,7 @@ class WordsScreenState extends State<WordsScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
     BuddyService.instance.addListener(_onBuddyChanged);
+    SoundService.instance.initialize();
     _initTts();
     _loadWords();
   }
@@ -420,13 +404,49 @@ class WordsScreenState extends State<WordsScreen> {
     });
   }
 
+  void _updateWordInPlace(Word updatedWord) {
+    final index = _allWords.indexWhere((w) => w.id == updatedWord.id);
+    if (index != -1) {
+      _allWords[index] = updatedWord;
+    }
+
+    // フィルター条件（お気に入りON / 未暗記ON）がある場合は一覧再構築
+    if (_filterFavorite || _filterUnlearned) {
+      _onFilterChanged();
+      return;
+    }
+
+    // フィルター条件がない場合は、該当セクション内のリストのみ差し替えて再描画（3.1万件の再走査をスキップ）
+    bool found = false;
+    for (int i = 0; i < _sections.length; i++) {
+      final sec = _sections[i];
+      final wIndex = sec.words.indexWhere((w) => w.id == updatedWord.id);
+      if (wIndex != -1) {
+        final newWords = List<Word>.from(sec.words);
+        newWords[wIndex] = updatedWord;
+        final newMemCount = newWords.where((w) => w.isMemorized || w.retentionPoint >= 80).length;
+        _sections[i] = WordSection(
+          key: sec.key,
+          title: sec.title,
+          subtitle: sec.subtitle,
+          words: newWords,
+          memorizedCount: newMemCount,
+        );
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      setState(() {});
+    } else {
+      _onFilterChanged();
+    }
+  }
+
   Future<void> _toggleFavoriteFast(Word targetWord) async {
     final newStatus = !targetWord.isFavorite;
-    final index = _allWords.indexWhere((w) => w.id == targetWord.id);
-    if (index != -1) {
-      _allWords[index] = _allWords[index].copyWith(isFavorite: newStatus);
-    }
-    _onFilterChanged();
+    final updated = targetWord.copyWith(isFavorite: newStatus);
+    _updateWordInPlace(updated);
     await widget.database.toggleFavorite(targetWord.id, newStatus);
   }
 
@@ -500,6 +520,7 @@ class WordsScreenState extends State<WordsScreen> {
     _scrollController.dispose();
     _filterScrollController.dispose();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     BuddyService.instance.removeListener(_onBuddyChanged);
     TtsService.instance.stop();
     super.dispose();
@@ -563,6 +584,7 @@ class WordsScreenState extends State<WordsScreen> {
                                           ),
                                           child: TextField(
                                             controller: _searchController,
+                                            focusNode: _searchFocusNode,
                                             textAlignVertical: TextAlignVertical.center,
                                             decoration: InputDecoration(
                                               hintText: '英単語または和訳で検索...',
@@ -575,6 +597,7 @@ class WordsScreenState extends State<WordsScreen> {
                                                         _searchController.clear();
                                                         setState(() => _searchQuery = '');
                                                         _onFilterChanged();
+                                                        _searchFocusNode.requestFocus();
                                                       },
                                                       padding: EdgeInsets.zero,
                                                       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -593,6 +616,26 @@ class WordsScreenState extends State<WordsScreen> {
                                         ),
                                       ),
                                       const SizedBox(width: 4),
+                                      ListenableBuilder(
+                                        listenable: SoundService.instance,
+                                        builder: (context, _) {
+                                          final seOn = SoundService.instance.isSeEnabled;
+                                          return IconButton(
+                                            icon: Icon(
+                                              seOn ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                                              color: seOn ? _primaryAccent : _textSecondary.withAlpha(150),
+                                              size: 22,
+                                            ),
+                                            tooltip: seOn ? '効果音: ON' : '効果音: OFF',
+                                            onPressed: () {
+                                              SoundService.instance.setSeEnabled(!seOn);
+                                            },
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                                          );
+                                        },
+                                      ),
+                                      const SizedBox(width: 2),
                                       IconButton(
                                         icon: const Icon(Icons.published_with_changes_rounded, color: _primaryAccent),
                                         tooltip: '暗記フラグ再同期（80pt未満を解除）',
@@ -745,15 +788,12 @@ class WordsScreenState extends State<WordsScreen> {
                                     onToggleFavorite: () => _toggleFavoriteFast(word),
                                     onSwipeRight: () async {
                                       await widget.database.markAsMemorizedManual(word.id);
-                                      final idx = _allWords.indexWhere((w) => w.id == word.id);
-                                      if (idx != -1) {
-                                        _allWords[idx] = _allWords[idx].copyWith(
-                                          retentionPoint: 80,
-                                          isMemorized: true,
-                                          isRestricted: false,
-                                        );
-                                        _onFilterChanged();
-                                      }
+                                      final updated = word.copyWith(
+                                        retentionPoint: 80,
+                                        isMemorized: true,
+                                        isRestricted: false,
+                                      );
+                                      _updateWordInPlace(updated);
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(context).clearSnackBars();
                                         ScaffoldMessenger.of(context).showSnackBar(
@@ -766,15 +806,12 @@ class WordsScreenState extends State<WordsScreen> {
                                     },
                                     onSwipeLeft: () async {
                                       await widget.database.resetRetentionManual(word.id);
-                                      final idx = _allWords.indexWhere((w) => w.id == word.id);
-                                      if (idx != -1) {
-                                        _allWords[idx] = _allWords[idx].copyWith(
-                                          retentionPoint: 0,
-                                          isMemorized: false,
-                                          isRestricted: true,
-                                        );
-                                        _onFilterChanged();
-                                      }
+                                      final updated = word.copyWith(
+                                        retentionPoint: 0,
+                                        isMemorized: false,
+                                        isRestricted: true,
+                                      );
+                                      _updateWordInPlace(updated);
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(context).clearSnackBars();
                                         ScaffoldMessenger.of(context).showSnackBar(

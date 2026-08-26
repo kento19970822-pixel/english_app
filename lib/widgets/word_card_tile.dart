@@ -1,7 +1,9 @@
 // コード管理番号: VER-20260824-12
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../db/app_database.dart';
+import '../services/sound_service.dart';
 
 class WordCardTile extends StatefulWidget {
   final Word word;
@@ -55,7 +57,7 @@ class _WordCardTileState extends State<WordCardTile> {
   @override
   Widget build(BuildContext context) {
     final bool isJapaneseVisible = _overrideShowJapanese ?? widget.showJapanese;
-    final bool isMemorized = widget.word.isMemorized;
+    final bool isMemorized = widget.word.isMemorized || widget.word.retentionPoint >= 80;
     final bool isRestricted = widget.word.isRestricted;
     final int pt = widget.word.retentionPoint;
     final Color indicatorColor = _getRetentionColor(pt, isMemorized);
@@ -65,8 +67,10 @@ class _WordCardTileState extends State<WordCardTile> {
       direction: DismissDirection.horizontal,
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
+          SoundService.instance.playMemorized();
           widget.onSwipeRight?.call();
         } else if (direction == DismissDirection.endToStart) {
+          SoundService.instance.playReset();
           widget.onSwipeLeft?.call();
         }
         return false;
@@ -124,19 +128,19 @@ class _WordCardTileState extends State<WordCardTile> {
         height: double.infinity,
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
-          color: _cardColor,
+          color: isMemorized ? const Color(0xFFF8FDF9) : _cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isMemorized
-                ? _primaryAccent.withAlpha(80)
+                ? const Color(0xFF81C784)
                 : _borderColor,
             width: isMemorized ? 1.5 : 1.0,
           ),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0x08000000),
-              blurRadius: 4,
-              offset: Offset(0, 1.5),
+              color: isMemorized ? const Color(0x124CAF50) : const Color(0x08000000),
+              blurRadius: isMemorized ? 5 : 4,
+              offset: const Offset(0, 1.5),
             ),
           ],
         ),
@@ -275,7 +279,14 @@ class _WordCardTileState extends State<WordCardTile> {
                                       : const Color(0xFFC0B8A5),
                                   size: 22,
                                 ),
-                                onPressed: widget.onToggleFavorite,
+                                onPressed: () {
+                                  if (!widget.word.isFavorite) {
+                                    SoundService.instance.playFavorite();
+                                  } else {
+                                    HapticFeedback.lightImpact();
+                                  }
+                                  widget.onToggleFavorite();
+                                },
                                 padding: const EdgeInsets.all(4),
                                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                               ),
@@ -358,22 +369,44 @@ class _WordCardTileState extends State<WordCardTile> {
                         ),
                       ],
 
-                      // 3行目: 日本語訳（タップ切り替え）
+                      // 3行目: 日本語訳（タップ切り替え ＆ アフォーダンス表示）
                       const SizedBox(height: 3),
-                      Text(
-                        isJapaneseVisible
-                            ? widget.word.japanese
-                            : '•••••• (タップで表示)',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w500,
-                          color: isJapaneseVisible ? _textPrimary : _textSecondary.withAlpha(150),
-                          fontStyle: isJapaneseVisible
-                              ? FontStyle.normal
-                              : FontStyle.italic,
-                          height: 1.25,
+                      if (isJapaneseVisible)
+                        Text(
+                          widget.word.japanese,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w500,
+                            color: _textPrimary,
+                            height: 1.25,
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF4EFE6),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: _borderColor,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.visibility_rounded, size: 13, color: _textSecondary),
+                              SizedBox(width: 4),
+                              Text(
+                                'タップで和訳を表示',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: _textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
 
                       // 4行目: 例文 ＆ 例文訳（存在する場合、はみ出しなく自然に全行表示）
                       if (widget.word.example != null &&
