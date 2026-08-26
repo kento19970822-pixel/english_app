@@ -1,6 +1,7 @@
 // コード管理番号: VER-20260824-32
 import 'package:flutter/material.dart';
 import '../db/app_database.dart';
+import '../services/buddy_service.dart';
 import '../services/stamp_service.dart';
 import '../widgets/pixel_stamp_widget.dart';
 
@@ -576,6 +577,7 @@ class _StampGalleryScreenState extends State<StampGalleryScreen> {
                           ),
                           onPressed: () async {
                             await widget.database.setFavoriteStamp(stamp.id);
+                            await BuddyService.instance.reloadFromDatabase(widget.database);
                             await _loadStamps();
                             if (context.mounted) {
                               Navigator.pop(context);

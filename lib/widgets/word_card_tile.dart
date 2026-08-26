@@ -27,6 +27,7 @@ class WordCardTile extends StatefulWidget {
 
 class _WordCardTileState extends State<WordCardTile> {
   bool? _overrideShowJapanese;
+  bool _isPressed = false;
 
   // 定数パステルカラー
   static const Color _cardColor = Color(0xFFFFFDF9);
@@ -98,7 +99,7 @@ class _WordCardTileState extends State<WordCardTile> {
       secondaryBackground: Container(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
-          color: const Color(0xFFE57373),
+          color: const Color(0xFFE53935),
           borderRadius: BorderRadius.circular(16.0),
         ),
         alignment: Alignment.centerRight,
@@ -107,7 +108,7 @@ class _WordCardTileState extends State<WordCardTile> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
-              '0ptにリセット (本日制限)',
+              '定着度リセット (0pt/制限)',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -115,7 +116,7 @@ class _WordCardTileState extends State<WordCardTile> {
               ),
             ),
             SizedBox(width: 8),
-            Icon(Icons.restart_alt_rounded, color: Colors.white, size: 26),
+            Icon(Icons.refresh_rounded, color: Colors.white, size: 26),
           ],
         ),
       ),
@@ -140,6 +141,9 @@ class _WordCardTileState extends State<WordCardTile> {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
+          onHighlightChanged: (val) {
+            setState(() => _isPressed = val);
+          },
           onTap: widget.showJapanese
               ? null
               : () {
@@ -157,13 +161,24 @@ class _WordCardTileState extends State<WordCardTile> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // 定着度ポイント4段階カラーインジケータ (緑:80pt+, 黄:50-79pt, 橙:1-49pt, 灰:0pt)
-                Container(
-                  width: 6,
-                  height: 44,
+                // 定着度ポイント4段階カラーインジケータ（タップ中インタラクション拡大対応）
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeOutCubic,
+                  width: _isPressed ? 10 : 6,
+                  height: _isPressed ? 48 : 44,
                   decoration: BoxDecoration(
                     color: indicatorColor,
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(4),
+                    boxShadow: _isPressed
+                        ? [
+                            BoxShadow(
+                              color: indicatorColor.withAlpha(120),
+                              blurRadius: 6,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 12),

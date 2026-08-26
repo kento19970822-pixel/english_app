@@ -1,8 +1,9 @@
-// コード管理番号: VER-20260826-01
+// コード管理番号: VER-20260826-08
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../db/app_database.dart';
+import '../services/buddy_service.dart';
 import '../services/tts_service.dart';
 import '../widgets/pixel_character_widget.dart';
 import '../widgets/sticky_section_header.dart';
@@ -53,6 +54,7 @@ class WordsScreenState extends State<WordsScreen> {
 
   bool _isLoading = true;
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _filterScrollController = ScrollController();
   bool _showScrollToTop = false;
 
   // パステルテーマカラー
@@ -68,8 +70,15 @@ class WordsScreenState extends State<WordsScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    BuddyService.instance.addListener(_onBuddyChanged);
     _initTts();
     _loadWords();
+  }
+
+  void _onBuddyChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _onScroll() {
@@ -85,13 +94,35 @@ class WordsScreenState extends State<WordsScreen> {
       _scrollController.animateTo(
         0,
         duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        curve: Curves.easeOutCubic,
       );
     }
   }
 
-  /// タブ再押下時などの画面表示初期化 (項目12)
+  /// タブ再押下時などの画面表示初期化 (要件2: スムーズな一連の初期化アニメーション)
   void resetFiltersAndScrollToTop() {
+    // 1. キーボードを閉じる
+    FocusScope.of(context).unfocus();
+
+    // 2. フィルター横スクロールを最左端へスムーズに戻す
+    if (_filterScrollController.hasClients) {
+      _filterScrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    }
+
+    // 3. 単語リストを最上部へスムーズにスクロール
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    }
+
+    // 4. フィルター状態のリセットと再描画
     setState(() {
       _searchController.clear();
       _searchQuery = '';
@@ -105,7 +136,6 @@ class WordsScreenState extends State<WordsScreen> {
       _showJapanese = true;
     });
     _applyFilterAndGrouping();
-    _scrollToTop();
   }
 
   /// 暗記フラグ再同期確認ダイアログ (忘却等で80pt未満になった単語の暗記フラグを取り外し) (F-09)
@@ -416,7 +446,9 @@ class WordsScreenState extends State<WordsScreen> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _filterScrollController.dispose();
     _searchController.dispose();
+    BuddyService.instance.removeListener(_onBuddyChanged);
     TtsService.instance.stop();
     super.dispose();
   }
@@ -568,6 +600,7 @@ class WordsScreenState extends State<WordsScreen> {
 
                                 // フィルタータグ（横スクロール対応）
                                 SingleChildScrollView(
+                                  controller: _filterScrollController,
                                   scrollDirection: Axis.horizontal,
                                   child: Row(
                                     children: [
@@ -741,30 +774,34 @@ class WordsScreenState extends State<WordsScreen> {
     final speciesIndex = chapter - 1;
     final species = getCharacterSpecies(chapter);
 
-    // フィルター状態に関わらず、チャプター全体の全単語を基準に定着度と成長段階を算出
+    // フィルター状態に関わらず、チャプター全体の全単語を基準に暗記率（80pt以上基準）と成長段階を算出
     final chapterAllWords = _allWords.where((w) => w.chapter == chapter).toList();
     final int totalWordsInChapter = chapterAllWords.isNotEmpty ? chapterAllWords.length : section.words.length;
-    final int targetCount = chapterAllWords.where((w) => w.retentionPoint >= 70).length;
-    final double rate = totalWordsInChapter > 0 ? (targetCount / totalWordsInChapter) * 100.0 : 0.0;
+    final int memorizedCount = chapterAllWords.where((w) => w.isMemorized || w.retentionPoint >= 80).length;
+    final double rate = totalWordsInChapter > 0 ? (memorizedCount / totalWordsInChapter) * 100.0 : 0.0;
     final growthState = PixelCharacterWidget.stateFromRate(rate, true);
     final isCleared = rate >= 80.0;
     final isLocked = growthState == CharacterGrowthState.locked;
 
+    // 要件9: 1段へ統合表示「元気 52%（52/100）」
     String statusText;
     Color statusColor;
     if (isLocked || rate <= 0) {
-      statusText = '🔒 未学習 (0%)';
+      statusText = '🔒 未学習 0% (0/$totalWordsInChapter)';
       statusColor = _textSecondary;
     } else if (isCleared) {
-      statusText = '🌟 進化マスター ($targetCount/100語)';
+      statusText = '🌟 進化 ${rate.toInt()}% ($memorizedCount/$totalWordsInChapter)';
       statusColor = const Color(0xFF6A1B9A);
     } else if (rate >= 50.0) {
-      statusText = '😊 元気 ($targetCount/100語)';
+      statusText = '😊 元気 ${rate.toInt()}% ($memorizedCount/$totalWordsInChapter)';
       statusColor = Colors.green.shade700;
     } else {
-      statusText = '🥀 70pt以上: $targetCount語';
+      statusText = '🥀 元気ない ${rate.toInt()}% ($memorizedCount/$totalWordsInChapter)';
       statusColor = Colors.deepOrange;
     }
+
+    final isCurrentBuddy = (speciesIndex == BuddyService.instance.selectedSpeciesId);
+    final favStamp = isCurrentBuddy ? BuddyService.instance.favoriteStamp : null;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
@@ -787,6 +824,7 @@ class WordsScreenState extends State<WordsScreen> {
             speciesIndex: speciesIndex,
             growthState: growthState,
             actionState: isCleared ? CharacterActionState.walk : CharacterActionState.idle,
+            favoriteStamp: favStamp,
             size: 42,
           ),
           const SizedBox(width: 10),
@@ -797,12 +835,15 @@ class WordsScreenState extends State<WordsScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      'Chapter $chapter: ${isLocked ? '？？？？？' : species.japaneseName}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isLocked ? _textSecondary : _textPrimary,
+                    Flexible(
+                      child: Text(
+                        'Ch.$chapter: ${isLocked ? '？？？？？' : species.japaneseName}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isLocked ? _textSecondary : _textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -810,7 +851,7 @@ class WordsScreenState extends State<WordsScreen> {
                       species.category.icon,
                       style: const TextStyle(fontSize: 11),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 6),
                     Text(
                       statusText,
                       style: TextStyle(
@@ -821,32 +862,17 @@ class WordsScreenState extends State<WordsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: (rate / 100.0).clamp(0.0, 1.0),
-                          backgroundColor: const Color(0xFFEFEAE0),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            isCleared ? const Color(0xFF8E24AA) : _primaryAccent,
-                          ),
-                          minHeight: 5,
-                        ),
-                      ),
+                const SizedBox(height: 5),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: (rate / 100.0).clamp(0.0, 1.0),
+                    backgroundColor: const Color(0xFFEFEAE0),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      isCleared ? const Color(0xFF8E24AA) : _primaryAccent,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${rate.toInt()}% (${section.memorizedCount}/${section.words.length})',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: _textSecondary,
-                      ),
-                    ),
-                  ],
+                    minHeight: 5,
+                  ),
                 ),
               ],
             ),

@@ -128,6 +128,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   int _correctCount = 0;
   int _totalAnsweredCount = 0;
 
+  // 要件6: SE重複・最下部到達とタップの排他制御用フラグ
+  bool _isLeftProcessing = false;
+  bool _isRightProcessing = false;
+
   WordModel? leftWord;
   List<String> leftChoices = [];
   Set<String> leftDisabledChoices = {};
@@ -282,7 +286,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     List<WordModel> targetWords = [];
     if (customWords != null && customWords.isNotEmpty) {
+      currentMode = 'revenge';
       targetWords = List.from(customWords);
+      if (targetWords.length < 5) {
+        final expandedList = <WordModel>[];
+        while (expandedList.length < 20) {
+          expandedList.addAll(customWords);
+        }
+        targetWords = expandedList;
+      }
     } else if (currentMode == 'learning') {
       // 1. 学習モード: 選択チャプター（selectedChapter）の全単語を抽出
       targetWords = allWords
@@ -479,6 +491,12 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _nextQuestion({required bool isLeft}) {
+    if (isLeft) {
+      _isLeftProcessing = false;
+    } else {
+      _isRightProcessing = false;
+    }
+
     if (questionQueue.isEmpty || isGameOver || !isGameStarted) {
       if (leftWord == null && rightWord == null) {
         _endGame();
@@ -520,10 +538,26 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _handleAnswer({required bool isLeft, required String selectedChoice}) {
+    // 要件6: タップと最下部判定の排他制御（SE重複・二重処理防止）
+    if (isLeft) {
+      if (_isLeftProcessing) return;
+      _isLeftProcessing = true;
+    } else {
+      if (_isRightProcessing) return;
+      _isRightProcessing = true;
+    }
+
     final targetWord = isLeft ? leftWord : rightWord;
     final controller = isLeft ? _leftDropController : _rightDropController;
 
-    if (targetWord == null || isPaused || !isGameStarted) return;
+    if (targetWord == null || isPaused || !isGameStarted) {
+      if (isLeft) {
+        _isLeftProcessing = false;
+      } else {
+        _isRightProcessing = false;
+      }
+      return;
+    }
 
     if (selectedChoice == targetWord.japanese) {
       // 端末/ブラウザのTicker跳躍に左右されない実経過時間ベースの正確な進捗計算
@@ -631,13 +665,43 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           rightFeedback = result['feedbackText'] as String;
         }
       });
+
+      // 誤答時は次の選択肢をタップできるようロック解除
+      if (isLeft) {
+        _isLeftProcessing = false;
+      } else {
+        _isRightProcessing = false;
+      }
     }
   }
 
   void _handleTimeOut({required bool isLeft}) {
-    if (!isGameStarted || isGameOver || isPaused) return;
+    // 要件6: タップと最下部判定の排他制御
+    if (isLeft) {
+      if (_isLeftProcessing) return;
+      _isLeftProcessing = true;
+    } else {
+      if (_isRightProcessing) return;
+      _isRightProcessing = true;
+    }
+
+    if (!isGameStarted || isGameOver || isPaused) {
+      if (isLeft) {
+        _isLeftProcessing = false;
+      } else {
+        _isRightProcessing = false;
+      }
+      return;
+    }
     final targetWord = isLeft ? leftWord : rightWord;
-    if (targetWord == null) return;
+    if (targetWord == null) {
+      if (isLeft) {
+        _isLeftProcessing = false;
+      } else {
+        _isRightProcessing = false;
+      }
+      return;
+    }
 
     // Safari等のTicker跳躍/誤完了ガード（落下開始から実時間で最低40%以上経過していない異常トリガーは無視して復元）
     final startTime = isLeft ? _leftQuestionStartTime : _rightQuestionStartTime;
@@ -648,6 +712,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         final correctProgress = (elapsedMs / (dropDurationSeconds * 1000.0)).clamp(0.0, 1.0);
         controller.value = correctProgress;
         controller.forward();
+        if (isLeft) {
+          _isLeftProcessing = false;
+        } else {
+          _isRightProcessing = false;
+        }
         return;
       }
     }
@@ -918,7 +987,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     final modeTitle = currentMode == 'learning'
         ? '学習モード (Ch.$selectedChapter)'
-        : (currentMode == 'weakness' ? '弱点克服モード' : 'チャレンジモード');
+        : (currentMode == 'revenge'
+            ? 'ミス単語リベンジ (${mistakenWords.isNotEmpty ? mistakenWords.length : allWords.length}語)'
+            : (currentMode == 'weakness' ? '弱点克服モード (100語)' : 'チャレンジモード'));
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -1306,7 +1377,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                                     FittedBox(
                                       fit: BoxFit.scaleDown,
                                       child: Text(
-                                        '✨ 次の Chapter $nextChapter が解放されました！ ✨',
+                                        '✨ 次の Ch.$nextChapter が解放されました！ ✨',
                                         style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
@@ -1343,7 +1414,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.flash_on_rounded, color: Colors.white, size: 18),
                         label: Text(
-                          'このミス単語（${mistakenWords.length}語）を特訓する',
+                          'ミス単語リベンジ（${mistakenWords.length}語）',
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -1484,19 +1555,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(width: 8),
 
-                  // 中: 再挑戦
+                  // 中: 再挑戦（要件5: アクティブな高視認性スタイル）
                   Expanded(
                     child: SizedBox(
                       height: 44,
-                      child: OutlinedButton.icon(
+                      child: ElevatedButton.icon(
                         icon: const Icon(Icons.refresh_rounded, size: 18),
                         label: const FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text('再挑戦', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF2C302E),
-                          side: const BorderSide(color: Color(0xFFD0D7DE), width: 1.5),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFECA882),
+                          foregroundColor: Colors.white,
+                          elevation: 1,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

@@ -48,11 +48,21 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
   @override
   void initState() {
     super.initState();
+    BuddyService.instance.addListener(_onBuddyChanged);
     _loadChaptersForLevel(selectedLevel);
+  }
+
+  void _onBuddyChanged() {
+    if (mounted) {
+      setState(() {
+        _favoriteStamp = BuddyService.instance.favoriteStamp;
+      });
+    }
   }
 
   @override
   void dispose() {
+    BuddyService.instance.removeListener(_onBuddyChanged);
     _scrollController.dispose();
     super.dispose();
   }
@@ -180,7 +190,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                   // スクロール時に隠れ、下スクロール（引き下げ）で単語帳同様に再表示されるフローティングヘッダー (項目6)
                   SliverAppBar(
                     floating: true,
-                    snap: true,
+                    snap: false,
                     pinned: false,
                     automaticallyImplyLeading: false,
                     backgroundColor: _bgColor,
@@ -244,7 +254,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                 Expanded(
                                   child: _buildModeCard(
                                     title: '学習モード',
-                                    subtitle: '章ごと集中学習\n(80pt以上90%で次章解放)',
+                                    subtitle: '章ごと集中学習\n(70pt以上90%で次章解放)',
                                     icon: Icons.school_rounded,
                                     modeKey: 'learning',
                                     accentColor: _primaryAccent,
@@ -361,7 +371,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Text(
-                                    '解放条件: 80pt以上の単語が90%以上',
+                                    '解放条件: 70pt以上の単語が90%以上',
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
