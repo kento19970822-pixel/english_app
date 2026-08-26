@@ -707,14 +707,27 @@ class WordsScreenState extends State<WordsScreen> {
                       ),
                     )
                   else
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final item = _flatListItems[index];
-                          switch (item.type) {
-                            case WordListItemType.header:
-                              final section = item.section!;
-                              return StickySectionHeader(
+                    SliverVariedExtentList.builder(
+                      itemCount: _flatListItems.length,
+                      itemExtentBuilder: (index, _) {
+                        final item = _flatListItems[index];
+                        switch (item.type) {
+                          case WordListItemType.header:
+                            return 48.0;
+                          case WordListItemType.banner:
+                            return 82.0;
+                          case WordListItemType.card:
+                            final w = item.word!;
+                            final hasEx = (w.example != null && w.example!.isNotEmpty);
+                            return hasEx ? 128.0 : 96.0;
+                        }
+                      },
+                      itemBuilder: (context, index) {
+                        final item = _flatListItems[index];
+                        switch (item.type) {
+                          case WordListItemType.header:
+                            final section = item.section!;
+                            return StickySectionHeader(
                                 title: section.title,
                                 subtitle: section.subtitle,
                                 totalCount: section.words.length,
@@ -775,9 +788,7 @@ class WordsScreenState extends State<WordsScreen> {
                               );
                           }
                         },
-                        childCount: _flatListItems.length,
                       ),
-                    ),
                   const SliverToBoxAdapter(
                     child: SizedBox(height: 24),
                   ),

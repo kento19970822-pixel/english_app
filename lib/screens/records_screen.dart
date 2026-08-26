@@ -1,4 +1,5 @@
-// コード管理番号: VER-20260824-50
+// コード管理番号: VER-20260826-RECORDS-CUPERTINO
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
@@ -29,27 +30,44 @@ class RecordsScreenState extends State<RecordsScreen> {
   int _streakDays = 0;
   int _totalStudiedDays = 0;
   bool _isLoading = true;
-  String? _currentSubView;
 
   @override
   void initState() {
     super.initState();
-    _currentSubView = widget.initialSubView;
     _loadSummary();
+    if (widget.initialSubView != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) openSubView(widget.initialSubView!);
+      });
+    }
   }
 
   void openSubView(String viewKey) {
-    setState(() {
-      _currentSubView = viewKey;
-    });
-    widget.onSubViewChanged?.call(viewKey);
+    Widget? targetScreen;
+    if (viewKey == 'calendar') {
+      targetScreen = CalendarScreen(database: widget.database);
+    } else if (viewKey == 'stamp') {
+      targetScreen = StampGalleryScreen(database: widget.database);
+    } else if (viewKey == 'character') {
+      targetScreen = CharacterGalleryScreen(database: widget.database);
+    }
+
+    if (targetScreen != null) {
+      widget.onSubViewChanged?.call(viewKey);
+      Navigator.push(
+        context,
+        CupertinoPageRoute(builder: (context) => targetScreen!),
+      ).then((_) {
+        widget.onSubViewChanged?.call(null);
+        _loadSummary();
+      });
+    }
   }
 
   void closeSubView() {
-    setState(() {
-      _currentSubView = null;
-    });
-    widget.onSubViewChanged?.call(null);
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
     _loadSummary();
   }
 
@@ -65,65 +83,8 @@ class RecordsScreenState extends State<RecordsScreen> {
     }
   }
 
-  Widget _buildSwipeBackWrapper({required Widget child}) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) closeSubView();
-      },
-      child: Stack(
-        children: [
-          child,
-          // 画面左端（幅32px）からのスワイプバック判定エリア
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: 32,
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onHorizontalDragEnd: (details) {
-                if (details.primaryVelocity != null && details.primaryVelocity! > 200) {
-                  closeSubView();
-                }
-              },
-              onHorizontalDragUpdate: (details) {
-                if (details.primaryDelta != null && details.primaryDelta! > 12) {
-                  closeSubView();
-                }
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_currentSubView == 'calendar') {
-      return _buildSwipeBackWrapper(
-        child: CalendarScreen(
-          database: widget.database,
-          onBack: closeSubView,
-        ),
-      );
-    } else if (_currentSubView == 'stamp') {
-      return _buildSwipeBackWrapper(
-        child: StampGalleryScreen(
-          database: widget.database,
-          onBack: closeSubView,
-        ),
-      );
-    } else if (_currentSubView == 'character') {
-      return _buildSwipeBackWrapper(
-        child: CharacterGalleryScreen(
-          database: widget.database,
-          onBack: closeSubView,
-        ),
-      );
-    }
-
     const bgColor = Color(0xFFFBF7EE);
     const primaryColor = Color(0xFF5F9E98);
     const secondaryColor = Color(0xFFECA882);

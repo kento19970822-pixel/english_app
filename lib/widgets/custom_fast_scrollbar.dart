@@ -104,6 +104,10 @@ class _CustomFastScrollbarState extends State<CustomFastScrollbar> {
 
   void _handleDragEnd() {
     _isDraggingNotifier.value = false;
+    if (_pendingJumpOffset != null && widget.controller.hasClients) {
+      final maxExtent = widget.controller.position.maxScrollExtent;
+      widget.controller.jumpTo(_pendingJumpOffset!.clamp(0.0, maxExtent));
+    }
     _pendingJumpOffset = null;
     _lastHapticMilestone = -1;
     // 指を離した際の「ククッ」としたリリース触覚フィードバック
@@ -118,7 +122,8 @@ class _CustomFastScrollbarState extends State<CustomFastScrollbar> {
       SchedulerBinding.instance.scheduleFrameCallback((_) {
         _isFrameScheduled = false;
         if (_pendingJumpOffset != null && widget.controller.hasClients) {
-          widget.controller.jumpTo(_pendingJumpOffset!);
+          final maxExtent = widget.controller.position.maxScrollExtent;
+          widget.controller.jumpTo(_pendingJumpOffset!.clamp(0.0, maxExtent));
           _pendingJumpOffset = null;
         }
       });
