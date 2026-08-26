@@ -1,11 +1,11 @@
-// コード管理番号: VER-20260825-14
+// コード管理番号: VER-20260826-09
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
 import '../services/buddy_service.dart';
 import '../widgets/pixel_character_widget.dart';
 
-/// キャラクター図鑑画面 (F-12: 全374チャプター1:1固有キャラクター・8大系統フィルター)
+/// キャラクター図鑑画面 (F-12: 全チャプター1:1固有キャラクター・8大系統フィルター)
 class CharacterGalleryScreen extends StatefulWidget {
   final AppDatabase database;
   final VoidCallback? onBack;

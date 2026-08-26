@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
+import '../widgets/pixel_character_widget.dart';
 import 'calendar_screen.dart';
 import 'character_gallery_screen.dart';
 import 'stamp_gallery_screen.dart';
@@ -163,10 +164,10 @@ class RecordsScreenState extends State<RecordsScreen> {
                   // 3. キャラクター図鑑
                   _buildMenuCard(
                     title: 'キャラクター図鑑',
-                    subtitle: '全374チャプターのドット絵キャラ＆相棒設定',
+                    subtitle: '全$kTotalChapterCountチャプターのドット絵キャラ＆相棒設定',
                     icon: Icons.pets_rounded,
                     accentColor: const Color(0xFF88A0A8),
-                    badgeText: '全374体',
+                    badgeText: '全$kTotalChapterCount体',
                     onTap: () => openSubView('character'),
                   ),
                   const SizedBox(height: 24),

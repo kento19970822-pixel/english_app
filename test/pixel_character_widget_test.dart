@@ -117,17 +117,17 @@ void main() {
       expect(PixelCharacterWidget.stateFromRate(100.0, true), CharacterGrowthState.evolved);
     });
 
-    test('BuddyService maintains and updates active buddy species ID for 374 chapters', () {
+    test('BuddyService maintains and updates active buddy species ID for all chapters', () {
       final buddyService = BuddyService.instance;
       buddyService.setSelectedSpeciesId(10);
       expect(buddyService.selectedSpeciesId, 10);
 
-      buddyService.setSelectedSpeciesId(374); // 374 % 374 == 0
+      buddyService.setSelectedSpeciesId(kTotalChapterCount); // kTotalChapterCount % kTotalChapterCount == 0
       expect(buddyService.selectedSpeciesId, 0);
     });
 
-    test('getCharacterSpecies generates distinct species for all 374 chapters across 8 categories', () {
-      expect(kTotalChapterCount, 374);
+    test('getCharacterSpecies generates distinct species for all chapters across 8 categories', () {
+      expect(kTotalChapterCount, 312);
 
       for (int c = 1; c <= kTotalChapterCount; c++) {
         final sp = getCharacterSpecies(c);
