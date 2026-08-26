@@ -707,21 +707,8 @@ class WordsScreenState extends State<WordsScreen> {
                       ),
                     )
                   else
-                    SliverVariedExtentList.builder(
+                    SliverList.builder(
                       itemCount: _flatListItems.length,
-                      itemExtentBuilder: (index, _) {
-                        final item = _flatListItems[index];
-                        switch (item.type) {
-                          case WordListItemType.header:
-                            return 48.0;
-                          case WordListItemType.banner:
-                            return 82.0;
-                          case WordListItemType.card:
-                            final w = item.word!;
-                            final hasEx = (w.example != null && w.example!.isNotEmpty);
-                            return hasEx ? 128.0 : 96.0;
-                        }
-                      },
                       itemBuilder: (context, index) {
                         final item = _flatListItems[index];
                         switch (item.type) {

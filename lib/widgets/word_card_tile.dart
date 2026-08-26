@@ -157,7 +157,7 @@ class _WordCardTileState extends State<WordCardTile> {
                   }
                 },
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
+            padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -168,7 +168,7 @@ class _WordCardTileState extends State<WordCardTile> {
                     duration: const Duration(milliseconds: 150),
                     curve: Curves.easeOutCubic,
                     width: _isPressed ? 8 : 5,
-                    height: _isPressed ? 52 : 46,
+                    height: _isPressed ? 60 : 52,
                     decoration: BoxDecoration(
                       color: indicatorColor,
                       borderRadius: BorderRadius.circular(4),
@@ -190,6 +190,7 @@ class _WordCardTileState extends State<WordCardTile> {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // 1行目: 英単語 ＋ 定着度ポイント ＋ 暗記バッジ ＆ 上部操作ボタン（音声/Ch/お気に入り）
                       Row(
@@ -363,6 +364,7 @@ class _WordCardTileState extends State<WordCardTile> {
                             : '•••••• (タップで表示)',
                         style: TextStyle(
                           fontSize: 14,
+                          fontWeight: FontWeight.w500,
                           color: isJapaneseVisible ? _textPrimary : _textSecondary.withAlpha(150),
                           fontStyle: isJapaneseVisible
                               ? FontStyle.normal
@@ -370,30 +372,38 @@ class _WordCardTileState extends State<WordCardTile> {
                         ),
                       ),
 
-                      // 4行目: 例文（存在する場合）
+                      // 4行目: 例文 ＆ 例文訳（存在する場合、はみ出しなく自然に全行表示）
                       if (widget.word.example != null &&
                           widget.word.example!.trim().isNotEmpty) ...[
-                        const SizedBox(height: 5),
-                        Text(
-                          widget.word.example!,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                            color: Color(0xFF6B726E),
-                            height: 1.2,
-                          ),
-                        ),
-                        if (isJapaneseVisible &&
-                            widget.word.exampleJp != null &&
-                            widget.word.exampleJp!.trim().isNotEmpty)
-                          Text(
-                            widget.word.exampleJp!,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF888F8C),
-                              height: 1.2,
+                        const SizedBox(height: 6),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.word.example!,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                fontStyle: FontStyle.italic,
+                                color: Color(0xFF555B58),
+                                height: 1.35,
+                              ),
                             ),
-                          ),
+                            if (isJapaneseVisible &&
+                                widget.word.exampleJp != null &&
+                                widget.word.exampleJp!.trim().isNotEmpty) ...[
+                              const SizedBox(height: 3),
+                              Text(
+                                widget.word.exampleJp!,
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFF7A827E),
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ],
                     ],
                   ),
