@@ -46,43 +46,13 @@ class WordSection {
   });
 }
 
-class _SectionOffsetRange {
+class _SectionStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   final WordSection section;
-  final WordSection? nextSection;
-  final double startOffset;
-  final double endOffset;
-  final double nextHeaderOffset;
-
-  const _SectionOffsetRange({
-    required this.section,
-    this.nextSection,
-    required this.startOffset,
-    required this.endOffset,
-    required this.nextHeaderOffset,
-  });
-}
-
-class _StickyHeaderState {
-  final WordSection currentSection;
-  final WordSection? nextSection;
-  final double pushOffset;
-
-  const _StickyHeaderState({
-    required this.currentSection,
-    this.nextSection,
-    required this.pushOffset,
-  });
-}
-
-class _SingleStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final ValueNotifier<_StickyHeaderState?> stickyNotifier;
   final String sortMode;
-  final WordSection defaultSection;
 
-  _SingleStickyHeaderDelegate({
-    required this.stickyNotifier,
+  _SectionStickyHeaderDelegate({
+    required this.section,
     required this.sortMode,
-    required this.defaultSection,
   });
 
   @override
@@ -93,59 +63,18 @@ class _SingleStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return ValueListenableBuilder<_StickyHeaderState?>(
-      valueListenable: stickyNotifier,
-      builder: (context, state, _) {
-        final current = state?.currentSection ?? defaultSection;
-        final next = state?.nextSection;
-        final pushOffset = state?.pushOffset ?? 0.0;
-
-        return ClipRect(
-          child: SizedBox(
-            height: 48.0,
-            child: Stack(
-              children: [
-                // 現在のセクションバー（上方向へ押し出されスライドアウト）
-                Positioned(
-                  top: pushOffset,
-                  left: 0,
-                  right: 0,
-                  height: 48.0,
-                  child: StickySectionHeader(
-                    title: current.title,
-                    subtitle: current.subtitle,
-                    totalCount: current.words.length,
-                    memorizedCount: current.memorizedCount,
-                    sortMode: sortMode,
-                  ),
-                ),
-                // 次のセクションバー（現在のバーにぴったり接して下から押し上げスライドイン）
-                if (next != null && pushOffset < 0)
-                  Positioned(
-                    top: pushOffset + 48.0,
-                    left: 0,
-                    right: 0,
-                    height: 48.0,
-                    child: StickySectionHeader(
-                      title: next.title,
-                      subtitle: next.subtitle,
-                      totalCount: next.words.length,
-                      memorizedCount: next.memorizedCount,
-                      sortMode: sortMode,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
+    return StickySectionHeader(
+      title: section.title,
+      subtitle: section.subtitle,
+      totalCount: section.words.length,
+      memorizedCount: section.memorizedCount,
+      sortMode: sortMode,
     );
   }
 
   @override
-  bool shouldRebuild(covariant _SingleStickyHeaderDelegate oldDelegate) {
-    return oldDelegate.sortMode != sortMode ||
-        oldDelegate.defaultSection != defaultSection;
+  bool shouldRebuild(covariant _SectionStickyHeaderDelegate oldDelegate) {
+    return oldDelegate.section != section || oldDelegate.sortMode != sortMode;
   }
 }
 
@@ -160,10 +89,7 @@ class WordsScreen extends StatefulWidget {
 
 class WordsScreenState extends State<WordsScreen> {
   List<Word> _allWords = [];
-  List<WordListItem> _flatListItems = [];
-  List<_SectionOffsetRange> _sectionOffsetRanges = [];
-  final ValueNotifier<_StickyHeaderState?> _stickyHeaderNotifier = ValueNotifier(null);
-  WordSection? _firstSection;
+  List<WordSection> _sections = [];
   int _totalFilteredCount = 0;
 
   // ソート・フィルター状態
@@ -212,57 +138,6 @@ class WordsScreenState extends State<WordsScreen> {
     final show = _scrollController.offset > 300;
     if (show != _showScrollToTop) {
       setState(() => _showScrollToTop = show);
-    }
-    _updateStickyHeader();
-  }
-
-  void _updateStickyHeader() {
-    if (!_scrollController.hasClients || _sectionOffsetRanges.isEmpty) {
-      if (_firstSection != null) {
-        _stickyHeaderNotifier.value = _StickyHeaderState(
-          currentSection: _firstSection!,
-          pushOffset: 0.0,
-        );
-      } else {
-        _stickyHeaderNotifier.value = null;
-      }
-      return;
-    }
-    const double appBarHeight = 154.0;
-    final sliverOffset = (_scrollController.offset - appBarHeight).clamp(0.0, double.infinity);
-
-    // Binary search for active section range in the sliver list
-    int low = 0;
-    int high = _sectionOffsetRanges.length - 1;
-    _SectionOffsetRange? matched;
-
-    while (low <= high) {
-      final mid = (low + high) ~/ 2;
-      final range = _sectionOffsetRanges[mid];
-      if (sliverOffset >= range.startOffset && sliverOffset < range.endOffset) {
-        matched = range;
-        break;
-      } else if (sliverOffset < range.startOffset) {
-        high = mid - 1;
-      } else {
-        low = mid + 1;
-      }
-    }
-
-    if (matched != null) {
-      final distanceToNext = matched.nextHeaderOffset - sliverOffset;
-      final pushOffset = (distanceToNext < 48.0) ? (distanceToNext - 48.0) : 0.0;
-      _stickyHeaderNotifier.value = _StickyHeaderState(
-        currentSection: matched.section,
-        nextSection: matched.nextSection,
-        pushOffset: pushOffset,
-      );
-    } else if (_firstSection != null) {
-      _stickyHeaderNotifier.value = _StickyHeaderState(
-        currentSection: _firstSection!,
-        nextSection: null,
-        pushOffset: 0.0,
-      );
     }
   }
 
@@ -536,41 +411,7 @@ class WordsScreenState extends State<WordsScreen> {
       }
     }
 
-    final List<WordListItem> flatItems = [];
-    final List<_SectionOffsetRange> ranges = [];
-    double currentOffset = 0.0;
-
-    for (int i = 0; i < sections.length; i++) {
-      final section = sections[i];
-      final sectionStart = currentOffset;
-
-
-      if (_sortMode == 'chap') {
-        flatItems.add(WordListItem.banner(section));
-        currentOffset += 82.0;
-      }
-
-      for (final w in section.words) {
-        flatItems.add(WordListItem.card(w, section));
-        currentOffset += 196.0;
-      }
-
-      final sectionEnd = currentOffset;
-      final nextSection = (i < sections.length - 1) ? sections[i + 1] : null;
-      final nextHeaderStart = (i < sections.length - 1) ? sectionEnd : double.infinity;
-      ranges.add(_SectionOffsetRange(
-        section: section,
-        nextSection: nextSection,
-        startOffset: sectionStart,
-        endOffset: sectionEnd,
-        nextHeaderOffset: nextHeaderStart,
-      ));
-    }
-
-    _flatListItems = flatItems;
-    _sectionOffsetRanges = ranges;
-    _firstSection = sections.isNotEmpty ? sections.first : null;
-    _updateStickyHeader();
+    _sections = sections;
   }
 
   void _onFilterChanged() {
@@ -659,7 +500,6 @@ class WordsScreenState extends State<WordsScreen> {
     _scrollController.dispose();
     _filterScrollController.dispose();
     _searchController.dispose();
-    _stickyHeaderNotifier.dispose();
     BuddyService.instance.removeListener(_onBuddyChanged);
     TtsService.instance.stop();
     super.dispose();
@@ -687,308 +527,279 @@ class WordsScreenState extends State<WordsScreen> {
                 child: CustomScrollView(
                   controller: _scrollController,
                   slivers: [
-                  // 1. スクロールで出入りする可変ヘッダー
-                  SliverAppBar(
-                    floating: true,
-                    snap: false,
-                    pinned: false,
-                    backgroundColor: _bgColor,
-                    elevation: 0,
-                    toolbarHeight: 0,
-                    collapsedHeight: 0,
-                    expandedHeight: 154,
-                    flexibleSpace: FlexibleSpaceBar(
-                      collapseMode: CollapseMode.pin,
-                      background: ClipRect(
-                        child: OverflowBox(
-                          alignment: Alignment.topCenter,
-                          minHeight: 0,
-                          maxHeight: 154,
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 6.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // 検索バー ＆ 暗記リセット ＆ DBリフレッシュ
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        height: 36,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFEFEAE0),
-                                          borderRadius: BorderRadius.circular(10),
-                                          border: Border.all(color: _borderColor),
-                                        ),
-                                        child: TextField(
-                                          controller: _searchController,
-                                          textAlignVertical: TextAlignVertical.center,
-                                          decoration: InputDecoration(
-                                            hintText: '英単語または和訳で検索...',
-                                            hintStyle: const TextStyle(fontSize: 13, color: _textSecondary),
-                                            prefixIcon: const Icon(Icons.search_rounded, size: 20, color: _textSecondary),
-                                            suffixIcon: _searchController.text.isNotEmpty
-                                                ? IconButton(
-                                                    icon: const Icon(Icons.cancel_rounded, size: 18, color: _textSecondary),
-                                                    onPressed: () {
-                                                      _searchController.clear();
-                                                      setState(() => _searchQuery = '');
-                                                      _onFilterChanged();
-                                                    },
-                                                    padding: EdgeInsets.zero,
-                                                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                                  )
-                                                : null,
-                                            border: InputBorder.none,
-                                            isDense: true,
-                                            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                    // 1. スクロールに合わせて出入りする検索・ソート・フィルターバー
+                    SliverAppBar(
+                      floating: true,
+                      snap: false,
+                      pinned: false,
+                      backgroundColor: _bgColor,
+                      elevation: 0,
+                      toolbarHeight: 0,
+                      collapsedHeight: 0,
+                      expandedHeight: 154,
+                      flexibleSpace: FlexibleSpaceBar(
+                        collapseMode: CollapseMode.pin,
+                        background: ClipRect(
+                          child: OverflowBox(
+                            alignment: Alignment.topCenter,
+                            minHeight: 0,
+                            maxHeight: 154,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 6.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // 検索バー ＆ 暗記リセット ＆ DBリフレッシュ
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEFEAE0),
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(color: _borderColor),
                                           ),
-                                          style: const TextStyle(fontSize: 14, color: _textPrimary),
-                                          onChanged: (val) {
-                                            setState(() => _searchQuery = val);
+                                          child: TextField(
+                                            controller: _searchController,
+                                            textAlignVertical: TextAlignVertical.center,
+                                            decoration: InputDecoration(
+                                              hintText: '英単語または和訳で検索...',
+                                              hintStyle: const TextStyle(fontSize: 13, color: _textSecondary),
+                                              prefixIcon: const Icon(Icons.search_rounded, size: 20, color: _textSecondary),
+                                              suffixIcon: _searchController.text.isNotEmpty
+                                                  ? IconButton(
+                                                      icon: const Icon(Icons.cancel_rounded, size: 18, color: _textSecondary),
+                                                      onPressed: () {
+                                                        _searchController.clear();
+                                                        setState(() => _searchQuery = '');
+                                                        _onFilterChanged();
+                                                      },
+                                                      padding: EdgeInsets.zero,
+                                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                                    )
+                                                  : null,
+                                              border: InputBorder.none,
+                                              isDense: true,
+                                              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                                            ),
+                                            style: const TextStyle(fontSize: 14, color: _textPrimary),
+                                            onChanged: (val) {
+                                              setState(() => _searchQuery = val);
+                                              _onFilterChanged();
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      IconButton(
+                                        icon: const Icon(Icons.published_with_changes_rounded, color: _primaryAccent),
+                                        tooltip: '暗記フラグ再同期（80pt未満を解除）',
+                                        onPressed: _isLoading ? null : _showSyncMemorizedFlagsDialog,
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                                      ),
+                                      const SizedBox(width: 2),
+                                      IconButton(
+                                        icon: const Icon(Icons.sync_rounded, color: _primaryAccent),
+                                        tooltip: 'DB完全再構築',
+                                        onPressed: _isLoading ? null : _rebuildDatabase,
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+
+                                  // ソート切替（Chap / A-Z / Cat.） ＆ 和訳常時トグルボタン
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          height: 32,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFE8E2D5),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              _buildSortButton('Chap', 'chap'),
+                                              _buildSortButton('A-Z', 'az'),
+                                              _buildSortButton('Cat.', 'category'),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildToggleChip(
+                                        label: _showJapanese ? '和訳: ON' : '和訳: OFF',
+                                        isSelected: _showJapanese,
+                                        accentColor: _primaryAccent,
+                                        height: 32,
+                                        onTap: () {
+                                          setState(() => _showJapanese = !_showJapanese);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+
+                                  // フィルターチップ群
+                                  SingleChildScrollView(
+                                    controller: _filterScrollController,
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        _buildToggleChip(
+                                          label: '未暗記',
+                                          isSelected: _filterUnlearned,
+                                          onTap: () {
+                                            setState(() => _filterUnlearned = !_filterUnlearned);
                                             _onFilterChanged();
                                           },
                                         ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    IconButton(
-                                      icon: const Icon(Icons.published_with_changes_rounded, color: _primaryAccent),
-                                      tooltip: '暗記フラグ再同期（80pt未満を解除）',
-                                      onPressed: _isLoading ? null : _showSyncMemorizedFlagsDialog,
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
-                                    ),
-                                    const SizedBox(width: 2),
-                                    IconButton(
-                                      icon: const Icon(Icons.sync_rounded, color: _primaryAccent),
-                                      tooltip: 'DB完全再構築',
-                                      onPressed: _isLoading ? null : _rebuildDatabase,
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-
-                                // ソート切替（Chap / A-Z / Cat.） ＆ 和訳常時トグルボタン
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        height: 32,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFEFEAE0),
-                                          borderRadius: BorderRadius.circular(8),
+                                        const SizedBox(width: 6),
+                                        _buildToggleChip(
+                                          label: 'お気に入り ★',
+                                          isSelected: _filterFavorite,
+                                          onTap: () {
+                                            setState(() => _filterFavorite = !_filterFavorite);
+                                            _onFilterChanged();
+                                          },
                                         ),
-                                        child: Row(
-                                          children: [
-                                            _buildSortButton('Chap', 'chap'),
-                                            _buildSortButton('A-Z', 'az'),
-                                            _buildSortButton('Cat.', 'category'),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    // 和訳トグルボタン（常時アクセス可能・スクロール不要）
-                                    _buildToggleChip(
-                                      label: _showJapanese ? '和訳: ON' : '和訳: OFF',
-                                      isSelected: _showJapanese,
-                                      accentColor: _primaryAccent,
-                                      height: 32,
-                                      onTap: () {
-                                        setState(() => _showJapanese = !_showJapanese);
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-
-                                // フィルタータグ（横スクロール対応）
-                                SingleChildScrollView(
-                                  controller: _filterScrollController,
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: [
-                                      // 未暗記トグル
-                                      _buildToggleChip(
-                                        label: '未暗記',
-                                        isSelected: _filterUnlearned,
-                                        onTap: () {
-                                          setState(() {
-                                            _filterUnlearned = !_filterUnlearned;
-                                            _applyFilterAndGrouping();
-                                          });
-                                        },
-                                      ),
-                                      const SizedBox(width: 6),
-
-                                      // お気に入りトグル
-                                      _buildToggleChip(
-                                        label: 'お気に入り ★',
-                                        isSelected: _filterFavorite,
-                                        onTap: () {
-                                          setState(() {
-                                            _filterFavorite = !_filterFavorite;
-                                            _applyFilterAndGrouping();
-                                          });
-                                        },
-                                      ),
-                                      const SizedBox(width: 6),
-
-                                      // CEFRドロップダウン（現在条件に連動）
-                                      _buildCefrDropdown(),
-                                      const SizedBox(width: 6),
-
-                                      // Chapドロップダウン（現在条件に連動）
-                                      _buildChapDropdown(),
-                                      const SizedBox(width: 6),
-
-                                      // A-Zドロップダウン（現在条件に連動）
-                                      _buildAzDropdown(),
-                                      const SizedBox(width: 6),
-
-                                      // Categoryドロップダウン（現在条件に連動）
-                                      _buildCategoryDropdown(),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-
-                                // 表示件数
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    '表示中: $_totalFilteredCount 件',
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: _textSecondary,
+                                        const SizedBox(width: 6),
+                                        _buildCefrDropdown(),
+                                        const SizedBox(width: 6),
+                                        if (_sortMode == 'chap') ...[
+                                          _buildChapDropdown(),
+                                          const SizedBox(width: 6),
+                                        ],
+                                        if (_sortMode == 'az') ...[
+                                          _buildAzDropdown(),
+                                          const SizedBox(width: 6),
+                                        ],
+                                        if (_sortMode == 'category') ...[
+                                          _buildCategoryDropdown(),
+                                          const SizedBox(width: 6),
+                                        ],
+                                      ],
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 6),
+
+                                  // 件数表示
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      '表示中: $_totalFilteredCount 件',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: _textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
 
-                  // 2. 吸い付きスティッキーヘッダー（検索バー直下に自動配置され位置重複ゼロ）
-                  if (_firstSection != null)
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _SingleStickyHeaderDelegate(
-                        stickyNotifier: _stickyHeaderNotifier,
-                        sortMode: _sortMode,
-                        defaultSection: _firstSection!,
-                      ),
-                    ),
-
-                  // 3. 単語リスト（フラット仮想化リストによる超高速描画）
-                  if (_flatListItems.isEmpty)
-                    const SliverFillRemaining(
-                      child: Center(
-                        child: Text(
-                          '該当する単語が見つかりません',
-                          style: TextStyle(color: _textSecondary, fontSize: 14),
+                    // 2. セクションごとの吸い付き＆押し出しスライバーグループ
+                    if (_sections.isEmpty)
+                      const SliverFillRemaining(
+                        child: Center(
+                          child: Text(
+                            '該当する単語が見つかりません',
+                            style: TextStyle(color: _textSecondary, fontSize: 14),
+                          ),
                         ),
-                      ),
-                    )
-                  else
-                    SliverVariedExtentList.builder(
-                      itemCount: _flatListItems.length,
-                      itemExtentBuilder: (index, _) => _calculateItemExtent(index),
-                      itemBuilder: (context, index) {
-                        final item = _flatListItems[index];
-                        switch (item.type) {
-                          case WordListItemType.header:
-                            final section = item.section!;
-                            return StickySectionHeader(
-                                title: section.title,
-                                subtitle: section.subtitle,
-                                totalCount: section.words.length,
-                                memorizedCount: section.memorizedCount,
+                      )
+                    else
+                      for (final section in _sections)
+                        SliverMainAxisGroup(
+                          slivers: [
+                            SliverPersistentHeader(
+                              pinned: true,
+                              delegate: _SectionStickyHeaderDelegate(
+                                section: section,
                                 sortMode: _sortMode,
-                              );
-                            case WordListItemType.banner:
-                              return _buildChapterCharacterBanner(item.section!);
-                            case WordListItemType.card:
-                              final word = item.word!;
-                              return WordCardTile(
-                                word: word,
-                                showJapanese: _showJapanese,
-                                onSpeak: () => _speak(word.english),
-                                onToggleFavorite: () => _toggleFavoriteFast(word),
-                                onSwipeRight: () async {
-                                  await widget.database.markAsMemorizedManual(word.id);
-                                  final idx = _allWords.indexWhere((w) => w.id == word.id);
-                                  if (idx != -1) {
-                                    _allWords[idx] = _allWords[idx].copyWith(
-                                      retentionPoint: 80,
-                                      isMemorized: true,
-                                      isRestricted: false,
-                                    );
-                                    _onFilterChanged();
-                                  }
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).clearSnackBars();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('「${word.english}」を暗記済みに設定しました（制限解除）'),
-                                        duration: const Duration(seconds: 1),
-                                      ),
-                                    );
-                                  }
+                              ),
+                            ),
+                            if (_sortMode == 'chap')
+                              SliverToBoxAdapter(
+                                child: _buildChapterCharacterBanner(section),
+                              ),
+                            SliverFixedExtentList(
+                              itemExtent: 196.0,
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final word = section.words[index];
+                                  return WordCardTile(
+                                    word: word,
+                                    showJapanese: _showJapanese,
+                                    onSpeak: () => _speak(word.english),
+                                    onToggleFavorite: () => _toggleFavoriteFast(word),
+                                    onSwipeRight: () async {
+                                      await widget.database.markAsMemorizedManual(word.id);
+                                      final idx = _allWords.indexWhere((w) => w.id == word.id);
+                                      if (idx != -1) {
+                                        _allWords[idx] = _allWords[idx].copyWith(
+                                          retentionPoint: 80,
+                                          isMemorized: true,
+                                          isRestricted: false,
+                                        );
+                                        _onFilterChanged();
+                                      }
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).clearSnackBars();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('「${word.english}」を暗記済みに設定しました（制限解除）'),
+                                            duration: const Duration(seconds: 1),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    onSwipeLeft: () async {
+                                      await widget.database.resetRetentionManual(word.id);
+                                      final idx = _allWords.indexWhere((w) => w.id == word.id);
+                                      if (idx != -1) {
+                                        _allWords[idx] = _allWords[idx].copyWith(
+                                          retentionPoint: 0,
+                                          isMemorized: false,
+                                          isRestricted: true,
+                                        );
+                                        _onFilterChanged();
+                                      }
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).clearSnackBars();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('「${word.english}」の定着度を0ptにリセットしました'),
+                                            duration: const Duration(seconds: 1),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  );
                                 },
-                                onSwipeLeft: () async {
-                                  await widget.database.resetRetentionManual(word.id);
-                                  final idx = _allWords.indexWhere((w) => w.id == word.id);
-                                  if (idx != -1) {
-                                    _allWords[idx] = _allWords[idx].copyWith(
-                                      retentionPoint: 0,
-                                      isMemorized: false,
-                                      isRestricted: true,
-                                    );
-                                    _onFilterChanged();
-                                  }
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).clearSnackBars();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('「${word.english}」の定着度を0ptにリセットしました'),
-                                        duration: const Duration(seconds: 1),
-                                      ),
-                                    );
-                                  }
-                                },
-                              );
-                          }
-                        },
-                      ),
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 24),
-                  ),
-                ],
+                                childCount: section.words.length,
+                              ),
+                            ),
+                          ],
+                        ),
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: 24),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
     );
-  }
-
-  double _calculateItemExtent(int index) {
-    if (index >= _flatListItems.length) return 196.0;
-    switch (_flatListItems[index].type) {
-      case WordListItemType.header:
-        return 48.0;
-      case WordListItemType.banner:
-        return 82.0;
-      case WordListItemType.card:
-        return 196.0;
-    }
   }
 
   Widget _buildChapterCharacterBanner(WordSection section) {
