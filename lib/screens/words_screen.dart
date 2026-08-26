@@ -707,8 +707,9 @@ class WordsScreenState extends State<WordsScreen> {
                       ),
                     )
                   else
-                    SliverList.builder(
+                    SliverVariedExtentList.builder(
                       itemCount: _flatListItems.length,
+                      itemExtentBuilder: (index, _) => _calculateItemExtent(index),
                       itemBuilder: (context, index) {
                         final item = _flatListItems[index];
                         switch (item.type) {
@@ -784,6 +785,43 @@ class WordsScreenState extends State<WordsScreen> {
             ),
           ),
     );
+  }
+
+  double _calculateItemExtent(int index) {
+    if (index >= _flatListItems.length) return 180.0;
+    final item = _flatListItems[index];
+    switch (item.type) {
+      case WordListItemType.header:
+        return 48.0;
+      case WordListItemType.banner:
+        return 82.0;
+      case WordListItemType.card:
+        final w = item.word!;
+        // 基本高さ: 上下マージン(8) + パディング(24) + 1行目英単語(36) + 2行目発音記号(20) + 3行目日本語(24) + 余白(10)
+        double height = 122.0;
+
+        // 日本語訳が長文（14文字超でスマホ画面で2行に折り返し）
+        if (w.japanese.length > 14) {
+          height += 20.0;
+        }
+
+        // 例文・例文訳
+        final ex = w.example;
+        final exJp = w.exampleJp;
+        if (ex != null && ex.trim().isNotEmpty) {
+          // 英語例文: スマホ幅で約28文字ごとに1行（最低1行・最大4行）
+          final int exLines = ((ex.length + 26) ~/ 28).clamp(1, 4);
+          height += 8.0 + (exLines * 18.0);
+
+          if (_showJapanese && exJp != null && exJp.trim().isNotEmpty) {
+            // 日本語例文訳: スマホ幅で約18文字ごとに1行（最低1行・最大4行）
+            final int exJpLines = ((exJp.length + 16) ~/ 18).clamp(1, 4);
+            height += 4.0 + (exJpLines * 17.0);
+          }
+        }
+
+        return height;
+    }
   }
 
   Widget _buildChapterCharacterBanner(WordSection section) {
