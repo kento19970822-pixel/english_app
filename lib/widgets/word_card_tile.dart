@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../db/app_database.dart';
-import '../services/sound_service.dart';
 
 class WordCardTile extends StatefulWidget {
   final Word word;
@@ -67,10 +66,10 @@ class _WordCardTileState extends State<WordCardTile> {
       direction: DismissDirection.horizontal,
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          SoundService.instance.playMemorized();
+          HapticFeedback.mediumImpact();
           widget.onSwipeRight?.call();
         } else if (direction == DismissDirection.endToStart) {
-          SoundService.instance.playReset();
+          HapticFeedback.lightImpact();
           widget.onSwipeLeft?.call();
         }
         return false;
@@ -280,11 +279,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                   size: 22,
                                 ),
                                 onPressed: () {
-                                  if (!widget.word.isFavorite) {
-                                    SoundService.instance.playFavorite();
-                                  } else {
-                                    HapticFeedback.lightImpact();
-                                  }
+                                  HapticFeedback.lightImpact();
                                   widget.onToggleFavorite();
                                 },
                                 padding: const EdgeInsets.all(4),
