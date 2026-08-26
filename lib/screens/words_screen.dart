@@ -197,9 +197,10 @@ class WordsScreenState extends State<WordsScreen> {
       }
       return;
     }
-    final offset = _scrollController.offset.clamp(0.0, double.infinity);
+    const double appBarHeight = 154.0;
+    final sliverOffset = (_scrollController.offset - appBarHeight).clamp(0.0, double.infinity);
 
-    // Binary search for active section range
+    // Binary search for active section range in the sliver list
     int low = 0;
     int high = _sectionOffsetRanges.length - 1;
     _SectionOffsetRange? matched;
@@ -207,10 +208,10 @@ class WordsScreenState extends State<WordsScreen> {
     while (low <= high) {
       final mid = (low + high) ~/ 2;
       final range = _sectionOffsetRanges[mid];
-      if (offset >= range.startOffset && offset < range.endOffset) {
+      if (sliverOffset >= range.startOffset && sliverOffset < range.endOffset) {
         matched = range;
         break;
-      } else if (offset < range.startOffset) {
+      } else if (sliverOffset < range.startOffset) {
         high = mid - 1;
       } else {
         low = mid + 1;
@@ -218,7 +219,7 @@ class WordsScreenState extends State<WordsScreen> {
     }
 
     if (matched != null) {
-      final distanceToNext = matched.nextHeaderOffset - offset;
+      final distanceToNext = matched.nextHeaderOffset - sliverOffset;
       final pushOffset = (distanceToNext < 48.0) ? (distanceToNext - 48.0) : 0.0;
       _stickyHeaderNotifier.value = _StickyHeaderState(
         currentSection: matched.section,
