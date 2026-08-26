@@ -10,6 +10,25 @@ import '../widgets/pixel_character_widget.dart';
 import '../widgets/sticky_section_header.dart';
 import '../widgets/word_card_tile.dart';
 
+enum WordListItemType { header, banner, card }
+
+class WordListItem {
+  final WordListItemType type;
+  final WordSection? section;
+  final Word? word;
+
+  const WordListItem.header(this.section)
+      : type = WordListItemType.header,
+        word = null;
+
+  const WordListItem.banner(this.section)
+      : type = WordListItemType.banner,
+        word = null;
+
+  const WordListItem.card(this.word, this.section)
+      : type = WordListItemType.card;
+}
+
 /// 単語セクションデータクラス
 class WordSection {
   final String key;
@@ -38,7 +57,7 @@ class WordsScreen extends StatefulWidget {
 
 class WordsScreenState extends State<WordsScreen> {
   List<Word> _allWords = [];
-  List<WordSection> _groupedSections = [];
+  List<WordListItem> _flatListItems = [];
   int _totalFilteredCount = 0;
 
   // ソート・フィルター状態
@@ -360,7 +379,18 @@ class WordsScreenState extends State<WordsScreen> {
       }
     }
 
-    _groupedSections = sections;
+    final List<WordListItem> flatItems = [];
+    for (final section in sections) {
+      flatItems.add(WordListItem.header(section));
+      if (_sortMode == 'chap') {
+        flatItems.add(WordListItem.banner(section));
+      }
+      for (final w in section.words) {
+        flatItems.add(WordListItem.card(w, section));
+      }
+    }
+
+    _flatListItems = flatItems;
   }
 
   void _onFilterChanged() {
@@ -666,8 +696,8 @@ class WordsScreenState extends State<WordsScreen> {
                     ),
                   ),
 
-                  // 2. 単語リスト（セクション別 Sticky Header）
-                  if (_groupedSections.isEmpty)
+                  // 2. 単語リスト（フラット仮想化リストによる超高速描画）
+                  if (_flatListItems.isEmpty)
                     const SliverFillRemaining(
                       child: Center(
                         child: Text(
@@ -677,84 +707,77 @@ class WordsScreenState extends State<WordsScreen> {
                       ),
                     )
                   else
-                    ..._groupedSections.map((section) {
-                      return SliverMainAxisGroup(
-                        slivers: [
-                          SliverPersistentHeader(
-                            pinned: true,
-                            delegate: _StickyHeaderDelegate(
-                              child: StickySectionHeader(
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final item = _flatListItems[index];
+                          switch (item.type) {
+                            case WordListItemType.header:
+                              final section = item.section!;
+                              return StickySectionHeader(
                                 title: section.title,
                                 subtitle: section.subtitle,
                                 totalCount: section.words.length,
                                 memorizedCount: section.memorizedCount,
                                 sortMode: _sortMode,
-                              ),
-                            ),
-                          ),
-                          if (_sortMode == 'chap')
-                            SliverToBoxAdapter(
-                              child: _buildChapterCharacterBanner(section),
-                            ),
-                          SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final word = section.words[index];
-                                return WordCardTile(
-                                  word: word,
-                                  showJapanese: _showJapanese,
-                                  onSpeak: () => _speak(word.english),
-                                  onToggleFavorite: () => _toggleFavoriteFast(word),
-                                  onSwipeRight: () async {
-                                    await widget.database.markAsMemorizedManual(word.id);
-                                    final idx = _allWords.indexWhere((w) => w.id == word.id);
-                                    if (idx != -1) {
-                                      _allWords[idx] = _allWords[idx].copyWith(
-                                        retentionPoint: 80,
-                                        isMemorized: true,
-                                        isRestricted: false,
-                                      );
-                                      _onFilterChanged();
-                                    }
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).clearSnackBars();
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('「${word.english}」を暗記済みに設定しました（制限解除）'),
-                                          duration: const Duration(seconds: 1),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  onSwipeLeft: () async {
-                                    await widget.database.resetRetentionManual(word.id);
-                                    final idx = _allWords.indexWhere((w) => w.id == word.id);
-                                    if (idx != -1) {
-                                      _allWords[idx] = _allWords[idx].copyWith(
-                                        retentionPoint: 0,
-                                        isMemorized: false,
-                                        isRestricted: true,
-                                      );
-                                      _onFilterChanged();
-                                    }
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).clearSnackBars();
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('「${word.english}」の定着度を0ptにリセットしました'),
-                                          duration: const Duration(seconds: 1),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                );
-                              },
-                              childCount: section.words.length,
-                            ),
-                          ),
-                        ],
-                      );
-                    }),
+                              );
+                            case WordListItemType.banner:
+                              return _buildChapterCharacterBanner(item.section!);
+                            case WordListItemType.card:
+                              final word = item.word!;
+                              return WordCardTile(
+                                word: word,
+                                showJapanese: _showJapanese,
+                                onSpeak: () => _speak(word.english),
+                                onToggleFavorite: () => _toggleFavoriteFast(word),
+                                onSwipeRight: () async {
+                                  await widget.database.markAsMemorizedManual(word.id);
+                                  final idx = _allWords.indexWhere((w) => w.id == word.id);
+                                  if (idx != -1) {
+                                    _allWords[idx] = _allWords[idx].copyWith(
+                                      retentionPoint: 80,
+                                      isMemorized: true,
+                                      isRestricted: false,
+                                    );
+                                    _onFilterChanged();
+                                  }
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).clearSnackBars();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('「${word.english}」を暗記済みに設定しました（制限解除）'),
+                                        duration: const Duration(seconds: 1),
+                                      ),
+                                    );
+                                  }
+                                },
+                                onSwipeLeft: () async {
+                                  await widget.database.resetRetentionManual(word.id);
+                                  final idx = _allWords.indexWhere((w) => w.id == word.id);
+                                  if (idx != -1) {
+                                    _allWords[idx] = _allWords[idx].copyWith(
+                                      retentionPoint: 0,
+                                      isMemorized: false,
+                                      isRestricted: true,
+                                    );
+                                    _onFilterChanged();
+                                  }
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).clearSnackBars();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('「${word.english}」の定着度を0ptにリセットしました'),
+                                        duration: const Duration(seconds: 1),
+                                      ),
+                                    );
+                                  }
+                                },
+                              );
+                          }
+                        },
+                        childCount: _flatListItems.length,
+                      ),
+                    ),
                   const SliverToBoxAdapter(
                     child: SizedBox(height: 24),
                   ),
@@ -1209,27 +1232,5 @@ class WordsScreenState extends State<WordsScreen> {
         ),
       ),
     );
-  }
-}
-
-class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-
-  _StickyHeaderDelegate({required this.child});
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return child;
-  }
-
-  @override
-  double get maxExtent => 48.0;
-
-  @override
-  double get minExtent => 48.0;
-
-  @override
-  bool shouldRebuild(covariant _StickyHeaderDelegate oldDelegate) {
-    return oldDelegate.child != child;
   }
 }
