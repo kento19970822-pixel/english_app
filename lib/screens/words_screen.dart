@@ -544,6 +544,10 @@ class WordsScreenState extends State<WordsScreen> {
       final section = sections[i];
       final sectionStart = currentOffset;
 
+      // 各セクター（チャプター、アルファベット、カテゴリ）の先頭にヘッダーバーを追加
+      flatItems.add(WordListItem.header(section));
+      currentOffset += 48.0;
+
       if (_sortMode == 'chap') {
         flatItems.add(WordListItem.banner(section));
         currentOffset += 82.0;
