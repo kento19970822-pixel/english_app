@@ -48,12 +48,14 @@ class WordSection {
 
 class _SectionOffsetRange {
   final WordSection section;
+  final WordSection? nextSection;
   final double startOffset;
   final double endOffset;
   final double nextHeaderOffset;
 
   const _SectionOffsetRange({
     required this.section,
+    this.nextSection,
     required this.startOffset,
     required this.endOffset,
     required this.nextHeaderOffset,
@@ -62,10 +64,12 @@ class _SectionOffsetRange {
 
 class _StickyHeaderState {
   final WordSection currentSection;
+  final WordSection? nextSection;
   final double pushOffset;
 
   const _StickyHeaderState({
     required this.currentSection,
+    this.nextSection,
     required this.pushOffset,
   });
 }
@@ -93,17 +97,44 @@ class _SingleStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
       valueListenable: stickyNotifier,
       builder: (context, state, _) {
         final current = state?.currentSection ?? defaultSection;
+        final next = state?.nextSection;
         final pushOffset = state?.pushOffset ?? 0.0;
 
         return ClipRect(
-          child: Transform.translate(
-            offset: Offset(0, pushOffset),
-            child: StickySectionHeader(
-              title: current.title,
-              subtitle: current.subtitle,
-              totalCount: current.words.length,
-              memorizedCount: current.memorizedCount,
-              sortMode: sortMode,
+          child: SizedBox(
+            height: 48.0,
+            child: Stack(
+              children: [
+                // 現在のセクションバー（上方向へ押し出されスライドアウト）
+                Positioned(
+                  top: pushOffset,
+                  left: 0,
+                  right: 0,
+                  height: 48.0,
+                  child: StickySectionHeader(
+                    title: current.title,
+                    subtitle: current.subtitle,
+                    totalCount: current.words.length,
+                    memorizedCount: current.memorizedCount,
+                    sortMode: sortMode,
+                  ),
+                ),
+                // 次のセクションバー（現在のバーにぴったり接して下から押し上げスライドイン）
+                if (next != null && pushOffset < 0)
+                  Positioned(
+                    top: pushOffset + 48.0,
+                    left: 0,
+                    right: 0,
+                    height: 48.0,
+                    child: StickySectionHeader(
+                      title: next.title,
+                      subtitle: next.subtitle,
+                      totalCount: next.words.length,
+                      memorizedCount: next.memorizedCount,
+                      sortMode: sortMode,
+                    ),
+                  ),
+              ],
             ),
           ),
         );
@@ -223,11 +254,13 @@ class WordsScreenState extends State<WordsScreen> {
       final pushOffset = (distanceToNext < 48.0) ? (distanceToNext - 48.0) : 0.0;
       _stickyHeaderNotifier.value = _StickyHeaderState(
         currentSection: matched.section,
+        nextSection: matched.nextSection,
         pushOffset: pushOffset,
       );
     } else if (_firstSection != null) {
       _stickyHeaderNotifier.value = _StickyHeaderState(
         currentSection: _firstSection!,
+        nextSection: null,
         pushOffset: 0.0,
       );
     }
@@ -511,12 +544,6 @@ class WordsScreenState extends State<WordsScreen> {
       final section = sections[i];
       final sectionStart = currentOffset;
 
-      // セクション0は常時上部に固定表示されるためリスト内ヘッダーを省略（二重表示の完全防止）
-      // セクション1以降はリスト内にヘッダーを配置し、上部バーを押し出すアニメーションを実現
-      if (i > 0) {
-        flatItems.add(WordListItem.header(section));
-        currentOffset += 48.0;
-      }
 
       if (_sortMode == 'chap') {
         flatItems.add(WordListItem.banner(section));
@@ -529,9 +556,11 @@ class WordsScreenState extends State<WordsScreen> {
       }
 
       final sectionEnd = currentOffset;
+      final nextSection = (i < sections.length - 1) ? sections[i + 1] : null;
       final nextHeaderStart = (i < sections.length - 1) ? sectionEnd : double.infinity;
       ranges.add(_SectionOffsetRange(
         section: section,
+        nextSection: nextSection,
         startOffset: sectionStart,
         endOffset: sectionEnd,
         nextHeaderOffset: nextHeaderStart,
