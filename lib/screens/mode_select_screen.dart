@@ -316,41 +316,6 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          if (selectedMode == 'weakness') ...[
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFFDF9),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFE5DEC9)),
-                              ),
-                              child: const Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(Icons.psychology_rounded, color: Color(0xFFD9534F), size: 20),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        '弱点克服（リベンジ）特訓',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: _textPrimary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 6),
-                                  Text(
-                                    '過去の誤答履歴、定着度ポイント（50pt未満）、未暗記状態をリアルタイム集計し、あなたの苦手な単語を最優先で100問連続出題します。',
-                                    style: TextStyle(fontSize: 12, color: _textSecondary, height: 1.4),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
                           if (selectedMode == 'learning') ...[
                             const SizedBox(height: 8),
                             Row(
@@ -449,51 +414,37 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                                   // F-13: 章ドットキャラクター（定着率連動）
                                                   PixelCharacterWidget(
                                                     speciesIndex: cp.chapter - 1,
-                                                    growthState: PixelCharacterWidget.stateFromRate(
-                                                      cp.memorizedRate,
-                                                      isUnlocked,
-                                                    ),
-                                                    actionState: isUnlocked && isCleared
-                                                        ? CharacterActionState.walk
-                                                        : CharacterActionState.idle,
-                                                    size: 28,
+                                                    growthState: isUnlocked
+                                                        ? (isCleared
+                                                            ? CharacterGrowthState.evolved
+                                                            : PixelCharacterWidget.stateFromRate(cp.memorizedRate, true))
+                                                        : CharacterGrowthState.locked,
+                                                    size: 26,
                                                   ),
                                                   const SizedBox(width: 8),
                                                   Text(
-                                                    'Chapter ${cp.chapter}',
+                                                    'Ch.${cp.chapter}',
                                                     style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 13,
+                                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                                                       color: isUnlocked ? _textPrimary : Colors.grey,
                                                     ),
                                                   ),
                                                   const Spacer(),
-                                                  if (isCleared)
-                                                    Container(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                      decoration: BoxDecoration(
-                                                        color: const Color(0xFFE8F5E9),
-                                                        borderRadius: BorderRadius.circular(6),
-                                                      ),
-                                                      child: const Text(
-                                                        'MASTER 🎉',
-                                                        style: TextStyle(
-                                                          fontSize: 11,
-                                                          color: Colors.green,
-                                                          fontWeight: FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                    )
-                                                  else if (isUnlocked)
+                                                  if (isUnlocked) ...[
                                                     Text(
-                                                      '70pt以上: ${cp.memorizedRate.toInt()}%',
-                                                      style: const TextStyle(
+                                                      '${cp.memorizedRate.toStringAsFixed(0)}% (${(cp.memorizedRate).round()}/100)',
+                                                      style: TextStyle(
                                                         fontSize: 11,
-                                                        color: _textSecondary,
-                                                        fontWeight: FontWeight.bold,
+                                                        color: isCleared ? _primaryAccent : _textSecondary,
+                                                        fontWeight: isCleared ? FontWeight.bold : FontWeight.normal,
                                                       ),
-                                                    )
-                                                  else if (!isUnlocked)
+                                                    ),
+                                                    if (isCleared) ...[
+                                                      const SizedBox(width: 4),
+                                                      const Icon(Icons.check_circle_rounded, color: _primaryAccent, size: 14),
+                                                    ],
+                                                  ] else
                                                     const Text(
                                                       '未解放',
                                                       style: TextStyle(fontSize: 11, color: Colors.grey),
@@ -504,6 +455,40 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                           );
                                         },
                                       ),
+                          ] else if (selectedMode == 'weakness') ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFFDF9),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFE5DEC9)),
+                              ),
+                              child: const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.psychology_rounded, color: Color(0xFFD9534F), size: 20),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        '弱点克服（リベンジ）特訓',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: _textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 6),
+                                  Text(
+                                    '過去の誤答履歴、定着度ポイント（50pt未満）、未暗記状態をリアルタイム集計し、あなたの苦手な単語を最優先で100問連続出題します。',
+                                    style: TextStyle(fontSize: 12, color: _textSecondary, height: 1.4),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ] else ...[
                             const SizedBox(height: 12),
                             Container(
@@ -596,11 +581,13 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              selectedMode == 'learning'
-                                  ? (isBuddyLocked
-                                      ? 'Ch.${buddySpecies.chapter} の暗記クリアで解放！'
-                                      : 'Ch.$selectedChapter の暗記クリアを目指そう！')
-                                  : '制限時間1分間でスコアアタックに挑戦！',
+                              isBuddyLocked
+                                  ? 'Ch.${buddySpecies.chapter} の暗記クリアで解放！'
+                                  : (selectedMode == 'learning'
+                                      ? 'Ch.$selectedChapter の暗記クリアを目指そう！'
+                                      : (selectedMode == 'weakness'
+                                          ? '苦手な単語を克服して、記憶を定着させよう！'
+                                          : '制限時間1分間でスコアアタックに挑戦！')),
                               style: const TextStyle(
                                 fontSize: 11,
                                 color: _textSecondary,
@@ -755,7 +742,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? accentColor.withAlpha(20) : _cardColor,
           borderRadius: BorderRadius.circular(14),
@@ -773,8 +760,22 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
         ),
         child: Column(
           children: [
-            Icon(icon, size: 28, color: isSelected ? accentColor : _textSecondary),
-            const SizedBox(height: 4),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: isSelected ? accentColor.withAlpha(30) : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: isSelected ? accentColor : _textSecondary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
             Text(
               title,
               style: TextStyle(
@@ -787,7 +788,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 9, color: _textSecondary),
+              style: const TextStyle(fontSize: 9, color: _textSecondary, height: 1.2),
             ),
           ],
         ),

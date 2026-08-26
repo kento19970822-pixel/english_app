@@ -121,6 +121,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   List<WordModel> allWords = [];
   List<WordModel> questionQueue = [];
   List<WordModel> mistakenWords = [];
+  List<WordModel> _currentRevengeTargetWords = [];
   Set<int> favoriteWordIds = {};
 
   // F-05: 1ゲーム1変動原則（セッション中に既にDB反映・ポイント評価を行った単語IDを記録）
@@ -287,6 +288,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     List<WordModel> targetWords = [];
     if (customWords != null && customWords.isNotEmpty) {
       currentMode = 'revenge';
+      _currentRevengeTargetWords = List<WordModel>.from(customWords);
       targetWords = List.from(customWords);
       if (targetWords.length < 5) {
         final expandedList = <WordModel>[];
@@ -295,7 +297,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         }
         targetWords = expandedList;
       }
-    } else if (currentMode == 'learning') {
+    } else {
+      _currentRevengeTargetWords.clear();
+      if (currentMode == 'learning') {
       // 1. 学習モード: 選択チャプター（selectedChapter）の全単語を抽出
       targetWords = allWords
           .where((w) => w.chapter == selectedChapter)
@@ -359,6 +363,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         targetWords = List.from(allWords);
       }
       targetWords.shuffle();
+      }
     }
 
     if (targetWords.isEmpty) {
@@ -988,7 +993,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     final modeTitle = currentMode == 'learning'
         ? '学習モード (Ch.$selectedChapter)'
         : (currentMode == 'revenge'
-            ? 'ミス単語リベンジ (${mistakenWords.isNotEmpty ? mistakenWords.length : allWords.length}語)'
+            ? 'ミス単語リベンジ (${_currentRevengeTargetWords.length}語)'
             : (currentMode == 'weakness' ? '弱点克服モード (100語)' : 'チャレンジモード'));
 
     return PopScope(
@@ -1575,13 +1580,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                         ),
                         onPressed: () {
+                          final wordsToRetry = (currentMode == 'revenge' && _currentRevengeTargetWords.isNotEmpty)
+                              ? List<WordModel>.from(_currentRevengeTargetWords)
+                              : null;
                           setState(() {
                             isGameOver = false;
                             isGameStarted = true;
                             remainingTime = totalGameDuration;
                             _unlockResult = null;
                           });
-                          _startCountdownSequence();
+                          _startCountdownSequence(customWords: wordsToRetry);
                         },
                       ),
                     ),
