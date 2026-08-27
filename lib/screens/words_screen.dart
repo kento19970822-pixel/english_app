@@ -653,21 +653,22 @@ class WordsScreenState extends State<WordsScreen> {
                                 child: WordChapterBanner(section: section),
                               ),
                             SliverFixedExtentList(
-                              itemExtent: 104.0,
+                              itemExtent: 120.0,
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) {
                                   final word = section.words[index];
+                                  final isKeyboardActive = _searchFocusNode.hasFocus || (MediaQuery.of(context).viewInsets.bottom > 0);
                                   return WordCardTile(
                                     word: word,
                                     showJapanese: _showJapanese,
-                                    isKeyboardActive: _searchFocusNode.hasFocus || (FocusManager.instance.primaryFocus?.hasFocus ?? false),
+                                    isKeyboardActive: isKeyboardActive,
                                     onSpeak: () => _speak(word.english),
                                     onToggleFavorite: () => _toggleFavoriteFast(word),
                                     onTap: () {
-                                      final hasKeyboard = _searchFocusNode.hasFocus || (FocusManager.instance.primaryFocus?.hasFocus ?? false);
-                                      if (hasKeyboard) {
-                                        FocusManager.instance.primaryFocus?.unfocus();
+                                      final isKbActive = _searchFocusNode.hasFocus || (MediaQuery.of(context).viewInsets.bottom > 0);
+                                      if (isKbActive) {
                                         _searchFocusNode.unfocus();
+                                        FocusScope.of(context).unfocus();
                                         return;
                                       }
                                       final allCurrent = _sections.expand((s) => s.words).toList();
@@ -681,10 +682,10 @@ class WordsScreenState extends State<WordsScreen> {
                                       );
                                     },
                                     onDoubleTap: () {
-                                      final hasKeyboard = _searchFocusNode.hasFocus || (FocusManager.instance.primaryFocus?.hasFocus ?? false);
-                                      if (hasKeyboard) {
-                                        FocusManager.instance.primaryFocus?.unfocus();
+                                      final isKbActive = _searchFocusNode.hasFocus || (MediaQuery.of(context).viewInsets.bottom > 0);
+                                      if (isKbActive) {
                                         _searchFocusNode.unfocus();
+                                        FocusScope.of(context).unfocus();
                                         return;
                                       }
                                       final allCurrent = _sections.expand((s) => s.words).toList();
