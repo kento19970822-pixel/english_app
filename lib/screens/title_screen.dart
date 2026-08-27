@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
 import '../main.dart';
-import '../providers/settings_provider.dart';
 import '../services/buddy_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/pixel_character_widget.dart';

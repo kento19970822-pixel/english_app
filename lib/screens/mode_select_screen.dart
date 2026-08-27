@@ -8,6 +8,7 @@ import 'calendar_screen.dart';
 import 'character_gallery_screen.dart';
 import 'game_screen.dart';
 import 'stamp_gallery_screen.dart';
+import '../widgets/srs_review_dialog.dart';
 
 class ModeSelectScreen extends StatefulWidget {
   final AppDatabase database;
@@ -315,8 +316,66 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          const SizedBox(height: 10),
+
+                          // SRS 能動的想起（Active Recall）復習バナー
+                          InkWell(
+                            onTap: () => SrsReviewDialog.show(
+                              context,
+                              widget.database,
+                              onComplete: () => setState(() {}),
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color(0xFFED8936).withAlpha(35),
+                                    const Color(0xFF5F9E98).withAlpha(25),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFED8936).withAlpha(80)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFED8936),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 16),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'SRS 能動的想起（Active Recall）',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: _textPrimary,
+                                          ),
+                                        ),
+                                        Text(
+                                          '忘却曲線に基づく本日の最適復習を開始',
+                                          style: TextStyle(fontSize: 10.5, color: _textSecondary),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.chevron_right_rounded, color: _textSecondary, size: 20),
+                                ],
+                              ),
+                            ),
+                          ),
+
                           if (selectedMode == 'learning') ...[
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 12),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [

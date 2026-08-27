@@ -10,18 +10,20 @@ import 'tables/daily_records.dart';
 import 'tables/stamps.dart';
 import 'tables/chapter_progress.dart';
 import 'tables/learning_logs.dart';
+import 'tables/word_senses.dart';
+import 'tables/user_word_progress.dart';
 import '../services/retention_service.dart';
 import 'connection/connection.dart' as impl;
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Words, LearningHistory, DailyRecords, Stamps, ChapterProgresses, LearningLogs])
+@DriftDatabase(tables: [Words, LearningHistory, DailyRecords, Stamps, ChapterProgresses, LearningLogs, WordSenses, UserWordProgresses])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(impl.connect());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,6 +46,8 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_restricted ON words (is_restricted);');
       await customStatement('CREATE INDEX IF NOT EXISTS idx_learning_logs_word ON learning_logs (word_id);');
       await customStatement('CREATE INDEX IF NOT EXISTS idx_learning_logs_time ON learning_logs (learned_at);');
+      await customStatement('CREATE INDEX IF NOT EXISTS idx_word_senses_word ON word_senses (word_id);');
+      await customStatement('CREATE INDEX IF NOT EXISTS idx_user_progress_next_review ON user_word_progresses (next_review_at);');
     },
   );
 
@@ -413,6 +417,9 @@ class AppDatabase extends _$AppDatabase {
     // チャプター進行状況テーブルも再生成
     await delete(chapterProgresses).go();
     await initChapterProgresses();
+
+    // 3NF テーブル（WordSenses, UserWordProgresses）への初期データ同期
+    await populateSensesAndProgressFromWords();
   }
 
   /// 初回起動時またはテーブルが空の場合にCSVから単語データを自動シード
@@ -1146,5 +1153,198 @@ class AppDatabase extends _$AppDatabase {
       debugPrint('cleanupOldLogs error: $e');
       return 0;
     }
+  }
+
+  // ==========================================
+  // 3NF (第3正規化) & SRS (間隔反復) 関連メソッド
+  // ==========================================
+
+  /// 単語IDに紐づく語義リスト（3NF）を取得
+  Future<List<WordSense>> getSensesForWord(int wordId) async {
+    return (select(wordSenses)
+          ..where((t) => t.wordId.equals(wordId))
+          ..orderBy([(t) => OrderingTerm.asc(t.senseIndex)]))
+        .get();
+  }
+
+  /// 単語IDに紐づくユーザー進捗 ＆ SRSステータスを取得
+  Future<UserWordProgress?> getUserWordProgress(int wordId) async {
+    return (select(userWordProgresses)..where((t) => t.wordId.equals(wordId))).getSingleOrNull();
+  }
+
+  /// SRS（SuperMemo SM-2）アルゴリズムによる復習結果の更新
+  /// [quality]: 0: 完全忘却, 1: 不正解/難, 2: 正解(遅), 3: 正解(普通), 4: 即答/完璧
+  Future<UserWordProgress> updateSrsReviewResult({
+    required int wordId,
+    required int quality,
+    DateTime? now,
+  }) async {
+    final currentTime = now ?? DateTime.now();
+    final existing = await getUserWordProgress(wordId);
+
+    int newInterval = 1;
+    double newEase = existing?.srsEaseFactor ?? 2.5;
+    int correct = existing?.correctCount ?? 0;
+    int wrong = existing?.wrongCount ?? 0;
+    int retention = existing?.retentionPoint ?? 0;
+
+    if (quality < 2) {
+      // 不正解・忘却時: 間隔を1日にリセット
+      newInterval = 1;
+      wrong++;
+      retention = (retention - 20).clamp(0, 100);
+      // Ease Factor 減算 (最低1.3)
+      newEase = (newEase - 0.2).clamp(1.3, 3.5);
+    } else {
+      // 正解時: 間隔を指数拡大
+      correct++;
+      retention = (retention + 15).clamp(0, 100);
+      final prevInterval = existing?.srsIntervalDays ?? 0;
+      if (prevInterval <= 0) {
+        newInterval = 1;
+      } else if (prevInterval == 1) {
+        newInterval = 3;
+      } else if (prevInterval == 3) {
+        newInterval = 7;
+      } else {
+        newInterval = (prevInterval * newEase).round();
+      }
+
+      // SM-2 Ease Factor 更新式: EF' = EF + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
+      final q5 = (quality + 1).clamp(0, 5); // 0..5 スケール
+      newEase = (newEase + (0.1 - (5 - q5) * (0.08 + (5 - q5) * 0.02))).clamp(1.3, 3.5);
+    }
+
+    final nextReview = currentTime.add(Duration(days: newInterval));
+    final isMemorized = retention >= 80;
+
+    final updated = UserWordProgress(
+      wordId: wordId,
+      retentionPoint: retention,
+      pointDecreasedTotal: 0,
+      isMemorized: isMemorized,
+      isRestricted: false,
+      isFavorite: existing?.isFavorite ?? false,
+      correctCount: correct,
+      wrongCount: wrong,
+      lastStudiedAt: currentTime,
+      lastRestrictedDate: null,
+      srsIntervalDays: newInterval,
+      srsEaseFactor: newEase,
+      nextReviewAt: nextReview,
+    );
+
+    await into(userWordProgresses).insertOnConflictUpdate(updated);
+
+    // 既存の words テーブルの進捗カラムとも自動同期（互換性担保）
+    await (update(words)..where((t) => t.id.equals(wordId))).write(
+      WordsCompanion(
+        retentionPoint: Value(retention),
+        isMemorized: Value(isMemorized),
+        correctCount: Value(correct),
+        wrongCount: Value(wrong),
+        lastStudiedAt: Value(currentTime),
+      ),
+    );
+
+    // 学習ログも記録
+    await recordLearningLog(wordId: wordId, isCorrect: quality >= 2, mode: 'srs');
+
+    return updated;
+  }
+
+  /// 本日復習期日（nextReviewAt <= now）を迎えている単語一覧（Due Words）を取得
+  Future<List<Word>> getDueWords({DateTime? now, int limit = 20}) async {
+    final currentTime = now ?? DateTime.now();
+
+    // 1. user_word_progresses で期日が来ている wordId を抽出
+    final dueQuery = select(userWordProgresses)
+      ..where((t) => t.nextReviewAt.isSmallerOrEqualValue(currentTime) & t.nextReviewAt.isNotNull())
+      ..orderBy([(t) => OrderingTerm.asc(t.nextReviewAt)])
+      ..limit(limit);
+
+    final dueProgresses = await dueQuery.get();
+    if (dueProgresses.isEmpty) {
+      // 期日設定済みの単語がない場合、定着度0pt〜79ptの未暗記単語をフォールバック抽出
+      return (select(words)
+            ..where((t) => t.isMemorized.equals(false))
+            ..limit(limit))
+          .get();
+    }
+
+    final wordIds = dueProgresses.map((p) => p.wordId).toList();
+    final wordsList = await (select(words)..where((t) => t.id.isIn(wordIds))).get();
+    return wordsList;
+  }
+
+  /// 既存の Words テーブルから WordSenses ＆ UserWordProgresses への自動同期（3NFマイグレーション）
+  Future<void> populateSensesAndProgressFromWords() async {
+    final allWordsList = await select(words).get();
+    if (allWordsList.isEmpty) return;
+
+    await batch((b) {
+      for (final w in allWordsList) {
+        // 1. 第1語義
+        b.insert(
+          wordSenses,
+          WordSensesCompanion(
+            wordId: Value(w.id),
+            senseIndex: const Value(1),
+            partOfSpeech: Value(w.partOfSpeech),
+            japanese: Value(w.japanese),
+            cefr: Value(w.cefr),
+            example: Value(w.example),
+            exampleJp: Value(w.exampleJp),
+            collocations: Value(w.collocations),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
+
+        // 2. 複数語義（otherMeanings JSONが存在する場合）
+        if (w.otherMeanings != null && w.otherMeanings!.isNotEmpty) {
+          try {
+            final List<dynamic> list = jsonDecode(w.otherMeanings!);
+            for (int i = 0; i < list.length; i++) {
+              final item = list[i] as Map<String, dynamic>;
+              b.insert(
+                wordSenses,
+                WordSensesCompanion(
+                  wordId: Value(w.id),
+                  senseIndex: Value(i + 2),
+                  partOfSpeech: Value(item['pos']?.toString() ?? ''),
+                  japanese: Value(item['meaning']?.toString() ?? ''),
+                  cefr: Value(item['cefr']?.toString() ?? w.cefr),
+                  example: Value(item['example']?.toString()),
+                  exampleJp: Value(item['example_jp']?.toString()),
+                  collocations: Value(item['collocations']?.toString()),
+                ),
+                mode: InsertMode.insertOrReplace,
+              );
+            }
+          } catch (_) {}
+        }
+
+        // 3. UserWordProgress 初期化
+        b.insert(
+          userWordProgresses,
+          UserWordProgressesCompanion(
+            wordId: Value(w.id),
+            retentionPoint: Value(w.retentionPoint),
+            pointDecreasedTotal: Value(w.pointDecreasedTotal),
+            isMemorized: Value(w.isMemorized),
+            isRestricted: Value(w.isRestricted),
+            isFavorite: Value(w.isFavorite),
+            correctCount: Value(w.correctCount),
+            wrongCount: Value(w.wrongCount),
+            lastStudiedAt: Value(w.lastStudiedAt),
+            lastRestrictedDate: Value(w.lastRestrictedDate),
+            srsIntervalDays: Value(w.isMemorized ? 7 : (w.retentionPoint > 0 ? 1 : 0)),
+            srsEaseFactor: const Value(2.5),
+            nextReviewAt: Value(w.lastStudiedAt != null ? w.lastStudiedAt!.add(const Duration(days: 1)) : DateTime.now()),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
+      }
+    });
   }
 }
