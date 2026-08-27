@@ -10,11 +10,13 @@ import '../services/sound_service.dart';
 import '../services/stamp_service.dart';
 import '../services/tts_service.dart';
 import '../widgets/stamp_reward_dialog.dart';
+import '../widgets/word_detail_modal.dart';
 
 class WordModel {
   final int id;
   final String english;
   final String japanese;
+  final String partOfSpeech;
   final int level;
   final int chapter;
   final int retentionPoint;
@@ -28,6 +30,7 @@ class WordModel {
     required this.id,
     required this.english,
     required this.japanese,
+    this.partOfSpeech = '',
     required this.level,
     required this.chapter,
     this.retentionPoint = 0,
@@ -61,10 +64,15 @@ class WordModel {
       parsedLevel = 1;
     }
 
+    final pos = driftWord.partOfSpeech.isNotEmpty
+        ? driftWord.partOfSpeech
+        : AppDatabase.detectPartOfSpeech(driftWord.japanese);
+
     return WordModel(
       id: driftWord.id,
       english: driftWord.english,
       japanese: driftWord.japanese,
+      partOfSpeech: pos,
       level: parsedLevel,
       chapter: driftWord.chapter,
       retentionPoint: driftWord.retentionPoint,
@@ -80,8 +88,9 @@ class WordModel {
 class GameScreen extends StatefulWidget {
   final AppDatabase database;
   final Function(bool isStarted)? onGameStateChanged;
-  final String mode; // 'challenge' or 'learning'
+  final String mode; // 'challenge', 'learning', or 'weakness'
   final int initialLevel;
+  final List<int>? selectedLevels;
   final int initialChapter;
   final bool autoStart;
 
@@ -91,6 +100,7 @@ class GameScreen extends StatefulWidget {
     this.onGameStateChanged,
     this.mode = 'challenge',
     this.initialLevel = 1,
+    this.selectedLevels,
     this.initialChapter = 1,
     this.autoStart = true,
   });
@@ -122,6 +132,8 @@ class _GameScreenState extends State<GameScreen>
   List<WordModel> allWords = [];
   List<WordModel> questionQueue = [];
   List<WordModel> mistakenWords = [];
+  final List<WordModel> _playedSessionWords = [];
+  final Map<int, List<bool>> _sessionWordAttempts = {};
   List<WordModel> _currentRevengeTargetWords = [];
   List<WordModel> _currentWeaknessTargetWords = [];
   Set<int> favoriteWordIds = {};
@@ -143,6 +155,8 @@ class _GameScreenState extends State<GameScreen>
   bool isLeftStarted = false;
   bool leftMistaken = false;
   String? leftFeedback;
+  String? _leftHighlightCorrect;
+  String? _rightHighlightCorrect;
 
   WordModel? rightWord;
   List<String> rightChoices = [];
@@ -276,6 +290,8 @@ class _GameScreenState extends State<GameScreen>
     _resetAndStopAll();
 
     List<WordModel> targetWords = [];
+    _playedSessionWords.clear();
+    _sessionWordAttempts.clear();
     if (customWords != null && customWords.isNotEmpty) {
       currentMode = 'revenge';
       _currentRevengeTargetWords = List<WordModel>.from(customWords);
@@ -303,8 +319,9 @@ class _GameScreenState extends State<GameScreen>
       final memorized = targetWords.where((w) => w.isMemorized).toList()..shuffle();
       targetWords = [...unmemorized, ...memorized];
     } else if (currentMode == 'weakness') {
-      // 2. 弱点克服モード: プレイ経験のある単語から苦手単語上位15語を抽出
-      final filtered = allWords.where((w) => w.level == selectedLevel).toList();
+      // 2. 弱点克服モード: プレイ経験のある単語から苦手単語上位15語を抽出（複数レベル対応）
+      final targetLevels = widget.selectedLevels ?? [selectedLevel];
+      final filtered = allWords.where((w) => targetLevels.contains(w.level)).toList();
       final pool = filtered.isNotEmpty ? filtered : List<WordModel>.from(allWords);
 
       final played = pool.where((w) {
@@ -342,8 +359,9 @@ class _GameScreenState extends State<GameScreen>
         targetWords.addAll(refill);
       }
     } else {
-      // 3. チャレンジモード: 選択中レベルの全単語をシャッフル
-      targetWords = allWords.where((w) => w.level == selectedLevel).toList();
+      // 3. チャレンジモード: 選択中レベルの全単語をシャッフル（複数レベル対応）
+      final targetLevels = widget.selectedLevels ?? [selectedLevel];
+      targetWords = allWords.where((w) => targetLevels.contains(w.level)).toList();
       if (targetWords.length < 5) {
         targetWords = List.from(allWords);
       }
@@ -450,19 +468,55 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
-  List<String> _generateChoices(WordModel correctWord) {
-    final correctJapanese = correctWord.japanese.trim();
+  static String _normalizeChoiceText(String str) {
+    // 全角数字を半角数字に統一
+    return str.replaceAllMapped(RegExp(r'[０-９]'), (m) {
+      final code = m.group(0)!.codeUnitAt(0) - 0xFEE0;
+      return String.fromCharCode(code);
+    }).trim();
+  }
 
-    // 1. 全単語から空文字・正解と重複しないユニークな日本語訳候補を抽出
-    final uniqueCandidateMeanings = allWords
-        .map((w) => w.japanese.trim())
+  List<String> _generateChoices(WordModel correctWord) {
+    final correctJapanese = _normalizeChoiceText(correctWord.japanese);
+    final targetPos = correctWord.partOfSpeech.isNotEmpty
+        ? correctWord.partOfSpeech
+        : AppDatabase.detectPartOfSpeech(correctWord.japanese);
+
+    // 1. 同一単語の別語義・同スペル単語を完全除外
+    final otherWords = allWords.where((w) =>
+        w.id != correctWord.id &&
+        w.english.toLowerCase().trim() != correctWord.english.toLowerCase().trim()
+    ).toList();
+
+    // 2. 同一品詞ダミー厳選（Same-POS Matching: 品詞消去法を防止）
+    final samePosCandidates = otherWords
+        .where((w) {
+          final pos = w.partOfSpeech.isNotEmpty
+              ? w.partOfSpeech
+              : AppDatabase.detectPartOfSpeech(w.japanese);
+          return pos == targetPos;
+        })
+        .map((w) => _normalizeChoiceText(w.japanese))
         .where((j) => j.isNotEmpty && j != correctJapanese)
         .toSet()
-        .toList();
-    uniqueCandidateMeanings.shuffle();
+        .toList()..shuffle();
 
-    // 2. 誤答候補を必ず3つ取得
-    final wrongChoices = uniqueCandidateMeanings.take(3).toList();
+    final List<String> wrongChoices = [];
+    if (samePosCandidates.length >= 3) {
+      wrongChoices.addAll(samePosCandidates.take(3));
+    } else {
+      wrongChoices.addAll(samePosCandidates);
+      // 足りない場合は他の品詞から安全に補填
+      final remainingCandidates = otherWords
+          .map((w) => _normalizeChoiceText(w.japanese))
+          .where((j) => j.isNotEmpty && j != correctJapanese && !wrongChoices.contains(j))
+          .toSet()
+          .toList()..shuffle();
+      for (final rem in remainingCandidates) {
+        if (wrongChoices.length >= 3) break;
+        wrongChoices.add(rem);
+      }
+    }
 
     // 3. 万が一候補が3つに満たない場合の安全なフォールバック
     const fallbackList = [
@@ -470,8 +524,9 @@ class _GameScreenState extends State<GameScreen>
     ];
     for (final fb in fallbackList) {
       if (wrongChoices.length >= 3) break;
-      if (fb != correctJapanese && !wrongChoices.contains(fb)) {
-        wrongChoices.add(fb);
+      final norm = _normalizeChoiceText(fb);
+      if (norm != correctJapanese && !wrongChoices.contains(norm)) {
+        wrongChoices.add(norm);
       }
     }
 
@@ -507,6 +562,9 @@ class _GameScreenState extends State<GameScreen>
     }
 
     final nextWord = questionQueue.removeAt(0);
+    if (!_playedSessionWords.any((w) => w.id == nextWord.id)) {
+      _playedSessionWords.add(nextWord);
+    }
     final choices = _generateChoices(nextWord);
 
     setState(() {
@@ -516,12 +574,14 @@ class _GameScreenState extends State<GameScreen>
         leftDisabledChoices.clear();
         leftMistaken = false;
         leftFeedback = null;
+        _leftHighlightCorrect = null;
       } else {
         rightWord = nextWord;
         rightChoices = choices;
         rightDisabledChoices.clear();
         rightMistaken = false;
         rightFeedback = null;
+        _rightHighlightCorrect = null;
       }
     });
 
@@ -537,6 +597,79 @@ class _GameScreenState extends State<GameScreen>
       _rightDropController.reset();
       _rightDropController.forward();
     }
+  }
+
+
+  void _handleDontKnow({required bool isLeft}) {
+    if (isLeft) {
+      if (_isLeftProcessing) return;
+      _isLeftProcessing = true;
+    } else {
+      if (_isRightProcessing) return;
+      _isRightProcessing = true;
+    }
+
+    final targetWord = isLeft ? leftWord : rightWord;
+    final controller = isLeft ? _leftDropController : _rightDropController;
+
+    if (targetWord == null || isPaused || !isGameStarted || _isEnding || _isTimeUpShowing || isGameOver) {
+      if (isLeft) {
+        _isLeftProcessing = false;
+      } else {
+        _isRightProcessing = false;
+      }
+      return;
+    }
+
+    controller.stop();
+    _playSE('wrong');
+    _recordMistake(targetWord);
+    _sessionWordAttempts.putIfAbsent(targetWord.id, () => []).add(false);
+
+    if (!_processedWordIds.contains(targetWord.id)) {
+      _processedWordIds.add(targetWord.id);
+      widget.database.updateWordQuizResult(
+        id: targetWord.id,
+        dropProgress: 1.0,
+        isCorrect: false,
+      );
+    }
+
+    final normCorrect = _normalizeChoiceText(targetWord.japanese);
+    setState(() {
+      combo = 0;
+      _totalAnsweredCount += 1;
+      if (isLeft) {
+        leftMistaken = true;
+        leftFeedback = "パス (不正解)";
+        _leftHighlightCorrect = normCorrect;
+        leftDisabledChoices.addAll(leftChoices.where((c) => _normalizeChoiceText(c) != normCorrect));
+      } else {
+        rightMistaken = true;
+        rightFeedback = "パス (不正解)";
+        _rightHighlightCorrect = normCorrect;
+        rightDisabledChoices.addAll(rightChoices.where((c) => _normalizeChoiceText(c) != normCorrect));
+      }
+    });
+
+    questionQueue.add(targetWord);
+
+    // 1.0秒間正解をハイライトした後に次問へ遷移
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (!mounted || isGameOver || !isGameStarted) return;
+      setState(() {
+        if (isLeft) {
+          leftWord = null;
+          leftChoices = [];
+          _leftHighlightCorrect = null;
+        } else {
+          rightWord = null;
+          rightChoices = [];
+          _rightHighlightCorrect = null;
+        }
+      });
+      _nextQuestion(isLeft: isLeft);
+    });
   }
 
   void _handleAnswer({required bool isLeft, required String selectedChoice}) {
@@ -561,7 +694,16 @@ class _GameScreenState extends State<GameScreen>
       return;
     }
 
-    if (selectedChoice == targetWord.japanese) {
+    final isCorrectAnswer = (_normalizeChoiceText(selectedChoice) == _normalizeChoiceText(targetWord.japanese));
+
+    if (isCorrectAnswer) {
+      // 正解の選択肢のみをハイライト
+      if (isLeft) {
+        _leftHighlightCorrect = _normalizeChoiceText(targetWord.japanese);
+      } else {
+        _rightHighlightCorrect = _normalizeChoiceText(targetWord.japanese);
+      }
+
       // 端末/ブラウザのTicker跳躍に左右されない実経過時間ベースの正確な進捗計算
       final startTime = isLeft ? _leftQuestionStartTime : _rightQuestionStartTime;
       double progress = controller.value;
@@ -611,6 +753,7 @@ class _GameScreenState extends State<GameScreen>
       }
 
       final wasMistaken = isLeft ? leftMistaken : rightMistaken;
+      _sessionWordAttempts.putIfAbsent(targetWord.id, () => []).add(!wasMistaken);
       if (wasMistaken) {
         questionQueue.add(targetWord);
       }
@@ -725,6 +868,7 @@ class _GameScreenState extends State<GameScreen>
 
     _playSE('timeout');
     _recordMistake(targetWord);
+    _sessionWordAttempts.putIfAbsent(targetWord.id, () => []).add(false);
 
     // F-05: タイムオーバー時も初回であれば誤答扱いとしてDB更新（制限フラグ付与等）
     if (!_processedWordIds.contains(targetWord.id)) {
@@ -736,27 +880,36 @@ class _GameScreenState extends State<GameScreen>
       );
     }
 
+    final normCorrect = _normalizeChoiceText(targetWord.japanese);
     setState(() {
       combo = 0;
       _totalAnsweredCount += 1;
       if (isLeft) {
+        leftMistaken = true;
         leftFeedback = "タイムオーバー!";
+        _leftHighlightCorrect = normCorrect;
+        leftDisabledChoices.addAll(leftChoices.where((c) => _normalizeChoiceText(c) != normCorrect));
       } else {
+        rightMistaken = true;
         rightFeedback = "タイムオーバー!";
+        _rightHighlightCorrect = normCorrect;
+        rightDisabledChoices.addAll(rightChoices.where((c) => _normalizeChoiceText(c) != normCorrect));
       }
     });
 
     questionQueue.add(targetWord);
 
-    Future.delayed(const Duration(milliseconds: 400), () {
+    Future.delayed(const Duration(milliseconds: 1000), () {
       if (!mounted || isGameOver || !isGameStarted) return;
       setState(() {
         if (isLeft) {
           leftWord = null;
           leftChoices = [];
+          _leftHighlightCorrect = null;
         } else {
           rightWord = null;
           rightChoices = [];
+          _rightHighlightCorrect = null;
         }
       });
       _nextQuestion(isLeft: isLeft);
@@ -1190,7 +1343,7 @@ class _GameScreenState extends State<GameScreen>
               decoration: BoxDecoration(
                 color: const Color(0xFFFFFDF9),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFD9534F), width: 3),
+                border: Border.all(color: const Color(0xFFCF7067), width: 3),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x33000000),
@@ -1204,7 +1357,7 @@ class _GameScreenState extends State<GameScreen>
                 children: [
                   Icon(
                     Icons.timer_off_rounded,
-                    color: Color(0xFFD9534F),
+                    color: Color(0xFFCF7067),
                     size: 44,
                   ),
                   SizedBox(height: 6),
@@ -1213,7 +1366,7 @@ class _GameScreenState extends State<GameScreen>
                     style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFFD9534F),
+                      color: Color(0xFFCF7067),
                       letterSpacing: 2.0,
                     ),
                   ),
@@ -1291,6 +1444,82 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
+  Widget _buildAttemptBadges(List<bool> attempts) {
+    if (attempts.isEmpty) return const SizedBox.shrink();
+
+    if (attempts.length == 1) {
+      final isCorrect = attempts.first;
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+        decoration: BoxDecoration(
+          color: isCorrect ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isCorrect ? const Color(0xFFA5D6A7) : const Color(0xFFEF9A9A),
+            width: 0.8,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
+              size: 12,
+              color: isCorrect ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+            ),
+            const SizedBox(width: 3),
+            Text(
+              isCorrect ? '正解' : '不正解',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: isCorrect ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 2,
+      children: attempts.asMap().entries.map((entry) {
+        final idx = entry.key + 1;
+        final isCorrect = entry.value;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+          decoration: BoxDecoration(
+            color: isCorrect ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+            borderRadius: BorderRadius.circular(5),
+            border: Border.all(
+              color: isCorrect ? const Color(0xFFA5D6A7) : const Color(0xFFEF9A9A),
+              width: 0.8,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$idx回目: ',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isCorrect ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Icon(
+                isCorrect ? Icons.check_rounded : Icons.close_rounded,
+                size: 12,
+                color: isCorrect ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildResultScreen() {
     final isLearning = currentMode == 'learning';
     final rate = (_unlockResult?['memorizedRate'] as double?) ?? 0.0;
@@ -1298,299 +1527,404 @@ class _GameScreenState extends State<GameScreen>
     final nextChapter = _unlockResult?['nextChapterUnlocked'] as int?;
     final isNewUnlock = (_unlockResult?['isNewUnlock'] as bool?) ?? false;
 
+    // ミス単語リベンジモードおよび弱点克服モード時は出題単語を表示
+    final isShowPlayedWords = (currentMode == 'revenge' || currentMode == 'weakness');
+    final List<WordModel> displayWords = isShowPlayedWords
+        ? (_playedSessionWords.isNotEmpty
+            ? _playedSessionWords
+            : (_currentRevengeTargetWords.isNotEmpty
+                ? _currentRevengeTargetWords
+                : (_currentWeaknessTargetWords.isNotEmpty ? _currentWeaknessTargetWords : mistakenWords)))
+        : mistakenWords;
+
+    final String headerTitle = isShowPlayedWords
+        ? '出題単語（${displayWords.length}件）'
+        : '要復習単語（${displayWords.length}件）';
+
+    final bool showActionButton = currentMode == 'revenge'
+        ? displayWords.isNotEmpty
+        : mistakenWords.isNotEmpty;
+
+    final String actionButtonText = currentMode == 'revenge'
+        ? '同じ問題を解きなおす'
+        : 'ミス単語リベンジ';
+
+    final IconData actionButtonIcon = currentMode == 'revenge'
+        ? Icons.replay_rounded
+        : Icons.flash_on_rounded;
+
     return Container(
       color: const Color(0xFFFBF7EE),
       child: Column(
         children: [
-          // スクロール可能なリザルトカード ＆ 要復習単語リスト
+          // スクロール可能なリザルトカード ＆ ピン留めヘッダー付き単語リスト
           Expanded(
-            child: SingleChildScrollView(
+            child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(14.0, 10.0, 14.0, 6.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Card(
-                    elevation: 1,
-                    color: const Color(0xFFFFFDF9),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: const BorderSide(color: Color(0xFFE5DEC9)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14.0),
-                      child: Column(
-                        children: [
-                          const FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              'ゲーム終了！',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2C302E),
+              slivers: [
+                // 1. スコアサマリーカード
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(14.0, 10.0, 14.0, 4.0),
+                  sliver: SliverToBoxAdapter(
+                    child: Card(
+                      elevation: 1,
+                      color: const Color(0xFFFFFDF9),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: const BorderSide(color: Color(0xFFE5DEC9)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14.0),
+                        child: Column(
+                          children: [
+                            const FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'ゲーム終了！',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2C302E),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              '最終スコア: $score',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                color: Color(0xFF5F9E98),
-                                fontWeight: FontWeight.bold,
+                            const SizedBox(height: 4),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '最終スコア: $score',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  color: Color(0xFF5F9E98),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 10),
-
-                          // 正解単語数・ミス単語数・正答率サマリーチップ (F-03/F-07)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE8F5E9),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: const Color(0xFFA5D6A7)),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      const Text('正解単語数', style: TextStyle(fontSize: 10, color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 2),
-                                      Text('$_correctCount 語', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20))),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFFEBEE),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: const Color(0xFFEF9A9A)),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      const Text('ミス単語数', style: TextStyle(fontSize: 10, color: Color(0xFFC62828), fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 2),
-                                      Text('${mistakenWords.length} 語', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFFB71C1C))),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE3F2FD),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: const Color(0xFF90CAF9)),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      const Text('正答率', style: TextStyle(fontSize: 10, color: Color(0xFF1565C0), fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        '${_totalAnsweredCount > 0 ? ((_correctCount / _totalAnsweredCount) * 100).toInt() : 100}%',
-                                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1)),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (isLearning) ...[
                             const SizedBox(height: 10),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: isCleared
-                                    ? const Color(0xFFE8F5E9)
-                                    : const Color(0xFFFFF3E0),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: isCleared
-                                      ? Colors.green.shade300
-                                      : Colors.orange.shade200,
+
+                            // 正解単語数・ミス単語数・正答率サマリーチップ (F-03/F-07)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE8F5E9),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: const Color(0xFFA5D6A7)),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const Text('正解単語数', style: TextStyle(fontSize: 10, color: Color(0xFF2E7D32), fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 2),
+                                        Text('$_correctCount 語', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20))),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        isCleared ? Icons.stars_rounded : Icons.info_outline_rounded,
-                                        color: isCleared ? Colors.amber.shade700 : Colors.orange,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Flexible(
-                                        child: FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          child: Text(
-                                            isCleared
-                                                ? 'Ch.$selectedChapter MASTER! (70pt以上: ${rate.toInt()}%) 🎉'
-                                                : 'Ch.$selectedChapter 70pt以上: ${rate.toInt()}% (解放条件: 90%以上)',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              color: isCleared
-                                                  ? Colors.green.shade900
-                                                  : Colors.brown.shade800,
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFEBEE),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: const Color(0xFFEF9A9A)),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const Text('ミス単語数', style: TextStyle(fontSize: 10, color: Color(0xFFC62828), fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 2),
+                                        Text('${mistakenWords.length} 語', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFFB71C1C))),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE3F2FD),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: const Color(0xFF90CAF9)),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const Text('正答率', style: TextStyle(fontSize: 10, color: Color(0xFF1565C0), fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${_totalAnsweredCount > 0 ? ((_correctCount / _totalAnsweredCount) * 100).toInt() : 100}%',
+                                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (isLearning) ...[
+                              const SizedBox(height: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: isCleared
+                                      ? const Color(0xFFE8F5E9)
+                                      : const Color(0xFFFFF3E0),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isCleared
+                                        ? Colors.green.shade300
+                                        : Colors.orange.shade200,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          isCleared ? Icons.stars_rounded : Icons.info_outline_rounded,
+                                          color: isCleared ? Colors.amber.shade700 : Colors.orange,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: Text(
+                                              isCleared
+                                                  ? 'Ch.$selectedChapter MASTER! (70pt以上: ${rate.toInt()}%) 🎉'
+                                                  : 'Ch.$selectedChapter 70pt以上: ${rate.toInt()}% (解放条件: 90%以上)',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                                color: isCleared
+                                                    ? Colors.green.shade900
+                                                    : Colors.brown.shade800,
+                                              ),
                                             ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (isNewUnlock && nextChapter != null) ...[
+                                      const SizedBox(height: 2),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          '✨ 次の Ch.$nextChapter が解放されました！ ✨',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green.shade800,
                                           ),
                                         ),
                                       ),
                                     ],
-                                  ),
-                                  if (isNewUnlock && nextChapter != null) ...[
-                                    const SizedBox(height: 2),
-                                    FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                        '✨ 次の Ch.$nextChapter が解放されました！ ✨',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.green.shade800,
-                                        ),
-                                      ),
-                                    ),
                                   ],
-                                ],
+                                ),
                               ),
-                            ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '要復習単語（${mistakenWords.length}件）',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C302E),
-                      ),
-                    ),
+                ),
+
+                // 2. スクロールしても上に固定表示され続ける見出し ＆ リベンジボタン
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _ResultListHeaderDelegate(
+                    title: headerTitle,
+                    buttonText: actionButtonText,
+                    buttonIcon: actionButtonIcon,
+                    showButton: showActionButton,
+                    onButtonPressed: () {
+                      if (currentMode == 'revenge') {
+                        List<WordModel> wordsToRetry = mistakenWords.isNotEmpty
+                            ? List<WordModel>.from(mistakenWords)
+                            : List<WordModel>.from(displayWords);
+                        if (wordsToRetry.length <= 5 && _currentRevengeTargetWords.isNotEmpty) {
+                          final additional = _currentRevengeTargetWords.where((w) => !wordsToRetry.any((mw) => mw.id == w.id)).toList()..shuffle();
+                          for (final add in additional) {
+                            if (wordsToRetry.length >= 6) break;
+                            wordsToRetry.add(add);
+                          }
+                        }
+                        setState(() {
+                          isGameOver = false;
+                          isGameStarted = true;
+                          remainingTime = totalGameDuration;
+                          _unlockResult = null;
+                        });
+                        _startCountdownSequence(customWords: wordsToRetry.isNotEmpty ? wordsToRetry : _currentRevengeTargetWords);
+                      } else {
+                        List<WordModel> wordsToRetry = List<WordModel>.from(mistakenWords);
+                        if (wordsToRetry.length <= 5) {
+                          final currentPool = (widget.mode == 'learning')
+                              ? allWords.where((w) => w.chapter == selectedChapter).toList()
+                              : allWords.where((w) => (widget.selectedLevels ?? [selectedLevel]).contains(w.level)).toList();
+                          final additional = currentPool.where((w) => !wordsToRetry.any((mw) => mw.id == w.id)).toList()..shuffle();
+                          for (final add in additional) {
+                            if (wordsToRetry.length >= 6) break;
+                            wordsToRetry.add(add);
+                          }
+                        }
+                        setState(() {
+                          isGameOver = false;
+                          isGameStarted = true;
+                          remainingTime = totalGameDuration;
+                          _unlockResult = null;
+                        });
+                        _startCountdownSequence(customWords: wordsToRetry);
+                      }
+                    },
                   ),
-                  const SizedBox(height: 6),
-                  if (mistakenWords.isNotEmpty) ...[
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.flash_on_rounded, color: Colors.white, size: 18),
-                        label: Text(
-                          'ミス単語リベンジ（${mistakenWords.length}語）',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD9534F),
-                          foregroundColor: Colors.white,
-                          elevation: 1,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                        ),
-                        onPressed: () {
-                          final wordsToRetry = List<WordModel>.from(mistakenWords);
-                          setState(() {
-                            isGameOver = false;
-                            isGameStarted = true;
-                            remainingTime = totalGameDuration;
-                            _unlockResult = null;
-                          });
-                          _startCountdownSequence(customWords: wordsToRetry);
-                        },
-                      ),
-                    ),
-                  ],
-                  mistakenWords.isEmpty
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          alignment: Alignment.center,
-                          child: const Text(
-                            'パーフェクト！間違えた単語はありません 🎉',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF6B726E),
-                              fontWeight: FontWeight.bold,
+                ),
+
+                // 3. 単語リスト一覧
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(14.0, 4.0, 14.0, 12.0),
+                  sliver: displayWords.isEmpty
+                      ? SliverToBoxAdapter(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            alignment: Alignment.center,
+                            child: Text(
+                              isShowPlayedWords
+                                  ? '出題された単語はありません'
+                                  : 'パーフェクト！間違えた単語はありません 🎉',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF6B726E),
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: mistakenWords.length,
-                          itemBuilder: (context, index) {
-                            final word = mistakenWords[index];
-                            final isFav = favoriteWordIds.contains(word.id);
+                      : SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final word = displayWords[index];
+                              final isFav = favoriteWordIds.contains(word.id);
 
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 3),
-                              elevation: 0.5,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                side: const BorderSide(color: Color(0xFFE5DEC9)),
-                              ),
-                              child: ListTile(
-                                dense: true,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                                title: Text(
-                                  word.english,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
+                              return Card(
+                                margin: const EdgeInsets.symmetric(vertical: 3),
+                                elevation: 0.5,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: const BorderSide(color: Color(0xFFE5DEC9)),
+                                ),
+                                child: ListTile(
+                                  dense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                  onTap: () async {
+                                    final allDbWords = await widget.database.getAllWords();
+                                    final modalWordList = displayWords.map((mw) {
+                                      return allDbWords.firstWhere(
+                                        (w) => w.id == mw.id,
+                                        orElse: () => Word(
+                                          id: mw.id,
+                                          level: mw.level,
+                                          chapter: mw.chapter,
+                                          english: mw.english,
+                                          japanese: mw.japanese,
+                                          partOfSpeech: mw.partOfSpeech,
+                                          cefr: 'A1',
+                                          category: 'General',
+                                          phonetic: '',
+                                          example: '',
+                                          exampleJp: '',
+                                          collocations: '[]',
+                                          otherMeanings: '[]',
+                                          retentionPoint: mw.retentionPoint,
+                                          pointDecreasedTotal: 0,
+                                          isMemorized: mw.isMemorized,
+                                          isRestricted: mw.isRestricted,
+                                          isFavorite: isFav,
+                                          correctCount: mw.correctCount,
+                                          wrongCount: mw.wrongCount,
+                                          lastStudiedAt: null,
+                                        ),
+                                      );
+                                    }).toList();
+
+                                    if (context.mounted) {
+                                      WordDetailModal.show(
+                                        context: context,
+                                        wordList: modalWordList,
+                                        initialIndex: index,
+                                        database: widget.database,
+                                        onFavoriteChanged: () {
+                                          setState(() {
+                                            if (favoriteWordIds.contains(word.id)) {
+                                              favoriteWordIds.remove(word.id);
+                                              word.isFavorite = false;
+                                            } else {
+                                              favoriteWordIds.add(word.id);
+                                              word.isFavorite = true;
+                                            }
+                                          });
+                                        },
+                                      );
+                                    }
+                                  },
+                                  title: Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          word.english,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      if (isShowPlayedWords) ...[
+                                        const SizedBox(width: 8),
+                                        _buildAttemptBadges(_sessionWordAttempts[word.id] ?? []),
+                                      ],
+                                    ],
+                                  ),
+                                  subtitle: Text(
+                                    word.japanese,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.volume_up_rounded,
+                                          color: Color(0xFF5F9E98),
+                                          size: 20,
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                        onPressed: () => _playAudio(word),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          isFav ? Icons.star_rounded : Icons.star_border_rounded,
+                                          color: isFav ? Colors.amber : Colors.grey,
+                                          size: 20,
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                        onPressed: () => _toggleFavorite(word),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                subtitle: Text(
-                                  word.japanese,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.volume_up_rounded,
-                                        color: Color(0xFF5F9E98),
-                                        size: 20,
-                                      ),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                      onPressed: () => _playAudio(word),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        isFav ? Icons.star_rounded : Icons.star_border_rounded,
-                                        color: isFav ? Colors.amber : Colors.grey,
-                                        size: 20,
-                                      ),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                      onPressed: () => _toggleFavorite(word),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                            childCount: displayWords.length,
+                          ),
                         ),
-                  const SizedBox(height: 6),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
 
@@ -1635,18 +1969,28 @@ class _GameScreenState extends State<GameScreen>
                   ),
                   const SizedBox(width: 8),
 
-                  // 中: 再挑戦（要件5: アクティブな高視認性スタイル）
+                  // 中: 再挑戦（通常時） / ゲーム選択画面で選択したセクションをはじめから開始（リベンジ時）
                   Expanded(
                     child: SizedBox(
                       height: 44,
                       child: ElevatedButton.icon(
-                        icon: const Icon(Icons.refresh_rounded, size: 18),
-                        label: const FittedBox(
+                        icon: Icon(
+                          currentMode == 'revenge' ? Icons.school_rounded : Icons.refresh_rounded,
+                          size: 18,
+                        ),
+                        label: FittedBox(
                           fit: BoxFit.scaleDown,
-                          child: Text('再挑戦', style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: Text(
+                            currentMode == 'revenge'
+                                ? (widget.mode == 'learning'
+                                    ? 'Chapter $selectedChapter を学習開始'
+                                    : '選択セクションをはじめから開始')
+                                : '再挑戦',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFECA882),
+                          backgroundColor: currentMode == 'revenge' ? const Color(0xFF5F9E98) : const Color(0xFFECA882),
                           foregroundColor: Colors.white,
                           elevation: 1,
                           shape: RoundedRectangleBorder(
@@ -1655,16 +1999,16 @@ class _GameScreenState extends State<GameScreen>
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                         ),
                         onPressed: () {
-                          final wordsToRetry = (currentMode == 'revenge' && _currentRevengeTargetWords.isNotEmpty)
-                              ? List<WordModel>.from(_currentRevengeTargetWords)
-                              : null;
                           setState(() {
+                            if (currentMode == 'revenge') {
+                              currentMode = widget.mode;
+                            }
                             isGameOver = false;
                             isGameStarted = true;
                             remainingTime = totalGameDuration;
                             _unlockResult = null;
                           });
-                          _startCountdownSequence(customWords: wordsToRetry);
+                          _startCountdownSequence();
                         },
                       ),
                     ),
@@ -1699,6 +2043,7 @@ class _GameScreenState extends State<GameScreen>
                             final targetCh = nextChapter ?? (selectedChapter + 1);
                             setState(() {
                               selectedChapter = targetCh;
+                              currentMode = 'learning';
                               isGameOver = false;
                               isGameStarted = true;
                               remainingTime = totalGameDuration;
@@ -1898,84 +2243,199 @@ class _GameScreenState extends State<GameScreen>
 
           // 4択選択肢エリア（広々としたタッチターゲット・快適なタップ領域：高さを1.4倍の59pxに拡大）
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
             decoration: const BoxDecoration(
               color: Color(0xFFF6F2E7),
               border: Border(top: BorderSide(color: Color(0xFFE5DEC9), width: 1)),
             ),
             child: Column(
-              children: List.generate(displayChoices.length, (index) {
-                final choice = displayChoices[index];
-                final isPlaceholder = choice.isEmpty;
-                final isDisabled =
-                    isPlaceholder || disabledChoices.contains(choice);
+              children: [
+                ...List.generate(displayChoices.length, (index) {
+                  final choice = displayChoices[index];
+                  final isPlaceholder = choice.isEmpty;
+                  final normChoice = _normalizeChoiceText(choice);
+                  final highlightedCorrect = isLeft ? _leftHighlightCorrect : _rightHighlightCorrect;
+                  final isCorrectHighlighted = highlightedCorrect != null && highlightedCorrect == normChoice && normChoice.isNotEmpty;
+                  final isMistakenChoice = disabledChoices.contains(choice);
+                  final isLaneProcessing = (isLeft ? _isLeftProcessing : _isRightProcessing);
+                  final isButtonDisabled = isPlaceholder || isMistakenChoice || isLaneProcessing;
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3.5),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 59,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        disabledBackgroundColor: isPlaceholder
-                            ? const Color(0xFFEDE8DC)
-                            : Colors.red.shade50,
-                        disabledForegroundColor: isPlaceholder
-                            ? Colors.transparent
-                            : Colors.red.shade700,
-                        backgroundColor: isDisabled
-                            ? (isPlaceholder
-                                  ? const Color(0xFFEDE8DC)
-                                  : Colors.red.shade50)
-                            : const Color(0xFFFFFDF9),
-                        foregroundColor: isDisabled
-                            ? (isPlaceholder
-                                  ? Colors.transparent
-                                  : Colors.red.shade700)
-                            : const Color(0xFF2C302E),
-                        elevation: isDisabled ? 0 : 1,
-                        shadowColor: Colors.black12,
-                        side: BorderSide(
-                          color: isPlaceholder
-                              ? const Color(0xFFE2DCCF)
-                              : (isDisabled ? Colors.red.shade300 : const Color(0xFFDCD4BE)),
-                          width: 1.2,
+                  Color btnBgColor;
+                  Color btnFgColor;
+                  Color btnBorderColor;
+                  double btnBorderWidth = 1.2;
+
+                  if (isPlaceholder) {
+                    btnBgColor = const Color(0xFFEDE8DC);
+                    btnFgColor = Colors.transparent;
+                    btnBorderColor = const Color(0xFFE2DCCF);
+                  } else if (isCorrectHighlighted) {
+                    // 正解時: 誤答時と同じトーンの薄緑ハイライト
+                    btnBgColor = Colors.green.shade50;
+                    btnFgColor = Colors.green.shade800;
+                    btnBorderColor = Colors.green.shade300;
+                    btnBorderWidth = 1.5;
+                  } else if (isMistakenChoice) {
+                    btnBgColor = Colors.red.shade50; // 誤答時: 赤薄＋赤文字
+                    btnFgColor = Colors.red.shade700;
+                    btnBorderColor = Colors.red.shade300;
+                  } else {
+                    btnBgColor = const Color(0xFFFFFDF9); // 通常・未タップ
+                    btnFgColor = const Color(0xFF2C302E);
+                    btnBorderColor = const Color(0xFFDCD4BE);
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2.5),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          disabledBackgroundColor: btnBgColor,
+                          disabledForegroundColor: btnFgColor,
+                          backgroundColor: btnBgColor,
+                          foregroundColor: btnFgColor,
+                          elevation: (isPlaceholder || isMistakenChoice) ? 0 : 1,
+                          shadowColor: Colors.black12,
+                          side: BorderSide(
+                            color: btnBorderColor,
+                            width: btnBorderWidth,
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: isDisabled
-                          ? null
-                          : () => _handleAnswer(
-                              isLeft: isLeft,
-                              selectedChoice: choice,
-                            ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            choice,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              decoration: (!isPlaceholder && isDisabled)
-                                  ? TextDecoration.lineThrough
-                                  : null,
+                        onPressed: isButtonDisabled
+                            ? null
+                            : () => _handleAnswer(
+                                isLeft: isLeft,
+                                selectedChoice: choice,
+                              ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              choice,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                decoration: (!isPlaceholder && isMistakenChoice && !isCorrectHighlighted)
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
+                  );
+                }),
+                // 「わからない」ボタン（即座に正解を1秒ハイライト表示して不正解遷移）
+                Padding(
+                  padding: const EdgeInsets.only(top: 2, bottom: 2),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 28,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.help_outline_rounded, size: 13, color: Color(0xFF8C827A)),
+                      label: const Text(
+                        'わからない',
+                        style: TextStyle(fontSize: 11, color: Color(0xFF5A524C), fontWeight: FontWeight.bold),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        backgroundColor: const Color(0xFFEFE8DA),
+                        side: const BorderSide(color: Color(0xFFDCD4BE), width: 1),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: (word == null || (isLeft ? _isLeftProcessing : _isRightProcessing))
+                          ? null
+                          : () => _handleDontKnow(isLeft: isLeft),
+                    ),
                   ),
-                );
-              }),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
+  }
+}
+
+class _ResultListHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final String title;
+  final String? buttonText;
+  final IconData buttonIcon;
+  final bool showButton;
+  final VoidCallback? onButtonPressed;
+
+  _ResultListHeaderDelegate({
+    required this.title,
+    this.buttonText,
+    required this.buttonIcon,
+    required this.showButton,
+    this.onButtonPressed,
+  });
+
+  @override
+  double get minExtent => showButton ? 88.0 : 36.0;
+
+  @override
+  double get maxExtent => showButton ? 88.0 : 36.0;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: const Color(0xFFFBF7EE),
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 4.0),
+      alignment: Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C302E),
+            ),
+          ),
+          if (showButton && buttonText != null) ...[
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 40,
+              child: ElevatedButton.icon(
+                icon: Icon(buttonIcon, color: Colors.white, size: 18),
+                label: Text(
+                  buttonText!,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFCF7067),
+                  foregroundColor: Colors.white,
+                  elevation: overlapsContent ? 2 : 1,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                onPressed: onButtonPressed,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _ResultListHeaderDelegate oldDelegate) {
+    return oldDelegate.title != title ||
+        oldDelegate.buttonText != buttonText ||
+        oldDelegate.buttonIcon != buttonIcon ||
+        oldDelegate.showButton != showButton;
   }
 }

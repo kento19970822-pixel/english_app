@@ -10,6 +10,7 @@ import '../widgets/custom_fast_scrollbar.dart';
 import '../widgets/pixel_character_widget.dart';
 import '../widgets/sticky_section_header.dart';
 import '../widgets/word_card_tile.dart';
+import '../widgets/word_detail_modal.dart';
 
 /// 単語セクションデータクラス
 class WordSection {
@@ -545,9 +546,12 @@ class WordsScreenState extends State<WordsScreen> {
           : SafeArea(
               child: CustomFastScrollbar(
                 controller: _scrollController,
-                child: CustomScrollView(
-                  controller: _scrollController,
-                  slivers: [
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).unfocus(),
+                  child: CustomScrollView(
+                    controller: _scrollController,
+                    slivers: [
                     // 1. スクロールに合わせて出入りする検索・ソート・フィルターバー
                     SliverAppBar(
                       floating: true,
@@ -586,10 +590,20 @@ class WordsScreenState extends State<WordsScreen> {
                                             controller: _searchController,
                                             focusNode: _searchFocusNode,
                                             textAlignVertical: TextAlignVertical.center,
+                                            textInputAction: TextInputAction.search,
                                             decoration: InputDecoration(
                                               hintText: '英単語または和訳で検索...',
                                               hintStyle: const TextStyle(fontSize: 13, color: _textSecondary),
-                                              prefixIcon: const Icon(Icons.search_rounded, size: 20, color: _textSecondary),
+                                              prefixIcon: IconButton(
+                                                icon: const Icon(Icons.search_rounded, size: 20, color: _textSecondary),
+                                                onPressed: () {
+                                                  setState(() => _searchQuery = _searchController.text.trim());
+                                                  _onFilterChanged();
+                                                  FocusScope.of(context).unfocus();
+                                                },
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                              ),
                                               suffixIcon: _searchController.text.isNotEmpty
                                                   ? IconButton(
                                                       icon: const Icon(Icons.cancel_rounded, size: 18, color: _textSecondary),
@@ -608,9 +622,10 @@ class WordsScreenState extends State<WordsScreen> {
                                               contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
                                             ),
                                             style: const TextStyle(fontSize: 14, color: _textPrimary),
-                                            onChanged: (val) {
-                                              setState(() => _searchQuery = val);
+                                            onSubmitted: (val) {
+                                              setState(() => _searchQuery = val.trim());
                                               _onFilterChanged();
+                                              FocusScope.of(context).unfocus();
                                             },
                                           ),
                                         ),
@@ -786,10 +801,33 @@ class WordsScreenState extends State<WordsScreen> {
                                     showJapanese: _showJapanese,
                                     onSpeak: () => _speak(word.english),
                                     onToggleFavorite: () => _toggleFavoriteFast(word),
+                                    onTap: () {
+                                      final allCurrent = _sections.expand((s) => s.words).toList();
+                                      final gIdx = allCurrent.indexWhere((w) => w.id == word.id);
+                                      WordDetailModal.show(
+                                        context: context,
+                                        wordList: allCurrent,
+                                        initialIndex: gIdx >= 0 ? gIdx : 0,
+                                        database: widget.database,
+                                        onFavoriteChanged: () => _loadWords(),
+                                      );
+                                    },
+                                    onDoubleTap: () {
+                                      final allCurrent = _sections.expand((s) => s.words).toList();
+                                      final gIdx = allCurrent.indexWhere((w) => w.id == word.id);
+                                      WordDetailModal.show(
+                                        context: context,
+                                        wordList: allCurrent,
+                                        initialIndex: gIdx >= 0 ? gIdx : 0,
+                                        database: widget.database,
+                                        onFavoriteChanged: () => _loadWords(),
+                                      );
+                                    },
                                     onSwipeRight: () async {
                                       await widget.database.markAsMemorizedManual(word.id);
                                       final updated = word.copyWith(
                                         retentionPoint: 80,
+                                        pointDecreasedTotal: 0,
                                         isMemorized: true,
                                         isRestricted: false,
                                       );
@@ -836,6 +874,7 @@ class WordsScreenState extends State<WordsScreen> {
                 ),
               ),
             ),
+          ),
     );
   }
 

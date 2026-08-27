@@ -11,6 +11,8 @@ class WordCardTile extends StatefulWidget {
   final VoidCallback onToggleFavorite;
   final VoidCallback? onSwipeRight; // 右スワイプ: 暗記済み化 (80pt)
   final VoidCallback? onSwipeLeft; // 左スワイプ: 0ptリセット ＋ 制限フラグ
+  final VoidCallback? onTap; // タップ（通常時詳細モーダル表示）
+  final VoidCallback? onDoubleTap; // ダブルタップ（和訳OFF時詳細モーダル表示）
 
   const WordCardTile({
     super.key,
@@ -20,6 +22,8 @@ class WordCardTile extends StatefulWidget {
     required this.onToggleFavorite,
     this.onSwipeRight,
     this.onSwipeLeft,
+    this.onTap,
+    this.onDoubleTap,
   });
 
   @override
@@ -149,7 +153,7 @@ class _WordCardTileState extends State<WordCardTile> {
             setState(() => _isPressed = val);
           },
           onTap: widget.showJapanese
-              ? null
+              ? widget.onTap
               : () {
                   final currentlyVisible = _overrideShowJapanese ?? false;
                   final willShow = !currentlyVisible;
@@ -160,6 +164,7 @@ class _WordCardTileState extends State<WordCardTile> {
                     widget.onSpeak();
                   }
                 },
+          onDoubleTap: widget.showJapanese ? null : (widget.onDoubleTap ?? widget.onTap),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
             child: Row(
@@ -196,7 +201,7 @@ class _WordCardTileState extends State<WordCardTile> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // 1行目: 英単語 ＋ 定着度ポイント ＆ 上部操作ボタン（音声/Ch/お気に入り）
+                      // 1行目: 英単語 ＋ 品詞 ＋ 定着度ポイント(-減算pt) ＆ 上部操作ボタン（音声/Ch/お気に入り）
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -215,8 +220,26 @@ class _WordCardTileState extends State<WordCardTile> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                const SizedBox(width: 6),
-                                // 定着度ポイントバッジ
+                                const SizedBox(width: 5),
+                                // 品詞バッジ
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE8EEF5),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: const Color(0xFFBDD0E0), width: 0.8),
+                                  ),
+                                  child: Text(
+                                    '[${widget.word.partOfSpeech.isNotEmpty ? widget.word.partOfSpeech : AppDatabase.detectPartOfSpeech(widget.word.japanese)}]',
+                                    style: const TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF4A6B82),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                // 定着度ポイントバッジ ＆ 減算累計ポイント
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                                   decoration: BoxDecoration(
@@ -224,13 +247,29 @@ class _WordCardTileState extends State<WordCardTile> {
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(color: indicatorColor, width: 1),
                                   ),
-                                  child: Text(
-                                    '$pt pt',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: isMemorized ? const Color(0xFF2E7D32) : _textPrimary,
-                                    ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '$pt pt',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: isMemorized ? const Color(0xFF2E7D32) : _textPrimary,
+                                        ),
+                                      ),
+                                      if (widget.word.pointDecreasedTotal > 0) ...[
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          '(-${widget.word.pointDecreasedTotal})',
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFFD96B6B),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ),
                               ],

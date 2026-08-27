@@ -135,12 +135,57 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _partOfSpeechMeta = const VerificationMeta(
+    'partOfSpeech',
+  );
+  @override
+  late final GeneratedColumn<String> partOfSpeech = GeneratedColumn<String>(
+    'part_of_speech',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _collocationsMeta = const VerificationMeta(
+    'collocations',
+  );
+  @override
+  late final GeneratedColumn<String> collocations = GeneratedColumn<String>(
+    'collocations',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _otherMeaningsMeta = const VerificationMeta(
+    'otherMeanings',
+  );
+  @override
+  late final GeneratedColumn<String> otherMeanings = GeneratedColumn<String>(
+    'other_meanings',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _retentionPointMeta = const VerificationMeta(
     'retentionPoint',
   );
   @override
   late final GeneratedColumn<int> retentionPoint = GeneratedColumn<int>(
     'retention_point',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _pointDecreasedTotalMeta =
+      const VerificationMeta('pointDecreasedTotal');
+  @override
+  late final GeneratedColumn<int> pointDecreasedTotal = GeneratedColumn<int>(
+    'point_decreased_total',
     aliasedName,
     false,
     type: DriftSqlType.int,
@@ -237,7 +282,11 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     isFavorite,
     example,
     exampleJp,
+    partOfSpeech,
+    collocations,
+    otherMeanings,
     retentionPoint,
+    pointDecreasedTotal,
     isMemorized,
     isRestricted,
     correctCount,
@@ -324,12 +373,48 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         exampleJp.isAcceptableOrUnknown(data['example_jp']!, _exampleJpMeta),
       );
     }
+    if (data.containsKey('part_of_speech')) {
+      context.handle(
+        _partOfSpeechMeta,
+        partOfSpeech.isAcceptableOrUnknown(
+          data['part_of_speech']!,
+          _partOfSpeechMeta,
+        ),
+      );
+    }
+    if (data.containsKey('collocations')) {
+      context.handle(
+        _collocationsMeta,
+        collocations.isAcceptableOrUnknown(
+          data['collocations']!,
+          _collocationsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('other_meanings')) {
+      context.handle(
+        _otherMeaningsMeta,
+        otherMeanings.isAcceptableOrUnknown(
+          data['other_meanings']!,
+          _otherMeaningsMeta,
+        ),
+      );
+    }
     if (data.containsKey('retention_point')) {
       context.handle(
         _retentionPointMeta,
         retentionPoint.isAcceptableOrUnknown(
           data['retention_point']!,
           _retentionPointMeta,
+        ),
+      );
+    }
+    if (data.containsKey('point_decreased_total')) {
+      context.handle(
+        _pointDecreasedTotalMeta,
+        pointDecreasedTotal.isAcceptableOrUnknown(
+          data['point_decreased_total']!,
+          _pointDecreasedTotalMeta,
         ),
       );
     }
@@ -437,9 +522,25 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         DriftSqlType.string,
         data['${effectivePrefix}example_jp'],
       ),
+      partOfSpeech: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}part_of_speech'],
+      )!,
+      collocations: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}collocations'],
+      ),
+      otherMeanings: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}other_meanings'],
+      ),
       retentionPoint: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}retention_point'],
+      )!,
+      pointDecreasedTotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}point_decreased_total'],
       )!,
       isMemorized: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
@@ -486,7 +587,11 @@ class Word extends DataClass implements Insertable<Word> {
   final bool isFavorite;
   final String? example;
   final String? exampleJp;
+  final String partOfSpeech;
+  final String? collocations;
+  final String? otherMeanings;
   final int retentionPoint;
+  final int pointDecreasedTotal;
   final bool isMemorized;
   final bool isRestricted;
   final int correctCount;
@@ -505,7 +610,11 @@ class Word extends DataClass implements Insertable<Word> {
     required this.isFavorite,
     this.example,
     this.exampleJp,
+    required this.partOfSpeech,
+    this.collocations,
+    this.otherMeanings,
     required this.retentionPoint,
+    required this.pointDecreasedTotal,
     required this.isMemorized,
     required this.isRestricted,
     required this.correctCount,
@@ -533,7 +642,15 @@ class Word extends DataClass implements Insertable<Word> {
     if (!nullToAbsent || exampleJp != null) {
       map['example_jp'] = Variable<String>(exampleJp);
     }
+    map['part_of_speech'] = Variable<String>(partOfSpeech);
+    if (!nullToAbsent || collocations != null) {
+      map['collocations'] = Variable<String>(collocations);
+    }
+    if (!nullToAbsent || otherMeanings != null) {
+      map['other_meanings'] = Variable<String>(otherMeanings);
+    }
     map['retention_point'] = Variable<int>(retentionPoint);
+    map['point_decreased_total'] = Variable<int>(pointDecreasedTotal);
     map['is_memorized'] = Variable<bool>(isMemorized);
     map['is_restricted'] = Variable<bool>(isRestricted);
     map['correct_count'] = Variable<int>(correctCount);
@@ -566,7 +683,15 @@ class Word extends DataClass implements Insertable<Word> {
       exampleJp: exampleJp == null && nullToAbsent
           ? const Value.absent()
           : Value(exampleJp),
+      partOfSpeech: Value(partOfSpeech),
+      collocations: collocations == null && nullToAbsent
+          ? const Value.absent()
+          : Value(collocations),
+      otherMeanings: otherMeanings == null && nullToAbsent
+          ? const Value.absent()
+          : Value(otherMeanings),
       retentionPoint: Value(retentionPoint),
+      pointDecreasedTotal: Value(pointDecreasedTotal),
       isMemorized: Value(isMemorized),
       isRestricted: Value(isRestricted),
       correctCount: Value(correctCount),
@@ -597,7 +722,13 @@ class Word extends DataClass implements Insertable<Word> {
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       example: serializer.fromJson<String?>(json['example']),
       exampleJp: serializer.fromJson<String?>(json['exampleJp']),
+      partOfSpeech: serializer.fromJson<String>(json['partOfSpeech']),
+      collocations: serializer.fromJson<String?>(json['collocations']),
+      otherMeanings: serializer.fromJson<String?>(json['otherMeanings']),
       retentionPoint: serializer.fromJson<int>(json['retentionPoint']),
+      pointDecreasedTotal: serializer.fromJson<int>(
+        json['pointDecreasedTotal'],
+      ),
       isMemorized: serializer.fromJson<bool>(json['isMemorized']),
       isRestricted: serializer.fromJson<bool>(json['isRestricted']),
       correctCount: serializer.fromJson<int>(json['correctCount']),
@@ -623,7 +754,11 @@ class Word extends DataClass implements Insertable<Word> {
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'example': serializer.toJson<String?>(example),
       'exampleJp': serializer.toJson<String?>(exampleJp),
+      'partOfSpeech': serializer.toJson<String>(partOfSpeech),
+      'collocations': serializer.toJson<String?>(collocations),
+      'otherMeanings': serializer.toJson<String?>(otherMeanings),
       'retentionPoint': serializer.toJson<int>(retentionPoint),
+      'pointDecreasedTotal': serializer.toJson<int>(pointDecreasedTotal),
       'isMemorized': serializer.toJson<bool>(isMemorized),
       'isRestricted': serializer.toJson<bool>(isRestricted),
       'correctCount': serializer.toJson<int>(correctCount),
@@ -645,7 +780,11 @@ class Word extends DataClass implements Insertable<Word> {
     bool? isFavorite,
     Value<String?> example = const Value.absent(),
     Value<String?> exampleJp = const Value.absent(),
+    String? partOfSpeech,
+    Value<String?> collocations = const Value.absent(),
+    Value<String?> otherMeanings = const Value.absent(),
     int? retentionPoint,
+    int? pointDecreasedTotal,
     bool? isMemorized,
     bool? isRestricted,
     int? correctCount,
@@ -664,7 +803,13 @@ class Word extends DataClass implements Insertable<Word> {
     isFavorite: isFavorite ?? this.isFavorite,
     example: example.present ? example.value : this.example,
     exampleJp: exampleJp.present ? exampleJp.value : this.exampleJp,
+    partOfSpeech: partOfSpeech ?? this.partOfSpeech,
+    collocations: collocations.present ? collocations.value : this.collocations,
+    otherMeanings: otherMeanings.present
+        ? otherMeanings.value
+        : this.otherMeanings,
     retentionPoint: retentionPoint ?? this.retentionPoint,
+    pointDecreasedTotal: pointDecreasedTotal ?? this.pointDecreasedTotal,
     isMemorized: isMemorized ?? this.isMemorized,
     isRestricted: isRestricted ?? this.isRestricted,
     correctCount: correctCount ?? this.correctCount,
@@ -691,9 +836,21 @@ class Word extends DataClass implements Insertable<Word> {
           : this.isFavorite,
       example: data.example.present ? data.example.value : this.example,
       exampleJp: data.exampleJp.present ? data.exampleJp.value : this.exampleJp,
+      partOfSpeech: data.partOfSpeech.present
+          ? data.partOfSpeech.value
+          : this.partOfSpeech,
+      collocations: data.collocations.present
+          ? data.collocations.value
+          : this.collocations,
+      otherMeanings: data.otherMeanings.present
+          ? data.otherMeanings.value
+          : this.otherMeanings,
       retentionPoint: data.retentionPoint.present
           ? data.retentionPoint.value
           : this.retentionPoint,
+      pointDecreasedTotal: data.pointDecreasedTotal.present
+          ? data.pointDecreasedTotal.value
+          : this.pointDecreasedTotal,
       isMemorized: data.isMemorized.present
           ? data.isMemorized.value
           : this.isMemorized,
@@ -729,7 +886,11 @@ class Word extends DataClass implements Insertable<Word> {
           ..write('isFavorite: $isFavorite, ')
           ..write('example: $example, ')
           ..write('exampleJp: $exampleJp, ')
+          ..write('partOfSpeech: $partOfSpeech, ')
+          ..write('collocations: $collocations, ')
+          ..write('otherMeanings: $otherMeanings, ')
           ..write('retentionPoint: $retentionPoint, ')
+          ..write('pointDecreasedTotal: $pointDecreasedTotal, ')
           ..write('isMemorized: $isMemorized, ')
           ..write('isRestricted: $isRestricted, ')
           ..write('correctCount: $correctCount, ')
@@ -741,7 +902,7 @@ class Word extends DataClass implements Insertable<Word> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     english,
     japanese,
@@ -753,14 +914,18 @@ class Word extends DataClass implements Insertable<Word> {
     isFavorite,
     example,
     exampleJp,
+    partOfSpeech,
+    collocations,
+    otherMeanings,
     retentionPoint,
+    pointDecreasedTotal,
     isMemorized,
     isRestricted,
     correctCount,
     wrongCount,
     lastStudiedAt,
     lastRestrictedDate,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -776,7 +941,11 @@ class Word extends DataClass implements Insertable<Word> {
           other.isFavorite == this.isFavorite &&
           other.example == this.example &&
           other.exampleJp == this.exampleJp &&
+          other.partOfSpeech == this.partOfSpeech &&
+          other.collocations == this.collocations &&
+          other.otherMeanings == this.otherMeanings &&
           other.retentionPoint == this.retentionPoint &&
+          other.pointDecreasedTotal == this.pointDecreasedTotal &&
           other.isMemorized == this.isMemorized &&
           other.isRestricted == this.isRestricted &&
           other.correctCount == this.correctCount &&
@@ -797,7 +966,11 @@ class WordsCompanion extends UpdateCompanion<Word> {
   final Value<bool> isFavorite;
   final Value<String?> example;
   final Value<String?> exampleJp;
+  final Value<String> partOfSpeech;
+  final Value<String?> collocations;
+  final Value<String?> otherMeanings;
   final Value<int> retentionPoint;
+  final Value<int> pointDecreasedTotal;
   final Value<bool> isMemorized;
   final Value<bool> isRestricted;
   final Value<int> correctCount;
@@ -816,7 +989,11 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.isFavorite = const Value.absent(),
     this.example = const Value.absent(),
     this.exampleJp = const Value.absent(),
+    this.partOfSpeech = const Value.absent(),
+    this.collocations = const Value.absent(),
+    this.otherMeanings = const Value.absent(),
     this.retentionPoint = const Value.absent(),
+    this.pointDecreasedTotal = const Value.absent(),
     this.isMemorized = const Value.absent(),
     this.isRestricted = const Value.absent(),
     this.correctCount = const Value.absent(),
@@ -836,7 +1013,11 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.isFavorite = const Value.absent(),
     this.example = const Value.absent(),
     this.exampleJp = const Value.absent(),
+    this.partOfSpeech = const Value.absent(),
+    this.collocations = const Value.absent(),
+    this.otherMeanings = const Value.absent(),
     this.retentionPoint = const Value.absent(),
+    this.pointDecreasedTotal = const Value.absent(),
     this.isMemorized = const Value.absent(),
     this.isRestricted = const Value.absent(),
     this.correctCount = const Value.absent(),
@@ -857,7 +1038,11 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Expression<bool>? isFavorite,
     Expression<String>? example,
     Expression<String>? exampleJp,
+    Expression<String>? partOfSpeech,
+    Expression<String>? collocations,
+    Expression<String>? otherMeanings,
     Expression<int>? retentionPoint,
+    Expression<int>? pointDecreasedTotal,
     Expression<bool>? isMemorized,
     Expression<bool>? isRestricted,
     Expression<int>? correctCount,
@@ -877,7 +1062,12 @@ class WordsCompanion extends UpdateCompanion<Word> {
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (example != null) 'example': example,
       if (exampleJp != null) 'example_jp': exampleJp,
+      if (partOfSpeech != null) 'part_of_speech': partOfSpeech,
+      if (collocations != null) 'collocations': collocations,
+      if (otherMeanings != null) 'other_meanings': otherMeanings,
       if (retentionPoint != null) 'retention_point': retentionPoint,
+      if (pointDecreasedTotal != null)
+        'point_decreased_total': pointDecreasedTotal,
       if (isMemorized != null) 'is_memorized': isMemorized,
       if (isRestricted != null) 'is_restricted': isRestricted,
       if (correctCount != null) 'correct_count': correctCount,
@@ -900,7 +1090,11 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Value<bool>? isFavorite,
     Value<String?>? example,
     Value<String?>? exampleJp,
+    Value<String>? partOfSpeech,
+    Value<String?>? collocations,
+    Value<String?>? otherMeanings,
     Value<int>? retentionPoint,
+    Value<int>? pointDecreasedTotal,
     Value<bool>? isMemorized,
     Value<bool>? isRestricted,
     Value<int>? correctCount,
@@ -920,7 +1114,11 @@ class WordsCompanion extends UpdateCompanion<Word> {
       isFavorite: isFavorite ?? this.isFavorite,
       example: example ?? this.example,
       exampleJp: exampleJp ?? this.exampleJp,
+      partOfSpeech: partOfSpeech ?? this.partOfSpeech,
+      collocations: collocations ?? this.collocations,
+      otherMeanings: otherMeanings ?? this.otherMeanings,
       retentionPoint: retentionPoint ?? this.retentionPoint,
+      pointDecreasedTotal: pointDecreasedTotal ?? this.pointDecreasedTotal,
       isMemorized: isMemorized ?? this.isMemorized,
       isRestricted: isRestricted ?? this.isRestricted,
       correctCount: correctCount ?? this.correctCount,
@@ -966,8 +1164,20 @@ class WordsCompanion extends UpdateCompanion<Word> {
     if (exampleJp.present) {
       map['example_jp'] = Variable<String>(exampleJp.value);
     }
+    if (partOfSpeech.present) {
+      map['part_of_speech'] = Variable<String>(partOfSpeech.value);
+    }
+    if (collocations.present) {
+      map['collocations'] = Variable<String>(collocations.value);
+    }
+    if (otherMeanings.present) {
+      map['other_meanings'] = Variable<String>(otherMeanings.value);
+    }
     if (retentionPoint.present) {
       map['retention_point'] = Variable<int>(retentionPoint.value);
+    }
+    if (pointDecreasedTotal.present) {
+      map['point_decreased_total'] = Variable<int>(pointDecreasedTotal.value);
     }
     if (isMemorized.present) {
       map['is_memorized'] = Variable<bool>(isMemorized.value);
@@ -1006,7 +1216,11 @@ class WordsCompanion extends UpdateCompanion<Word> {
           ..write('isFavorite: $isFavorite, ')
           ..write('example: $example, ')
           ..write('exampleJp: $exampleJp, ')
+          ..write('partOfSpeech: $partOfSpeech, ')
+          ..write('collocations: $collocations, ')
+          ..write('otherMeanings: $otherMeanings, ')
           ..write('retentionPoint: $retentionPoint, ')
+          ..write('pointDecreasedTotal: $pointDecreasedTotal, ')
           ..write('isMemorized: $isMemorized, ')
           ..write('isRestricted: $isRestricted, ')
           ..write('correctCount: $correctCount, ')
@@ -2995,7 +3209,11 @@ typedef $$WordsTableCreateCompanionBuilder = WordsCompanion Function({
   Value<bool> isFavorite,
   Value<String?> example,
   Value<String?> exampleJp,
+  Value<String> partOfSpeech,
+  Value<String?> collocations,
+  Value<String?> otherMeanings,
   Value<int> retentionPoint,
+  Value<int> pointDecreasedTotal,
   Value<bool> isMemorized,
   Value<bool> isRestricted,
   Value<int> correctCount,
@@ -3015,7 +3233,11 @@ typedef $$WordsTableUpdateCompanionBuilder = WordsCompanion Function({
   Value<bool> isFavorite,
   Value<String?> example,
   Value<String?> exampleJp,
+  Value<String> partOfSpeech,
+  Value<String?> collocations,
+  Value<String?> otherMeanings,
   Value<int> retentionPoint,
+  Value<int> pointDecreasedTotal,
   Value<bool> isMemorized,
   Value<bool> isRestricted,
   Value<int> correctCount,
@@ -3087,8 +3309,28 @@ class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get partOfSpeech => $composableBuilder(
+    column: $table.partOfSpeech,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get collocations => $composableBuilder(
+    column: $table.collocations,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get otherMeanings => $composableBuilder(
+    column: $table.otherMeanings,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get retentionPoint => $composableBuilder(
     column: $table.retentionPoint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pointDecreasedTotal => $composableBuilder(
+    column: $table.pointDecreasedTotal,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3187,8 +3429,28 @@ class $$WordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get partOfSpeech => $composableBuilder(
+    column: $table.partOfSpeech,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get collocations => $composableBuilder(
+    column: $table.collocations,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get otherMeanings => $composableBuilder(
+    column: $table.otherMeanings,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get retentionPoint => $composableBuilder(
     column: $table.retentionPoint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pointDecreasedTotal => $composableBuilder(
+    column: $table.pointDecreasedTotal,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -3267,8 +3529,28 @@ class $$WordsTableAnnotationComposer
   GeneratedColumn<String> get exampleJp =>
       $composableBuilder(column: $table.exampleJp, builder: (column) => column);
 
+  GeneratedColumn<String> get partOfSpeech => $composableBuilder(
+    column: $table.partOfSpeech,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get collocations => $composableBuilder(
+    column: $table.collocations,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get otherMeanings => $composableBuilder(
+    column: $table.otherMeanings,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get retentionPoint => $composableBuilder(
     column: $table.retentionPoint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get pointDecreasedTotal => $composableBuilder(
+    column: $table.pointDecreasedTotal,
     builder: (column) => column,
   );
 
@@ -3342,7 +3624,11 @@ class $$WordsTableTableManager
                 Value<bool> isFavorite = const Value.absent(),
                 Value<String?> example = const Value.absent(),
                 Value<String?> exampleJp = const Value.absent(),
+                Value<String> partOfSpeech = const Value.absent(),
+                Value<String?> collocations = const Value.absent(),
+                Value<String?> otherMeanings = const Value.absent(),
                 Value<int> retentionPoint = const Value.absent(),
+                Value<int> pointDecreasedTotal = const Value.absent(),
                 Value<bool> isMemorized = const Value.absent(),
                 Value<bool> isRestricted = const Value.absent(),
                 Value<int> correctCount = const Value.absent(),
@@ -3361,7 +3647,11 @@ class $$WordsTableTableManager
                 isFavorite: isFavorite,
                 example: example,
                 exampleJp: exampleJp,
+                partOfSpeech: partOfSpeech,
+                collocations: collocations,
+                otherMeanings: otherMeanings,
                 retentionPoint: retentionPoint,
+                pointDecreasedTotal: pointDecreasedTotal,
                 isMemorized: isMemorized,
                 isRestricted: isRestricted,
                 correctCount: correctCount,
@@ -3382,7 +3672,11 @@ class $$WordsTableTableManager
                 Value<bool> isFavorite = const Value.absent(),
                 Value<String?> example = const Value.absent(),
                 Value<String?> exampleJp = const Value.absent(),
+                Value<String> partOfSpeech = const Value.absent(),
+                Value<String?> collocations = const Value.absent(),
+                Value<String?> otherMeanings = const Value.absent(),
                 Value<int> retentionPoint = const Value.absent(),
+                Value<int> pointDecreasedTotal = const Value.absent(),
                 Value<bool> isMemorized = const Value.absent(),
                 Value<bool> isRestricted = const Value.absent(),
                 Value<int> correctCount = const Value.absent(),
@@ -3401,7 +3695,11 @@ class $$WordsTableTableManager
                 isFavorite: isFavorite,
                 example: example,
                 exampleJp: exampleJp,
+                partOfSpeech: partOfSpeech,
+                collocations: collocations,
+                otherMeanings: otherMeanings,
                 retentionPoint: retentionPoint,
+                pointDecreasedTotal: pointDecreasedTotal,
                 isMemorized: isMemorized,
                 isRestricted: isRestricted,
                 correctCount: correctCount,

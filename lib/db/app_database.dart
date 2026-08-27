@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260826-01
+import 'dart:convert';
 import 'package:drift/drift.dart';
 
 // テーブル定義ファイルの読み込み
@@ -18,7 +18,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -48,18 +48,70 @@ class AppDatabase extends _$AppDatabase {
       case 'A1':
         return 1;
       case 'A2':
-        return 2;
+        return 1;
       case 'B1':
-        return 3;
+        return 2;
       case 'B2':
-        return 4;
+        return 2;
       case 'C1':
-        return 5;
+        return 3;
       case 'C2':
-        return 6;
+        return 3;
       default:
         return 1;
     }
+  }
+
+  /// 日本語訳から簡易品詞タグを判定するヘルパー関数
+  static String detectPartOfSpeech(String jp) {
+    final cleanJp = jp.trim();
+    if (cleanJp.startsWith('〜の') ||
+        cleanJp.startsWith('〜へ') ||
+        cleanJp.startsWith('〜で') ||
+        cleanJp.startsWith('〜に') ||
+        cleanJp.startsWith('〜から') ||
+        cleanJp.startsWith('〜まで')) {
+      return '前';
+    }
+    if (cleanJp == 'しかし' ||
+        cleanJp.contains('そして') ||
+        cleanJp.contains('だから') ||
+        cleanJp.contains('または')) {
+      return '接';
+    }
+    if (cleanJp.contains('〜する') ||
+        cleanJp.endsWith('する') ||
+        cleanJp.startsWith('〜できる') ||
+        cleanJp.endsWith('行く') ||
+        cleanJp.endsWith('書く') ||
+        cleanJp.endsWith('歩く') ||
+        cleanJp.endsWith('働く') ||
+        cleanJp.endsWith('聞く') ||
+        cleanJp.endsWith('見る') ||
+        cleanJp.endsWith('食べる') ||
+        cleanJp.endsWith('知る') ||
+        cleanJp.endsWith('作る') ||
+        cleanJp.endsWith('得る') ||
+        cleanJp.endsWith('走る') ||
+        cleanJp.endsWith('持つ') ||
+        cleanJp.endsWith('話す') ||
+        cleanJp.endsWith('言う')) {
+      return '動';
+    }
+    if (cleanJp.endsWith('い') ||
+        cleanJp.endsWith('な') ||
+        cleanJp.contains('〜のような') ||
+        cleanJp.contains('的')) {
+      return '形';
+    }
+    if (cleanJp.endsWith('に') ||
+        cleanJp.endsWith('く') ||
+        cleanJp.contains('また') ||
+        cleanJp.contains('もっと') ||
+        cleanJp.contains('いつも')) {
+      return '副';
+    }
+    return '名';
   }
 
   // --- 単語データ操作 ---
@@ -69,7 +121,7 @@ class AppDatabase extends _$AppDatabase {
     return select(words).get();
   }
 
-  /// 【1日1回処理】忘却曲線による定着度ポイント減算 ＆ 制限フラグ一括解除 (F-05)
+  /// 【1日1回処理】忘却曲線による定着度ポイント減算 ＆ 減算累計加算 ＆ 制限フラグ一括解除 (F-05)
   /// ※is_memorized フラグは自動では外さず手動更新用に保持する
   Future<int> syncDailyForgettingAndRestrictions() async {
     final now = DateTime.now();
@@ -84,6 +136,7 @@ class AppDatabase extends _$AppDatabase {
     for (final word in candidates) {
       bool needUpdate = false;
       int newPoint = word.retentionPoint;
+      int newPointDecreasedTotal = word.pointDecreasedTotal;
       bool newIsRestricted = word.isRestricted;
       DateTime? newLastRestrictedDate = word.lastRestrictedDate;
 
@@ -97,6 +150,10 @@ class AppDatabase extends _$AppDatabase {
         );
 
         if (newPoint != word.retentionPoint) {
+          final diff = word.retentionPoint - newPoint;
+          if (diff > 0) {
+            newPointDecreasedTotal += diff;
+          }
           needUpdate = true;
         }
       }
@@ -112,6 +169,7 @@ class AppDatabase extends _$AppDatabase {
         updates.add({
           'id': word.id,
           'point': newPoint,
+          'decreasedTotal': newPointDecreasedTotal,
           'restricted': newIsRestricted,
           'date': newLastRestrictedDate,
         });
@@ -127,6 +185,7 @@ class AppDatabase extends _$AppDatabase {
           words,
           WordsCompanion(
             retentionPoint: Value(item['point'] as int),
+            pointDecreasedTotal: Value(item['decreasedTotal'] as int),
             isRestricted: Value(item['restricted'] as bool),
             lastRestrictedDate: Value(item['date'] as DateTime?),
           ),
@@ -219,12 +278,33 @@ class AppDatabase extends _$AppDatabase {
         final categoryStr = item['category']?.toString() ?? 'General';
         final exampleStr = item['example']?.toString();
         final exampleJpStr = item['exampleJp']?.toString();
+        final posStr = detectPartOfSpeech(japaneseStr);
+
+        // 複数語義の構造化JSON生成
+        String? otherMeaningsJson;
+        final meanings = japaneseStr
+            .split(RegExp(r'[、,]'))
+            .map((m) => m.trim())
+            .where((m) => m.isNotEmpty)
+            .toList();
+        if (meanings.length > 1) {
+          final senses = meanings.asMap().entries.map((e) => {
+                'sense_id': e.key + 1,
+                'part_of_speech': detectPartOfSpeech(e.value),
+                'meaning_ja': e.value,
+                'cefr': cefrStr,
+                'example_en': e.key == 0 ? exampleStr : null,
+                'example_ja': e.key == 0 ? exampleJpStr : null,
+              }).toList();
+          otherMeaningsJson = jsonEncode(senses);
+        }
 
         batch.insert(
           words,
           WordsCompanion.insert(
             english: englishStr,
             japanese: japaneseStr,
+            partOfSpeech: Value(posStr),
             cefr: Value(cefrStr),
             level: Value(level),
             chapter: Value(globalChapter),
@@ -232,6 +312,8 @@ class AppDatabase extends _$AppDatabase {
             category: Value(categoryStr),
             example: Value(exampleStr),
             exampleJp: Value(exampleJpStr),
+            otherMeanings: Value(otherMeaningsJson),
+            pointDecreasedTotal: const Value(0),
           ),
         );
       }
@@ -285,6 +367,9 @@ class AppDatabase extends _$AppDatabase {
     await (update(words)..where((t) => t.id.equals(id))).write(
       WordsCompanion(
         retentionPoint: Value(result['retentionPoint'] as int),
+        pointDecreasedTotal: isCorrect
+            ? const Value(0)
+            : Value(word.pointDecreasedTotal),
         isMemorized: Value(isNowMemorized),
         isRestricted: Value(result['isRestricted'] as bool),
         correctCount: Value(
@@ -304,7 +389,7 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// 手動チェック / 右スワイプ: 暗記済み(80pt)化 ＆ 制限解除 (F-08/F-10/F-14)
+  /// 手動チェック / 右スワイプ: 暗記済み(80pt)化 ＆ 制限解除 ＆ 減算リセット (F-08/F-10/F-14)
   Future<void> markAsMemorizedManual(int id) async {
     final word = await (select(
       words,
@@ -314,6 +399,7 @@ class AppDatabase extends _$AppDatabase {
     await (update(words)..where((t) => t.id.equals(id))).write(
       WordsCompanion(
         retentionPoint: const Value(80),
+        pointDecreasedTotal: const Value(0),
         isMemorized: const Value(true),
         isRestricted: const Value(false),
         lastStudiedAt: Value(DateTime.now()),
@@ -572,17 +658,17 @@ class AppDatabase extends _$AppDatabase {
     final sortedChapters = chapterLevelMap.keys.toList()..sort();
     if (sortedChapters.isEmpty) return;
 
-    // 各難易度グループ（初級: lvl 1,2 / 中級: lvl 3,4 / 上級: lvl 5,6）の先頭チャプターを特定
+    // 各難易度グループ（初級: lvl 1 / 中級: lvl 2 / 上級: lvl 3）の先頭チャプターを特定
     int? firstOfLvl1;
     int? firstOfLvl2;
     int? firstOfLvl3;
     for (final ch in sortedChapters) {
       final lvl = chapterLevelMap[ch]!;
-      if (lvl == 1 || lvl == 2) {
+      if (lvl == 1) {
         firstOfLvl1 ??= ch;
-      } else if (lvl == 3 || lvl == 4) {
+      } else if (lvl == 2) {
         firstOfLvl2 ??= ch;
-      } else if (lvl == 5 || lvl == 6) {
+      } else if (lvl == 3) {
         firstOfLvl3 ??= ch;
       }
     }
@@ -617,9 +703,9 @@ class AppDatabase extends _$AppDatabase {
         .get();
 
     // 既存DBでも各難易度グループの先頭チャプターが確実に解放されていることを保証
-    final lvl1First = list.where((cp) => cp.level == 1 || cp.level == 2).firstOrNull;
-    final lvl2First = list.where((cp) => cp.level == 3 || cp.level == 4).firstOrNull;
-    final lvl3First = list.where((cp) => cp.level == 5 || cp.level == 6).firstOrNull;
+    final lvl1First = list.where((cp) => cp.level == 1).firstOrNull;
+    final lvl2First = list.where((cp) => cp.level == 2).firstOrNull;
+    final lvl3First = list.where((cp) => cp.level == 3).firstOrNull;
 
     bool needUpdate = false;
     for (final firstCp in [lvl1First, lvl2First, lvl3First]) {

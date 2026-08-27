@@ -13,12 +13,16 @@ class Words extends Table {
   TextColumn get category => text().withDefault(const Constant('General'))();
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
 
-  // 例文・例文和訳
+  // 例文・例文和訳・語義・品詞・連語拡張
   TextColumn get example => text().nullable()();
   TextColumn get exampleJp => text().nullable()();
+  TextColumn get partOfSpeech => text().withDefault(const Constant(''))();
+  TextColumn get collocations => text().nullable()();
+  TextColumn get otherMeanings => text().nullable()();
 
   // F-05 / F-08用拡張カラム
   IntColumn get retentionPoint => integer().withDefault(const Constant(0))();
+  IntColumn get pointDecreasedTotal => integer().withDefault(const Constant(0))();
   BoolColumn get isMemorized => boolean().withDefault(const Constant(false))();
   BoolColumn get isRestricted => boolean().withDefault(const Constant(false))();
   IntColumn get correctCount => integer().withDefault(const Constant(0))();

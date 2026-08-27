@@ -26,8 +26,9 @@ class ModeSelectScreen extends StatefulWidget {
 }
 
 class ModeSelectScreenState extends State<ModeSelectScreen> {
-  String selectedMode = 'learning'; // 'learning' or 'challenge'
-  int selectedLevel = 1; // 1: 初級, 2: 中級, 3: 上級 (UI上の3区分)
+  String selectedMode = 'learning'; // 'learning', 'weakness', or 'challenge'
+  int selectedLevel = 1; // 1: 初級, 2: 中級, 3: 上級 (UI上の3区分 - 学習モード用)
+  final Set<int> _selectedLevels = {1, 2, 3}; // 弱点克服・チャレンジ用複数レベル選択（デフォルト全選択）
   int selectedChapter = 1;
 
   List<ChapterProgressesData> _allChapterProgresses = [];
@@ -41,6 +42,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
   static const Color _cardColor = Color(0xFFFFFDF9);
   static const Color _primaryAccent = Color(0xFF5F9E98);
   static const Color _secondaryAccent = Color(0xFFECA882);
+  static const Color _weaknessAccent = Color(0xFFCF7067);
   static const Color _textPrimary = Color(0xFF2C302E);
   static const Color _textSecondary = Color(0xFF6B726E);
   static const Color _borderColor = Color(0xFFE5DEC9);
@@ -90,17 +92,10 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
     setState(() => _isLoadingChapters = true);
 
     final favStamp = await widget.database.getFavoriteStamp();
-    // level 1: A1(1), A2(2) / level 2: B1(3), B2(4) / level 3: C1(5), C2(6)
     final allProgresses = await widget.database.getAllChapterProgresses();
     
-    // レベルマッピング (初級: lvl 1,2 / 中級: lvl 3,4 / 上級: lvl 5,6)
-    final targetLvls = level == 1
-        ? [1, 2]
-        : level == 2
-            ? [3, 4]
-            : [5, 6];
-
-    final filtered = allProgresses.where((cp) => targetLvls.contains(cp.level)).toList();
+    // レベルマッピング (初級: lvl 1 / 中級: lvl 2 / 上級: lvl 3)
+    final filtered = allProgresses.where((cp) => cp.level == level).toList();
 
     // 最新解放チャプターの算出 (isUnlocked == true のうち最大チャプター番号)
     final unlockedList = filtered.where((cp) => cp.isUnlocked).toList();
@@ -153,6 +148,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
           onGameStateChanged: widget.onGameStateChanged,
           mode: selectedMode,
           initialLevel: selectedLevel,
+          selectedLevels: selectedMode == 'learning' ? [selectedLevel] : _selectedLevels.toList(),
           initialChapter: selectedChapter,
           autoStart: true,
         ),
@@ -269,7 +265,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                       subtitle: '誤答・低定着の\n苦手単語を特訓',
                                       icon: Icons.healing_rounded,
                                       modeKey: 'weakness',
-                                      accentColor: const Color(0xFFD9534F),
+                                      accentColor: _weaknessAccent,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -467,12 +463,12 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: const Color(0xFFE5DEC9)),
                               ),
-                              child: const Column(
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
+                                  const Row(
                                     children: [
-                                      Icon(Icons.psychology_rounded, color: Color(0xFFD9534F), size: 20),
+                                      Icon(Icons.psychology_rounded, color: _weaknessAccent, size: 20),
                                       SizedBox(width: 8),
                                       Text(
                                         '弱点克服（リベンジ）特訓',
@@ -484,10 +480,10 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                       ),
                                     ],
                                   ),
-                                  SizedBox(height: 6),
+                                  const SizedBox(height: 6),
                                   Text(
-                                    '過去の誤答履歴、定着度ポイント（50pt未満）、未暗記状態をリアルタイム集計し、苦手な単語上位15語を1分間最後まで集中反復出題します。',
-                                    style: TextStyle(fontSize: 12, color: _textSecondary, height: 1.4),
+                                    '選択中レベル（${_selectedLevels.map((l) => l == 1 ? "初級" : (l == 2 ? "中級" : "上級")).join("・")}）の誤答履歴・定着度から苦手単語上位15語を集中反復出題します（複数レベル選択可）。',
+                                    style: const TextStyle(fontSize: 12, color: _textSecondary, height: 1.4),
                                   ),
                                 ],
                               ),
@@ -501,14 +497,14 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(color: _borderColor),
                               ),
-                              child: const Row(
+                              child: Row(
                                 children: [
-                                  Icon(Icons.info_outline_rounded, color: _secondaryAccent, size: 20),
-                                  SizedBox(width: 10),
+                                  const Icon(Icons.info_outline_rounded, color: _secondaryAccent, size: 20),
+                                  const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
-                                      'チャレンジモードは、全レベル・全単語から100問連続でランダム出題されます（制限時間1分間）。',
-                                      style: TextStyle(fontSize: 12, color: _textSecondary),
+                                      '選択中レベル（${_selectedLevels.map((l) => l == 1 ? "初級" : (l == 2 ? "中級" : "上級")).join("・")}）から100問連続でランダム出題されます（制限時間1分間・複数レベル選択可）。',
+                                      style: const TextStyle(fontSize: 12, color: _textSecondary),
                                     ),
                                   ),
                                 ],
@@ -623,7 +619,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       backgroundColor: selectedMode == 'learning'
                           ? _primaryAccent
-                          : (selectedMode == 'weakness' ? const Color(0xFFD9534F) : _secondaryAccent),
+                          : (selectedMode == 'weakness' ? _weaknessAccent : _secondaryAccent),
                       foregroundColor: Colors.white,
                       elevation: 2,
                       shape: RoundedRectangleBorder(
@@ -681,23 +677,38 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
   }
 
   Widget _buildLevelTab(int level, String title, String subtitle) {
-    final isSelected = selectedLevel == level;
+    final isMulti = selectedMode != 'learning';
+    final isSelected = isMulti ? _selectedLevels.contains(level) : selectedLevel == level;
+    final activeColor = selectedMode == 'weakness'
+        ? _weaknessAccent
+        : (selectedMode == 'challenge' ? _secondaryAccent : _primaryAccent);
 
     return InkWell(
       onTap: () {
         setState(() {
-          selectedLevel = level;
+          if (isMulti) {
+            if (_selectedLevels.contains(level)) {
+              _selectedLevels.remove(level);
+              if (_selectedLevels.isEmpty) {
+                _selectedLevels.addAll([1, 2, 3]);
+              }
+            } else {
+              _selectedLevels.add(level);
+            }
+          } else {
+            selectedLevel = level;
+            _loadChaptersForLevel(level);
+          }
         });
-        _loadChaptersForLevel(level);
       },
       borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
-          color: isSelected ? _primaryAccent.withAlpha(35) : _cardColor,
+          color: isSelected ? activeColor.withAlpha(35) : _cardColor,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? _primaryAccent : _borderColor,
+            color: isSelected ? activeColor : _borderColor,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -711,14 +722,14 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? _primaryAccent : _textPrimary,
+                  color: isSelected ? activeColor : _textPrimary,
                 ),
               ),
               Text(
                 subtitle,
                 style: TextStyle(
                   fontSize: 10,
-                  color: isSelected ? _primaryAccent : _textSecondary,
+                  color: isSelected ? activeColor : _textSecondary,
                 ),
               ),
             ],
@@ -741,6 +752,9 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
       onTap: () {
         setState(() {
           selectedMode = modeKey;
+          if (modeKey != 'learning' && _selectedLevels.isEmpty) {
+            _selectedLevels.addAll([1, 2, 3]);
+          }
         });
       },
       child: AnimatedContainer(

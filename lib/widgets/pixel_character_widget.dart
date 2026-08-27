@@ -665,7 +665,29 @@ class _PixelCharacterPainter48 extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(noteX2 + pixelSize * 0.4, noteY - pixelSize * 1.0, pixelSize * 0.4, pixelSize * 2.5), notePaint);
   }
 
-  /// お気に入りスタンプ胸バッジ合成描画 (F-14)
+  Color _getStampMainColor(Stamp stamp) {
+    switch (stamp.colorPaletteId % 16) {
+      case 0: return const Color(0xFF5F9E98); // エメラルド
+      case 1: return const Color(0xFFE58A9E); // サクラピンク
+      case 2: return const Color(0xFFECA882); // アンバーオレンジ
+      case 3: return const Color(0xFF5B92E5); // オーシャンスカイ
+      case 4: return const Color(0xFF9C27B0); // アメジスト
+      case 5: return const Color(0xFFE91E63); // ルビーレッド
+      case 6: return const Color(0xFF4CAF50); // フォレストグリーン
+      case 7: return const Color(0xFFFFB300); // サニーレモン
+      case 8: return const Color(0xFF00BCD4); // ターコイズ
+      case 9: return const Color(0xFF3F51B5); // ラピスラズリ
+      case 10: return const Color(0xFF795548); // チョコブラウン
+      case 11: return const Color(0xFF607D8B); // スレートグレー
+      case 12: return const Color(0xFFFF5722); // フレイムバーミリオン
+      case 13: return const Color(0xFF8BC34A); // ライムグリーン
+      case 14: return const Color(0xFF673AB7); // ロイヤルパープル
+      case 15: return const Color(0xFFFF9800); // ディープオレンジ
+      default: return const Color(0xFF5F9E98);
+    }
+  }
+
+  /// お気に入りスタンプ胸バッジ合成描画 (F-14: 装備中スタンプのメインカラーを動的反映)
   void _drawChestBadge(Canvas canvas, double pixelSize, Stamp stamp) {
     final badgeCenter = Offset(12 * pixelSize, 14 * pixelSize);
     final double badgeRadius = pixelSize * 2.2;
@@ -679,8 +701,9 @@ class _PixelCharacterPainter48 extends CustomPainter {
     canvas.drawCircle(badgeCenter, badgeRadius, goldPaint);
     canvas.drawCircle(badgeCenter, badgeRadius, borderPaint);
 
-    // 2. スタンプのミニチュア星モチーフ
-    final motifPaint = Paint()..color = const Color(0xFFD32F2F);
+    // 2. 装備中スタンプのメインカラーを胸元バッジに動的反映
+    final stampColor = _getStampMainColor(stamp);
+    final motifPaint = Paint()..color = stampColor;
     final double miniPx = pixelSize * 0.5;
 
     final miniMatrix = [

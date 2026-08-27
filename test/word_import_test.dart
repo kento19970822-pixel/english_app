@@ -57,12 +57,12 @@ void main() {
         });
       }
 
-      // Add 50 words in A2 (Level 2) -> should advance to Ch.4 (50 words)
+      // Add 50 words in B1 (Level 2) -> should advance to Ch.4 (50 words)
       for (int i = 1; i <= 50; i++) {
         rawWords.add({
-          'word': 'a2_word_$i',
-          'CEFR': 'A2',
-          'Japanese': 'A2意味_$i',
+          'word': 'b1_word_$i',
+          'CEFR': 'B1',
+          'Japanese': 'B1意味_$i',
         });
       }
 
