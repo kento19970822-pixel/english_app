@@ -653,19 +653,20 @@ class WordsScreenState extends State<WordsScreen> {
                                 child: WordChapterBanner(section: section),
                               ),
                             SliverFixedExtentList(
-                              itemExtent: 85.0,
+                              itemExtent: 104.0,
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) {
                                   final word = section.words[index];
                                   return WordCardTile(
                                     word: word,
                                     showJapanese: _showJapanese,
-                                    isKeyboardActive: _searchFocusNode.hasFocus,
+                                    isKeyboardActive: _searchFocusNode.hasFocus || (FocusManager.instance.primaryFocus?.hasFocus ?? false),
                                     onSpeak: () => _speak(word.english),
                                     onToggleFavorite: () => _toggleFavoriteFast(word),
                                     onTap: () {
-                                      if (_searchFocusNode.hasFocus || FocusScope.of(context).hasFocus) {
-                                        FocusScope.of(context).unfocus();
+                                      final hasKeyboard = _searchFocusNode.hasFocus || (FocusManager.instance.primaryFocus?.hasFocus ?? false);
+                                      if (hasKeyboard) {
+                                        FocusManager.instance.primaryFocus?.unfocus();
                                         _searchFocusNode.unfocus();
                                         return;
                                       }
@@ -680,8 +681,9 @@ class WordsScreenState extends State<WordsScreen> {
                                       );
                                     },
                                     onDoubleTap: () {
-                                      if (_searchFocusNode.hasFocus || FocusScope.of(context).hasFocus) {
-                                        FocusScope.of(context).unfocus();
+                                      final hasKeyboard = _searchFocusNode.hasFocus || (FocusManager.instance.primaryFocus?.hasFocus ?? false);
+                                      if (hasKeyboard) {
+                                        FocusManager.instance.primaryFocus?.unfocus();
                                         _searchFocusNode.unfocus();
                                         return;
                                       }
