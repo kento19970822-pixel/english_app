@@ -3720,6 +3720,1370 @@ class LearningLogsCompanion extends UpdateCompanion<LearningLog> {
   }
 }
 
+class $WordSensesTable extends WordSenses
+    with TableInfo<$WordSensesTable, WordSense> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WordSensesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _wordIdMeta = const VerificationMeta('wordId');
+  @override
+  late final GeneratedColumn<int> wordId = GeneratedColumn<int>(
+    'word_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES words (id)',
+    ),
+  );
+  static const VerificationMeta _senseIndexMeta = const VerificationMeta(
+    'senseIndex',
+  );
+  @override
+  late final GeneratedColumn<int> senseIndex = GeneratedColumn<int>(
+    'sense_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _partOfSpeechMeta = const VerificationMeta(
+    'partOfSpeech',
+  );
+  @override
+  late final GeneratedColumn<String> partOfSpeech = GeneratedColumn<String>(
+    'part_of_speech',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _japaneseMeta = const VerificationMeta(
+    'japanese',
+  );
+  @override
+  late final GeneratedColumn<String> japanese = GeneratedColumn<String>(
+    'japanese',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cefrMeta = const VerificationMeta('cefr');
+  @override
+  late final GeneratedColumn<String> cefr = GeneratedColumn<String>(
+    'cefr',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('A1'),
+  );
+  static const VerificationMeta _exampleMeta = const VerificationMeta(
+    'example',
+  );
+  @override
+  late final GeneratedColumn<String> example = GeneratedColumn<String>(
+    'example',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _exampleJpMeta = const VerificationMeta(
+    'exampleJp',
+  );
+  @override
+  late final GeneratedColumn<String> exampleJp = GeneratedColumn<String>(
+    'example_jp',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _collocationsMeta = const VerificationMeta(
+    'collocations',
+  );
+  @override
+  late final GeneratedColumn<String> collocations = GeneratedColumn<String>(
+    'collocations',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    wordId,
+    senseIndex,
+    partOfSpeech,
+    japanese,
+    cefr,
+    example,
+    exampleJp,
+    collocations,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'word_senses';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WordSense> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('word_id')) {
+      context.handle(
+        _wordIdMeta,
+        wordId.isAcceptableOrUnknown(data['word_id']!, _wordIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_wordIdMeta);
+    }
+    if (data.containsKey('sense_index')) {
+      context.handle(
+        _senseIndexMeta,
+        senseIndex.isAcceptableOrUnknown(data['sense_index']!, _senseIndexMeta),
+      );
+    }
+    if (data.containsKey('part_of_speech')) {
+      context.handle(
+        _partOfSpeechMeta,
+        partOfSpeech.isAcceptableOrUnknown(
+          data['part_of_speech']!,
+          _partOfSpeechMeta,
+        ),
+      );
+    }
+    if (data.containsKey('japanese')) {
+      context.handle(
+        _japaneseMeta,
+        japanese.isAcceptableOrUnknown(data['japanese']!, _japaneseMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_japaneseMeta);
+    }
+    if (data.containsKey('cefr')) {
+      context.handle(
+        _cefrMeta,
+        cefr.isAcceptableOrUnknown(data['cefr']!, _cefrMeta),
+      );
+    }
+    if (data.containsKey('example')) {
+      context.handle(
+        _exampleMeta,
+        example.isAcceptableOrUnknown(data['example']!, _exampleMeta),
+      );
+    }
+    if (data.containsKey('example_jp')) {
+      context.handle(
+        _exampleJpMeta,
+        exampleJp.isAcceptableOrUnknown(data['example_jp']!, _exampleJpMeta),
+      );
+    }
+    if (data.containsKey('collocations')) {
+      context.handle(
+        _collocationsMeta,
+        collocations.isAcceptableOrUnknown(
+          data['collocations']!,
+          _collocationsMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WordSense map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WordSense(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      wordId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}word_id'],
+      )!,
+      senseIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sense_index'],
+      )!,
+      partOfSpeech: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}part_of_speech'],
+      )!,
+      japanese: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}japanese'],
+      )!,
+      cefr: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cefr'],
+      )!,
+      example: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}example'],
+      ),
+      exampleJp: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}example_jp'],
+      ),
+      collocations: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}collocations'],
+      ),
+    );
+  }
+
+  @override
+  $WordSensesTable createAlias(String alias) {
+    return $WordSensesTable(attachedDatabase, alias);
+  }
+}
+
+class WordSense extends DataClass implements Insertable<WordSense> {
+  final int id;
+  final int wordId;
+  final int senseIndex;
+  final String partOfSpeech;
+  final String japanese;
+  final String cefr;
+  final String? example;
+  final String? exampleJp;
+  final String? collocations;
+  const WordSense({
+    required this.id,
+    required this.wordId,
+    required this.senseIndex,
+    required this.partOfSpeech,
+    required this.japanese,
+    required this.cefr,
+    this.example,
+    this.exampleJp,
+    this.collocations,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['word_id'] = Variable<int>(wordId);
+    map['sense_index'] = Variable<int>(senseIndex);
+    map['part_of_speech'] = Variable<String>(partOfSpeech);
+    map['japanese'] = Variable<String>(japanese);
+    map['cefr'] = Variable<String>(cefr);
+    if (!nullToAbsent || example != null) {
+      map['example'] = Variable<String>(example);
+    }
+    if (!nullToAbsent || exampleJp != null) {
+      map['example_jp'] = Variable<String>(exampleJp);
+    }
+    if (!nullToAbsent || collocations != null) {
+      map['collocations'] = Variable<String>(collocations);
+    }
+    return map;
+  }
+
+  WordSensesCompanion toCompanion(bool nullToAbsent) {
+    return WordSensesCompanion(
+      id: Value(id),
+      wordId: Value(wordId),
+      senseIndex: Value(senseIndex),
+      partOfSpeech: Value(partOfSpeech),
+      japanese: Value(japanese),
+      cefr: Value(cefr),
+      example: example == null && nullToAbsent
+          ? const Value.absent()
+          : Value(example),
+      exampleJp: exampleJp == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exampleJp),
+      collocations: collocations == null && nullToAbsent
+          ? const Value.absent()
+          : Value(collocations),
+    );
+  }
+
+  factory WordSense.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WordSense(
+      id: serializer.fromJson<int>(json['id']),
+      wordId: serializer.fromJson<int>(json['wordId']),
+      senseIndex: serializer.fromJson<int>(json['senseIndex']),
+      partOfSpeech: serializer.fromJson<String>(json['partOfSpeech']),
+      japanese: serializer.fromJson<String>(json['japanese']),
+      cefr: serializer.fromJson<String>(json['cefr']),
+      example: serializer.fromJson<String?>(json['example']),
+      exampleJp: serializer.fromJson<String?>(json['exampleJp']),
+      collocations: serializer.fromJson<String?>(json['collocations']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'wordId': serializer.toJson<int>(wordId),
+      'senseIndex': serializer.toJson<int>(senseIndex),
+      'partOfSpeech': serializer.toJson<String>(partOfSpeech),
+      'japanese': serializer.toJson<String>(japanese),
+      'cefr': serializer.toJson<String>(cefr),
+      'example': serializer.toJson<String?>(example),
+      'exampleJp': serializer.toJson<String?>(exampleJp),
+      'collocations': serializer.toJson<String?>(collocations),
+    };
+  }
+
+  WordSense copyWith({
+    int? id,
+    int? wordId,
+    int? senseIndex,
+    String? partOfSpeech,
+    String? japanese,
+    String? cefr,
+    Value<String?> example = const Value.absent(),
+    Value<String?> exampleJp = const Value.absent(),
+    Value<String?> collocations = const Value.absent(),
+  }) => WordSense(
+    id: id ?? this.id,
+    wordId: wordId ?? this.wordId,
+    senseIndex: senseIndex ?? this.senseIndex,
+    partOfSpeech: partOfSpeech ?? this.partOfSpeech,
+    japanese: japanese ?? this.japanese,
+    cefr: cefr ?? this.cefr,
+    example: example.present ? example.value : this.example,
+    exampleJp: exampleJp.present ? exampleJp.value : this.exampleJp,
+    collocations: collocations.present ? collocations.value : this.collocations,
+  );
+  WordSense copyWithCompanion(WordSensesCompanion data) {
+    return WordSense(
+      id: data.id.present ? data.id.value : this.id,
+      wordId: data.wordId.present ? data.wordId.value : this.wordId,
+      senseIndex: data.senseIndex.present
+          ? data.senseIndex.value
+          : this.senseIndex,
+      partOfSpeech: data.partOfSpeech.present
+          ? data.partOfSpeech.value
+          : this.partOfSpeech,
+      japanese: data.japanese.present ? data.japanese.value : this.japanese,
+      cefr: data.cefr.present ? data.cefr.value : this.cefr,
+      example: data.example.present ? data.example.value : this.example,
+      exampleJp: data.exampleJp.present ? data.exampleJp.value : this.exampleJp,
+      collocations: data.collocations.present
+          ? data.collocations.value
+          : this.collocations,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WordSense(')
+          ..write('id: $id, ')
+          ..write('wordId: $wordId, ')
+          ..write('senseIndex: $senseIndex, ')
+          ..write('partOfSpeech: $partOfSpeech, ')
+          ..write('japanese: $japanese, ')
+          ..write('cefr: $cefr, ')
+          ..write('example: $example, ')
+          ..write('exampleJp: $exampleJp, ')
+          ..write('collocations: $collocations')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    wordId,
+    senseIndex,
+    partOfSpeech,
+    japanese,
+    cefr,
+    example,
+    exampleJp,
+    collocations,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WordSense &&
+          other.id == this.id &&
+          other.wordId == this.wordId &&
+          other.senseIndex == this.senseIndex &&
+          other.partOfSpeech == this.partOfSpeech &&
+          other.japanese == this.japanese &&
+          other.cefr == this.cefr &&
+          other.example == this.example &&
+          other.exampleJp == this.exampleJp &&
+          other.collocations == this.collocations);
+}
+
+class WordSensesCompanion extends UpdateCompanion<WordSense> {
+  final Value<int> id;
+  final Value<int> wordId;
+  final Value<int> senseIndex;
+  final Value<String> partOfSpeech;
+  final Value<String> japanese;
+  final Value<String> cefr;
+  final Value<String?> example;
+  final Value<String?> exampleJp;
+  final Value<String?> collocations;
+  const WordSensesCompanion({
+    this.id = const Value.absent(),
+    this.wordId = const Value.absent(),
+    this.senseIndex = const Value.absent(),
+    this.partOfSpeech = const Value.absent(),
+    this.japanese = const Value.absent(),
+    this.cefr = const Value.absent(),
+    this.example = const Value.absent(),
+    this.exampleJp = const Value.absent(),
+    this.collocations = const Value.absent(),
+  });
+  WordSensesCompanion.insert({
+    this.id = const Value.absent(),
+    required int wordId,
+    this.senseIndex = const Value.absent(),
+    this.partOfSpeech = const Value.absent(),
+    required String japanese,
+    this.cefr = const Value.absent(),
+    this.example = const Value.absent(),
+    this.exampleJp = const Value.absent(),
+    this.collocations = const Value.absent(),
+  }) : wordId = Value(wordId),
+       japanese = Value(japanese);
+  static Insertable<WordSense> custom({
+    Expression<int>? id,
+    Expression<int>? wordId,
+    Expression<int>? senseIndex,
+    Expression<String>? partOfSpeech,
+    Expression<String>? japanese,
+    Expression<String>? cefr,
+    Expression<String>? example,
+    Expression<String>? exampleJp,
+    Expression<String>? collocations,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (wordId != null) 'word_id': wordId,
+      if (senseIndex != null) 'sense_index': senseIndex,
+      if (partOfSpeech != null) 'part_of_speech': partOfSpeech,
+      if (japanese != null) 'japanese': japanese,
+      if (cefr != null) 'cefr': cefr,
+      if (example != null) 'example': example,
+      if (exampleJp != null) 'example_jp': exampleJp,
+      if (collocations != null) 'collocations': collocations,
+    });
+  }
+
+  WordSensesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? wordId,
+    Value<int>? senseIndex,
+    Value<String>? partOfSpeech,
+    Value<String>? japanese,
+    Value<String>? cefr,
+    Value<String?>? example,
+    Value<String?>? exampleJp,
+    Value<String?>? collocations,
+  }) {
+    return WordSensesCompanion(
+      id: id ?? this.id,
+      wordId: wordId ?? this.wordId,
+      senseIndex: senseIndex ?? this.senseIndex,
+      partOfSpeech: partOfSpeech ?? this.partOfSpeech,
+      japanese: japanese ?? this.japanese,
+      cefr: cefr ?? this.cefr,
+      example: example ?? this.example,
+      exampleJp: exampleJp ?? this.exampleJp,
+      collocations: collocations ?? this.collocations,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (wordId.present) {
+      map['word_id'] = Variable<int>(wordId.value);
+    }
+    if (senseIndex.present) {
+      map['sense_index'] = Variable<int>(senseIndex.value);
+    }
+    if (partOfSpeech.present) {
+      map['part_of_speech'] = Variable<String>(partOfSpeech.value);
+    }
+    if (japanese.present) {
+      map['japanese'] = Variable<String>(japanese.value);
+    }
+    if (cefr.present) {
+      map['cefr'] = Variable<String>(cefr.value);
+    }
+    if (example.present) {
+      map['example'] = Variable<String>(example.value);
+    }
+    if (exampleJp.present) {
+      map['example_jp'] = Variable<String>(exampleJp.value);
+    }
+    if (collocations.present) {
+      map['collocations'] = Variable<String>(collocations.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WordSensesCompanion(')
+          ..write('id: $id, ')
+          ..write('wordId: $wordId, ')
+          ..write('senseIndex: $senseIndex, ')
+          ..write('partOfSpeech: $partOfSpeech, ')
+          ..write('japanese: $japanese, ')
+          ..write('cefr: $cefr, ')
+          ..write('example: $example, ')
+          ..write('exampleJp: $exampleJp, ')
+          ..write('collocations: $collocations')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserWordProgressesTable extends UserWordProgresses
+    with TableInfo<$UserWordProgressesTable, UserWordProgress> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserWordProgressesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _wordIdMeta = const VerificationMeta('wordId');
+  @override
+  late final GeneratedColumn<int> wordId = GeneratedColumn<int>(
+    'word_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES words (id)',
+    ),
+  );
+  static const VerificationMeta _retentionPointMeta = const VerificationMeta(
+    'retentionPoint',
+  );
+  @override
+  late final GeneratedColumn<int> retentionPoint = GeneratedColumn<int>(
+    'retention_point',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _pointDecreasedTotalMeta =
+      const VerificationMeta('pointDecreasedTotal');
+  @override
+  late final GeneratedColumn<int> pointDecreasedTotal = GeneratedColumn<int>(
+    'point_decreased_total',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isMemorizedMeta = const VerificationMeta(
+    'isMemorized',
+  );
+  @override
+  late final GeneratedColumn<bool> isMemorized = GeneratedColumn<bool>(
+    'is_memorized',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_memorized" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isRestrictedMeta = const VerificationMeta(
+    'isRestricted',
+  );
+  @override
+  late final GeneratedColumn<bool> isRestricted = GeneratedColumn<bool>(
+    'is_restricted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_restricted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isFavoriteMeta = const VerificationMeta(
+    'isFavorite',
+  );
+  @override
+  late final GeneratedColumn<bool> isFavorite = GeneratedColumn<bool>(
+    'is_favorite',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_favorite" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _correctCountMeta = const VerificationMeta(
+    'correctCount',
+  );
+  @override
+  late final GeneratedColumn<int> correctCount = GeneratedColumn<int>(
+    'correct_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _wrongCountMeta = const VerificationMeta(
+    'wrongCount',
+  );
+  @override
+  late final GeneratedColumn<int> wrongCount = GeneratedColumn<int>(
+    'wrong_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastStudiedAtMeta = const VerificationMeta(
+    'lastStudiedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastStudiedAt =
+      GeneratedColumn<DateTime>(
+        'last_studied_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastRestrictedDateMeta =
+      const VerificationMeta('lastRestrictedDate');
+  @override
+  late final GeneratedColumn<DateTime> lastRestrictedDate =
+      GeneratedColumn<DateTime>(
+        'last_restricted_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _srsIntervalDaysMeta = const VerificationMeta(
+    'srsIntervalDays',
+  );
+  @override
+  late final GeneratedColumn<int> srsIntervalDays = GeneratedColumn<int>(
+    'srs_interval_days',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _srsEaseFactorMeta = const VerificationMeta(
+    'srsEaseFactor',
+  );
+  @override
+  late final GeneratedColumn<double> srsEaseFactor = GeneratedColumn<double>(
+    'srs_ease_factor',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(2.5),
+  );
+  static const VerificationMeta _nextReviewAtMeta = const VerificationMeta(
+    'nextReviewAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextReviewAt = GeneratedColumn<DateTime>(
+    'next_review_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    wordId,
+    retentionPoint,
+    pointDecreasedTotal,
+    isMemorized,
+    isRestricted,
+    isFavorite,
+    correctCount,
+    wrongCount,
+    lastStudiedAt,
+    lastRestrictedDate,
+    srsIntervalDays,
+    srsEaseFactor,
+    nextReviewAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_word_progresses';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserWordProgress> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('word_id')) {
+      context.handle(
+        _wordIdMeta,
+        wordId.isAcceptableOrUnknown(data['word_id']!, _wordIdMeta),
+      );
+    }
+    if (data.containsKey('retention_point')) {
+      context.handle(
+        _retentionPointMeta,
+        retentionPoint.isAcceptableOrUnknown(
+          data['retention_point']!,
+          _retentionPointMeta,
+        ),
+      );
+    }
+    if (data.containsKey('point_decreased_total')) {
+      context.handle(
+        _pointDecreasedTotalMeta,
+        pointDecreasedTotal.isAcceptableOrUnknown(
+          data['point_decreased_total']!,
+          _pointDecreasedTotalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_memorized')) {
+      context.handle(
+        _isMemorizedMeta,
+        isMemorized.isAcceptableOrUnknown(
+          data['is_memorized']!,
+          _isMemorizedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_restricted')) {
+      context.handle(
+        _isRestrictedMeta,
+        isRestricted.isAcceptableOrUnknown(
+          data['is_restricted']!,
+          _isRestrictedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_favorite')) {
+      context.handle(
+        _isFavoriteMeta,
+        isFavorite.isAcceptableOrUnknown(data['is_favorite']!, _isFavoriteMeta),
+      );
+    }
+    if (data.containsKey('correct_count')) {
+      context.handle(
+        _correctCountMeta,
+        correctCount.isAcceptableOrUnknown(
+          data['correct_count']!,
+          _correctCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('wrong_count')) {
+      context.handle(
+        _wrongCountMeta,
+        wrongCount.isAcceptableOrUnknown(data['wrong_count']!, _wrongCountMeta),
+      );
+    }
+    if (data.containsKey('last_studied_at')) {
+      context.handle(
+        _lastStudiedAtMeta,
+        lastStudiedAt.isAcceptableOrUnknown(
+          data['last_studied_at']!,
+          _lastStudiedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_restricted_date')) {
+      context.handle(
+        _lastRestrictedDateMeta,
+        lastRestrictedDate.isAcceptableOrUnknown(
+          data['last_restricted_date']!,
+          _lastRestrictedDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('srs_interval_days')) {
+      context.handle(
+        _srsIntervalDaysMeta,
+        srsIntervalDays.isAcceptableOrUnknown(
+          data['srs_interval_days']!,
+          _srsIntervalDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('srs_ease_factor')) {
+      context.handle(
+        _srsEaseFactorMeta,
+        srsEaseFactor.isAcceptableOrUnknown(
+          data['srs_ease_factor']!,
+          _srsEaseFactorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_review_at')) {
+      context.handle(
+        _nextReviewAtMeta,
+        nextReviewAt.isAcceptableOrUnknown(
+          data['next_review_at']!,
+          _nextReviewAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {wordId};
+  @override
+  UserWordProgress map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserWordProgress(
+      wordId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}word_id'],
+      )!,
+      retentionPoint: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}retention_point'],
+      )!,
+      pointDecreasedTotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}point_decreased_total'],
+      )!,
+      isMemorized: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_memorized'],
+      )!,
+      isRestricted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_restricted'],
+      )!,
+      isFavorite: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_favorite'],
+      )!,
+      correctCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}correct_count'],
+      )!,
+      wrongCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}wrong_count'],
+      )!,
+      lastStudiedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_studied_at'],
+      ),
+      lastRestrictedDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_restricted_date'],
+      ),
+      srsIntervalDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}srs_interval_days'],
+      )!,
+      srsEaseFactor: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}srs_ease_factor'],
+      )!,
+      nextReviewAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_review_at'],
+      ),
+    );
+  }
+
+  @override
+  $UserWordProgressesTable createAlias(String alias) {
+    return $UserWordProgressesTable(attachedDatabase, alias);
+  }
+}
+
+class UserWordProgress extends DataClass
+    implements Insertable<UserWordProgress> {
+  final int wordId;
+  final int retentionPoint;
+  final int pointDecreasedTotal;
+  final bool isMemorized;
+  final bool isRestricted;
+  final bool isFavorite;
+  final int correctCount;
+  final int wrongCount;
+  final DateTime? lastStudiedAt;
+  final DateTime? lastRestrictedDate;
+  final int srsIntervalDays;
+  final double srsEaseFactor;
+  final DateTime? nextReviewAt;
+  const UserWordProgress({
+    required this.wordId,
+    required this.retentionPoint,
+    required this.pointDecreasedTotal,
+    required this.isMemorized,
+    required this.isRestricted,
+    required this.isFavorite,
+    required this.correctCount,
+    required this.wrongCount,
+    this.lastStudiedAt,
+    this.lastRestrictedDate,
+    required this.srsIntervalDays,
+    required this.srsEaseFactor,
+    this.nextReviewAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['word_id'] = Variable<int>(wordId);
+    map['retention_point'] = Variable<int>(retentionPoint);
+    map['point_decreased_total'] = Variable<int>(pointDecreasedTotal);
+    map['is_memorized'] = Variable<bool>(isMemorized);
+    map['is_restricted'] = Variable<bool>(isRestricted);
+    map['is_favorite'] = Variable<bool>(isFavorite);
+    map['correct_count'] = Variable<int>(correctCount);
+    map['wrong_count'] = Variable<int>(wrongCount);
+    if (!nullToAbsent || lastStudiedAt != null) {
+      map['last_studied_at'] = Variable<DateTime>(lastStudiedAt);
+    }
+    if (!nullToAbsent || lastRestrictedDate != null) {
+      map['last_restricted_date'] = Variable<DateTime>(lastRestrictedDate);
+    }
+    map['srs_interval_days'] = Variable<int>(srsIntervalDays);
+    map['srs_ease_factor'] = Variable<double>(srsEaseFactor);
+    if (!nullToAbsent || nextReviewAt != null) {
+      map['next_review_at'] = Variable<DateTime>(nextReviewAt);
+    }
+    return map;
+  }
+
+  UserWordProgressesCompanion toCompanion(bool nullToAbsent) {
+    return UserWordProgressesCompanion(
+      wordId: Value(wordId),
+      retentionPoint: Value(retentionPoint),
+      pointDecreasedTotal: Value(pointDecreasedTotal),
+      isMemorized: Value(isMemorized),
+      isRestricted: Value(isRestricted),
+      isFavorite: Value(isFavorite),
+      correctCount: Value(correctCount),
+      wrongCount: Value(wrongCount),
+      lastStudiedAt: lastStudiedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastStudiedAt),
+      lastRestrictedDate: lastRestrictedDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastRestrictedDate),
+      srsIntervalDays: Value(srsIntervalDays),
+      srsEaseFactor: Value(srsEaseFactor),
+      nextReviewAt: nextReviewAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextReviewAt),
+    );
+  }
+
+  factory UserWordProgress.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserWordProgress(
+      wordId: serializer.fromJson<int>(json['wordId']),
+      retentionPoint: serializer.fromJson<int>(json['retentionPoint']),
+      pointDecreasedTotal: serializer.fromJson<int>(
+        json['pointDecreasedTotal'],
+      ),
+      isMemorized: serializer.fromJson<bool>(json['isMemorized']),
+      isRestricted: serializer.fromJson<bool>(json['isRestricted']),
+      isFavorite: serializer.fromJson<bool>(json['isFavorite']),
+      correctCount: serializer.fromJson<int>(json['correctCount']),
+      wrongCount: serializer.fromJson<int>(json['wrongCount']),
+      lastStudiedAt: serializer.fromJson<DateTime?>(json['lastStudiedAt']),
+      lastRestrictedDate: serializer.fromJson<DateTime?>(
+        json['lastRestrictedDate'],
+      ),
+      srsIntervalDays: serializer.fromJson<int>(json['srsIntervalDays']),
+      srsEaseFactor: serializer.fromJson<double>(json['srsEaseFactor']),
+      nextReviewAt: serializer.fromJson<DateTime?>(json['nextReviewAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'wordId': serializer.toJson<int>(wordId),
+      'retentionPoint': serializer.toJson<int>(retentionPoint),
+      'pointDecreasedTotal': serializer.toJson<int>(pointDecreasedTotal),
+      'isMemorized': serializer.toJson<bool>(isMemorized),
+      'isRestricted': serializer.toJson<bool>(isRestricted),
+      'isFavorite': serializer.toJson<bool>(isFavorite),
+      'correctCount': serializer.toJson<int>(correctCount),
+      'wrongCount': serializer.toJson<int>(wrongCount),
+      'lastStudiedAt': serializer.toJson<DateTime?>(lastStudiedAt),
+      'lastRestrictedDate': serializer.toJson<DateTime?>(lastRestrictedDate),
+      'srsIntervalDays': serializer.toJson<int>(srsIntervalDays),
+      'srsEaseFactor': serializer.toJson<double>(srsEaseFactor),
+      'nextReviewAt': serializer.toJson<DateTime?>(nextReviewAt),
+    };
+  }
+
+  UserWordProgress copyWith({
+    int? wordId,
+    int? retentionPoint,
+    int? pointDecreasedTotal,
+    bool? isMemorized,
+    bool? isRestricted,
+    bool? isFavorite,
+    int? correctCount,
+    int? wrongCount,
+    Value<DateTime?> lastStudiedAt = const Value.absent(),
+    Value<DateTime?> lastRestrictedDate = const Value.absent(),
+    int? srsIntervalDays,
+    double? srsEaseFactor,
+    Value<DateTime?> nextReviewAt = const Value.absent(),
+  }) => UserWordProgress(
+    wordId: wordId ?? this.wordId,
+    retentionPoint: retentionPoint ?? this.retentionPoint,
+    pointDecreasedTotal: pointDecreasedTotal ?? this.pointDecreasedTotal,
+    isMemorized: isMemorized ?? this.isMemorized,
+    isRestricted: isRestricted ?? this.isRestricted,
+    isFavorite: isFavorite ?? this.isFavorite,
+    correctCount: correctCount ?? this.correctCount,
+    wrongCount: wrongCount ?? this.wrongCount,
+    lastStudiedAt: lastStudiedAt.present
+        ? lastStudiedAt.value
+        : this.lastStudiedAt,
+    lastRestrictedDate: lastRestrictedDate.present
+        ? lastRestrictedDate.value
+        : this.lastRestrictedDate,
+    srsIntervalDays: srsIntervalDays ?? this.srsIntervalDays,
+    srsEaseFactor: srsEaseFactor ?? this.srsEaseFactor,
+    nextReviewAt: nextReviewAt.present ? nextReviewAt.value : this.nextReviewAt,
+  );
+  UserWordProgress copyWithCompanion(UserWordProgressesCompanion data) {
+    return UserWordProgress(
+      wordId: data.wordId.present ? data.wordId.value : this.wordId,
+      retentionPoint: data.retentionPoint.present
+          ? data.retentionPoint.value
+          : this.retentionPoint,
+      pointDecreasedTotal: data.pointDecreasedTotal.present
+          ? data.pointDecreasedTotal.value
+          : this.pointDecreasedTotal,
+      isMemorized: data.isMemorized.present
+          ? data.isMemorized.value
+          : this.isMemorized,
+      isRestricted: data.isRestricted.present
+          ? data.isRestricted.value
+          : this.isRestricted,
+      isFavorite: data.isFavorite.present
+          ? data.isFavorite.value
+          : this.isFavorite,
+      correctCount: data.correctCount.present
+          ? data.correctCount.value
+          : this.correctCount,
+      wrongCount: data.wrongCount.present
+          ? data.wrongCount.value
+          : this.wrongCount,
+      lastStudiedAt: data.lastStudiedAt.present
+          ? data.lastStudiedAt.value
+          : this.lastStudiedAt,
+      lastRestrictedDate: data.lastRestrictedDate.present
+          ? data.lastRestrictedDate.value
+          : this.lastRestrictedDate,
+      srsIntervalDays: data.srsIntervalDays.present
+          ? data.srsIntervalDays.value
+          : this.srsIntervalDays,
+      srsEaseFactor: data.srsEaseFactor.present
+          ? data.srsEaseFactor.value
+          : this.srsEaseFactor,
+      nextReviewAt: data.nextReviewAt.present
+          ? data.nextReviewAt.value
+          : this.nextReviewAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserWordProgress(')
+          ..write('wordId: $wordId, ')
+          ..write('retentionPoint: $retentionPoint, ')
+          ..write('pointDecreasedTotal: $pointDecreasedTotal, ')
+          ..write('isMemorized: $isMemorized, ')
+          ..write('isRestricted: $isRestricted, ')
+          ..write('isFavorite: $isFavorite, ')
+          ..write('correctCount: $correctCount, ')
+          ..write('wrongCount: $wrongCount, ')
+          ..write('lastStudiedAt: $lastStudiedAt, ')
+          ..write('lastRestrictedDate: $lastRestrictedDate, ')
+          ..write('srsIntervalDays: $srsIntervalDays, ')
+          ..write('srsEaseFactor: $srsEaseFactor, ')
+          ..write('nextReviewAt: $nextReviewAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    wordId,
+    retentionPoint,
+    pointDecreasedTotal,
+    isMemorized,
+    isRestricted,
+    isFavorite,
+    correctCount,
+    wrongCount,
+    lastStudiedAt,
+    lastRestrictedDate,
+    srsIntervalDays,
+    srsEaseFactor,
+    nextReviewAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserWordProgress &&
+          other.wordId == this.wordId &&
+          other.retentionPoint == this.retentionPoint &&
+          other.pointDecreasedTotal == this.pointDecreasedTotal &&
+          other.isMemorized == this.isMemorized &&
+          other.isRestricted == this.isRestricted &&
+          other.isFavorite == this.isFavorite &&
+          other.correctCount == this.correctCount &&
+          other.wrongCount == this.wrongCount &&
+          other.lastStudiedAt == this.lastStudiedAt &&
+          other.lastRestrictedDate == this.lastRestrictedDate &&
+          other.srsIntervalDays == this.srsIntervalDays &&
+          other.srsEaseFactor == this.srsEaseFactor &&
+          other.nextReviewAt == this.nextReviewAt);
+}
+
+class UserWordProgressesCompanion extends UpdateCompanion<UserWordProgress> {
+  final Value<int> wordId;
+  final Value<int> retentionPoint;
+  final Value<int> pointDecreasedTotal;
+  final Value<bool> isMemorized;
+  final Value<bool> isRestricted;
+  final Value<bool> isFavorite;
+  final Value<int> correctCount;
+  final Value<int> wrongCount;
+  final Value<DateTime?> lastStudiedAt;
+  final Value<DateTime?> lastRestrictedDate;
+  final Value<int> srsIntervalDays;
+  final Value<double> srsEaseFactor;
+  final Value<DateTime?> nextReviewAt;
+  const UserWordProgressesCompanion({
+    this.wordId = const Value.absent(),
+    this.retentionPoint = const Value.absent(),
+    this.pointDecreasedTotal = const Value.absent(),
+    this.isMemorized = const Value.absent(),
+    this.isRestricted = const Value.absent(),
+    this.isFavorite = const Value.absent(),
+    this.correctCount = const Value.absent(),
+    this.wrongCount = const Value.absent(),
+    this.lastStudiedAt = const Value.absent(),
+    this.lastRestrictedDate = const Value.absent(),
+    this.srsIntervalDays = const Value.absent(),
+    this.srsEaseFactor = const Value.absent(),
+    this.nextReviewAt = const Value.absent(),
+  });
+  UserWordProgressesCompanion.insert({
+    this.wordId = const Value.absent(),
+    this.retentionPoint = const Value.absent(),
+    this.pointDecreasedTotal = const Value.absent(),
+    this.isMemorized = const Value.absent(),
+    this.isRestricted = const Value.absent(),
+    this.isFavorite = const Value.absent(),
+    this.correctCount = const Value.absent(),
+    this.wrongCount = const Value.absent(),
+    this.lastStudiedAt = const Value.absent(),
+    this.lastRestrictedDate = const Value.absent(),
+    this.srsIntervalDays = const Value.absent(),
+    this.srsEaseFactor = const Value.absent(),
+    this.nextReviewAt = const Value.absent(),
+  });
+  static Insertable<UserWordProgress> custom({
+    Expression<int>? wordId,
+    Expression<int>? retentionPoint,
+    Expression<int>? pointDecreasedTotal,
+    Expression<bool>? isMemorized,
+    Expression<bool>? isRestricted,
+    Expression<bool>? isFavorite,
+    Expression<int>? correctCount,
+    Expression<int>? wrongCount,
+    Expression<DateTime>? lastStudiedAt,
+    Expression<DateTime>? lastRestrictedDate,
+    Expression<int>? srsIntervalDays,
+    Expression<double>? srsEaseFactor,
+    Expression<DateTime>? nextReviewAt,
+  }) {
+    return RawValuesInsertable({
+      if (wordId != null) 'word_id': wordId,
+      if (retentionPoint != null) 'retention_point': retentionPoint,
+      if (pointDecreasedTotal != null)
+        'point_decreased_total': pointDecreasedTotal,
+      if (isMemorized != null) 'is_memorized': isMemorized,
+      if (isRestricted != null) 'is_restricted': isRestricted,
+      if (isFavorite != null) 'is_favorite': isFavorite,
+      if (correctCount != null) 'correct_count': correctCount,
+      if (wrongCount != null) 'wrong_count': wrongCount,
+      if (lastStudiedAt != null) 'last_studied_at': lastStudiedAt,
+      if (lastRestrictedDate != null)
+        'last_restricted_date': lastRestrictedDate,
+      if (srsIntervalDays != null) 'srs_interval_days': srsIntervalDays,
+      if (srsEaseFactor != null) 'srs_ease_factor': srsEaseFactor,
+      if (nextReviewAt != null) 'next_review_at': nextReviewAt,
+    });
+  }
+
+  UserWordProgressesCompanion copyWith({
+    Value<int>? wordId,
+    Value<int>? retentionPoint,
+    Value<int>? pointDecreasedTotal,
+    Value<bool>? isMemorized,
+    Value<bool>? isRestricted,
+    Value<bool>? isFavorite,
+    Value<int>? correctCount,
+    Value<int>? wrongCount,
+    Value<DateTime?>? lastStudiedAt,
+    Value<DateTime?>? lastRestrictedDate,
+    Value<int>? srsIntervalDays,
+    Value<double>? srsEaseFactor,
+    Value<DateTime?>? nextReviewAt,
+  }) {
+    return UserWordProgressesCompanion(
+      wordId: wordId ?? this.wordId,
+      retentionPoint: retentionPoint ?? this.retentionPoint,
+      pointDecreasedTotal: pointDecreasedTotal ?? this.pointDecreasedTotal,
+      isMemorized: isMemorized ?? this.isMemorized,
+      isRestricted: isRestricted ?? this.isRestricted,
+      isFavorite: isFavorite ?? this.isFavorite,
+      correctCount: correctCount ?? this.correctCount,
+      wrongCount: wrongCount ?? this.wrongCount,
+      lastStudiedAt: lastStudiedAt ?? this.lastStudiedAt,
+      lastRestrictedDate: lastRestrictedDate ?? this.lastRestrictedDate,
+      srsIntervalDays: srsIntervalDays ?? this.srsIntervalDays,
+      srsEaseFactor: srsEaseFactor ?? this.srsEaseFactor,
+      nextReviewAt: nextReviewAt ?? this.nextReviewAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (wordId.present) {
+      map['word_id'] = Variable<int>(wordId.value);
+    }
+    if (retentionPoint.present) {
+      map['retention_point'] = Variable<int>(retentionPoint.value);
+    }
+    if (pointDecreasedTotal.present) {
+      map['point_decreased_total'] = Variable<int>(pointDecreasedTotal.value);
+    }
+    if (isMemorized.present) {
+      map['is_memorized'] = Variable<bool>(isMemorized.value);
+    }
+    if (isRestricted.present) {
+      map['is_restricted'] = Variable<bool>(isRestricted.value);
+    }
+    if (isFavorite.present) {
+      map['is_favorite'] = Variable<bool>(isFavorite.value);
+    }
+    if (correctCount.present) {
+      map['correct_count'] = Variable<int>(correctCount.value);
+    }
+    if (wrongCount.present) {
+      map['wrong_count'] = Variable<int>(wrongCount.value);
+    }
+    if (lastStudiedAt.present) {
+      map['last_studied_at'] = Variable<DateTime>(lastStudiedAt.value);
+    }
+    if (lastRestrictedDate.present) {
+      map['last_restricted_date'] = Variable<DateTime>(
+        lastRestrictedDate.value,
+      );
+    }
+    if (srsIntervalDays.present) {
+      map['srs_interval_days'] = Variable<int>(srsIntervalDays.value);
+    }
+    if (srsEaseFactor.present) {
+      map['srs_ease_factor'] = Variable<double>(srsEaseFactor.value);
+    }
+    if (nextReviewAt.present) {
+      map['next_review_at'] = Variable<DateTime>(nextReviewAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserWordProgressesCompanion(')
+          ..write('wordId: $wordId, ')
+          ..write('retentionPoint: $retentionPoint, ')
+          ..write('pointDecreasedTotal: $pointDecreasedTotal, ')
+          ..write('isMemorized: $isMemorized, ')
+          ..write('isRestricted: $isRestricted, ')
+          ..write('isFavorite: $isFavorite, ')
+          ..write('correctCount: $correctCount, ')
+          ..write('wrongCount: $wrongCount, ')
+          ..write('lastStudiedAt: $lastStudiedAt, ')
+          ..write('lastRestrictedDate: $lastRestrictedDate, ')
+          ..write('srsIntervalDays: $srsIntervalDays, ')
+          ..write('srsEaseFactor: $srsEaseFactor, ')
+          ..write('nextReviewAt: $nextReviewAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3732,6 +5096,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ChapterProgressesTable chapterProgresses =
       $ChapterProgressesTable(this);
   late final $LearningLogsTable learningLogs = $LearningLogsTable(this);
+  late final $WordSensesTable wordSenses = $WordSensesTable(this);
+  late final $UserWordProgressesTable userWordProgresses =
+      $UserWordProgressesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3743,6 +5110,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     stamps,
     chapterProgresses,
     learningLogs,
+    wordSenses,
+    userWordProgresses,
   ];
 }
 
@@ -3820,6 +5189,45 @@ final class $$WordsTableReferences
     ).filter((f) => f.wordId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_learningLogsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$WordSensesTable, List<WordSense>>
+  _wordSensesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.wordSenses,
+    aliasName: 'words__id__word_senses__word_id',
+  );
+
+  $$WordSensesTableProcessedTableManager get wordSensesRefs {
+    final manager = $$WordSensesTableTableManager(
+      $_db,
+      $_db.wordSenses,
+    ).filter((f) => f.wordId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_wordSensesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$UserWordProgressesTable, List<UserWordProgress>>
+  _userWordProgressesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.userWordProgresses,
+        aliasName: 'words__id__user_word_progresses__word_id',
+      );
+
+  $$UserWordProgressesTableProcessedTableManager get userWordProgressesRefs {
+    final manager = $$UserWordProgressesTableTableManager(
+      $_db,
+      $_db.userWordProgresses,
+    ).filter((f) => f.wordId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _userWordProgressesRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -3980,6 +5388,56 @@ class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
           }) => $$LearningLogsTableFilterComposer(
             $db: $db,
             $table: $db.learningLogs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> wordSensesRefs(
+    Expression<bool> Function($$WordSensesTableFilterComposer f) f,
+  ) {
+    final $$WordSensesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.wordSenses,
+      getReferencedColumn: (t) => t.wordId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WordSensesTableFilterComposer(
+            $db: $db,
+            $table: $db.wordSenses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> userWordProgressesRefs(
+    Expression<bool> Function($$UserWordProgressesTableFilterComposer f) f,
+  ) {
+    final $$UserWordProgressesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.userWordProgresses,
+      getReferencedColumn: (t) => t.wordId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserWordProgressesTableFilterComposer(
+            $db: $db,
+            $table: $db.userWordProgresses,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4269,6 +5727,57 @@ class $$WordsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> wordSensesRefs<T extends Object>(
+    Expression<T> Function($$WordSensesTableAnnotationComposer a) f,
+  ) {
+    final $$WordSensesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.wordSenses,
+      getReferencedColumn: (t) => t.wordId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WordSensesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.wordSenses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> userWordProgressesRefs<T extends Object>(
+    Expression<T> Function($$UserWordProgressesTableAnnotationComposer a) f,
+  ) {
+    final $$UserWordProgressesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.userWordProgresses,
+          getReferencedColumn: (t) => t.wordId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserWordProgressesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.userWordProgresses,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$WordsTableTableManager
@@ -4284,7 +5793,11 @@ class $$WordsTableTableManager
           $$WordsTableUpdateCompanionBuilder,
           (Word, $$WordsTableReferences),
           Word,
-          PrefetchHooks Function({bool learningLogsRefs})
+          PrefetchHooks Function({
+            bool learningLogsRefs,
+            bool wordSensesRefs,
+            bool userWordProgressesRefs,
+          })
         > {
   $$WordsTableTableManager(_$AppDatabase db, $WordsTable table)
     : super(
@@ -4415,31 +5928,85 @@ class $$WordsTableTableManager
                     (e.readTable(table), $$WordsTableReferences(db, table, e)),
               )
               .toList(),
-          prefetchHooksCallback: ({learningLogsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (learningLogsRefs) db.learningLogs],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (learningLogsRefs)
-                    await $_getPrefetchedData<Word, $WordsTable, LearningLog>(
-                      currentTable: table,
-                      referencedTable: $$WordsTableReferences
-                          ._learningLogsRefsTable(db),
-                      managerFromTypedResult: (p0) => $$WordsTableReferences(
-                        db,
-                        table,
-                        p0,
-                      ).learningLogsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.wordId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({
+                learningLogsRefs = false,
+                wordSensesRefs = false,
+                userWordProgressesRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (learningLogsRefs) db.learningLogs,
+                    if (wordSensesRefs) db.wordSenses,
+                    if (userWordProgressesRefs) db.userWordProgresses,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (learningLogsRefs)
+                        await $_getPrefetchedData<
+                          Word,
+                          $WordsTable,
+                          LearningLog
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WordsTableReferences
+                              ._learningLogsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WordsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).learningLogsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.wordId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (wordSensesRefs)
+                        await $_getPrefetchedData<Word, $WordsTable, WordSense>(
+                          currentTable: table,
+                          referencedTable: $$WordsTableReferences
+                              ._wordSensesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WordsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).wordSensesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.wordId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (userWordProgressesRefs)
+                        await $_getPrefetchedData<
+                          Word,
+                          $WordsTable,
+                          UserWordProgress
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WordsTableReferences
+                              ._userWordProgressesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WordsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).userWordProgressesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.wordId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -4456,7 +6023,11 @@ typedef $$WordsTableProcessedTableManager =
       $$WordsTableUpdateCompanionBuilder,
       (Word, $$WordsTableReferences),
       Word,
-      PrefetchHooks Function({bool learningLogsRefs})
+      PrefetchHooks Function({
+        bool learningLogsRefs,
+        bool wordSensesRefs,
+        bool userWordProgressesRefs,
+      })
     >;
 typedef $$LearningHistoryTableCreateCompanionBuilder =
     LearningHistoryCompanion Function({
@@ -5765,6 +7336,894 @@ typedef $$LearningLogsTableProcessedTableManager =
       LearningLog,
       PrefetchHooks Function({bool wordId})
     >;
+typedef $$WordSensesTableCreateCompanionBuilder = WordSensesCompanion Function({
+  Value<int> id,
+  required int wordId,
+  Value<int> senseIndex,
+  Value<String> partOfSpeech,
+  required String japanese,
+  Value<String> cefr,
+  Value<String?> example,
+  Value<String?> exampleJp,
+  Value<String?> collocations,
+});
+typedef $$WordSensesTableUpdateCompanionBuilder = WordSensesCompanion Function({
+  Value<int> id,
+  Value<int> wordId,
+  Value<int> senseIndex,
+  Value<String> partOfSpeech,
+  Value<String> japanese,
+  Value<String> cefr,
+  Value<String?> example,
+  Value<String?> exampleJp,
+  Value<String?> collocations,
+});
+
+final class $$WordSensesTableReferences
+    extends BaseReferences<_$AppDatabase, $WordSensesTable, WordSense> {
+  $$WordSensesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $WordsTable _wordIdTable(_$AppDatabase db) =>
+      db.words.createAlias('word_senses__word_id__words__id');
+
+  $$WordsTableProcessedTableManager get wordId {
+    final $_column = $_itemColumn<int>('word_id')!;
+
+    final manager = $$WordsTableTableManager(
+      $_db,
+      $_db.words,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_wordIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$WordSensesTableFilterComposer
+    extends Composer<_$AppDatabase, $WordSensesTable> {
+  $$WordSensesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get senseIndex => $composableBuilder(
+    column: $table.senseIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partOfSpeech => $composableBuilder(
+    column: $table.partOfSpeech,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get japanese => $composableBuilder(
+    column: $table.japanese,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cefr => $composableBuilder(
+    column: $table.cefr,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get example => $composableBuilder(
+    column: $table.example,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get exampleJp => $composableBuilder(
+    column: $table.exampleJp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get collocations => $composableBuilder(
+    column: $table.collocations,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$WordsTableFilterComposer get wordId {
+    final $$WordsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wordId,
+      referencedTable: $db.words,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WordsTableFilterComposer(
+            $db: $db,
+            $table: $db.words,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WordSensesTableOrderingComposer
+    extends Composer<_$AppDatabase, $WordSensesTable> {
+  $$WordSensesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get senseIndex => $composableBuilder(
+    column: $table.senseIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partOfSpeech => $composableBuilder(
+    column: $table.partOfSpeech,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get japanese => $composableBuilder(
+    column: $table.japanese,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cefr => $composableBuilder(
+    column: $table.cefr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get example => $composableBuilder(
+    column: $table.example,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get exampleJp => $composableBuilder(
+    column: $table.exampleJp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get collocations => $composableBuilder(
+    column: $table.collocations,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$WordsTableOrderingComposer get wordId {
+    final $$WordsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wordId,
+      referencedTable: $db.words,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WordsTableOrderingComposer(
+            $db: $db,
+            $table: $db.words,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WordSensesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WordSensesTable> {
+  $$WordSensesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get senseIndex => $composableBuilder(
+    column: $table.senseIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get partOfSpeech => $composableBuilder(
+    column: $table.partOfSpeech,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get japanese =>
+      $composableBuilder(column: $table.japanese, builder: (column) => column);
+
+  GeneratedColumn<String> get cefr =>
+      $composableBuilder(column: $table.cefr, builder: (column) => column);
+
+  GeneratedColumn<String> get example =>
+      $composableBuilder(column: $table.example, builder: (column) => column);
+
+  GeneratedColumn<String> get exampleJp =>
+      $composableBuilder(column: $table.exampleJp, builder: (column) => column);
+
+  GeneratedColumn<String> get collocations => $composableBuilder(
+    column: $table.collocations,
+    builder: (column) => column,
+  );
+
+  $$WordsTableAnnotationComposer get wordId {
+    final $$WordsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wordId,
+      referencedTable: $db.words,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WordsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.words,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WordSensesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WordSensesTable,
+          WordSense,
+          $$WordSensesTableFilterComposer,
+          $$WordSensesTableOrderingComposer,
+          $$WordSensesTableAnnotationComposer,
+          $$WordSensesTableCreateCompanionBuilder,
+          $$WordSensesTableUpdateCompanionBuilder,
+          (WordSense, $$WordSensesTableReferences),
+          WordSense,
+          PrefetchHooks Function({bool wordId})
+        > {
+  $$WordSensesTableTableManager(_$AppDatabase db, $WordSensesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WordSensesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WordSensesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WordSensesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> wordId = const Value.absent(),
+                Value<int> senseIndex = const Value.absent(),
+                Value<String> partOfSpeech = const Value.absent(),
+                Value<String> japanese = const Value.absent(),
+                Value<String> cefr = const Value.absent(),
+                Value<String?> example = const Value.absent(),
+                Value<String?> exampleJp = const Value.absent(),
+                Value<String?> collocations = const Value.absent(),
+              }) => WordSensesCompanion(
+                id: id,
+                wordId: wordId,
+                senseIndex: senseIndex,
+                partOfSpeech: partOfSpeech,
+                japanese: japanese,
+                cefr: cefr,
+                example: example,
+                exampleJp: exampleJp,
+                collocations: collocations,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int wordId,
+                Value<int> senseIndex = const Value.absent(),
+                Value<String> partOfSpeech = const Value.absent(),
+                required String japanese,
+                Value<String> cefr = const Value.absent(),
+                Value<String?> example = const Value.absent(),
+                Value<String?> exampleJp = const Value.absent(),
+                Value<String?> collocations = const Value.absent(),
+              }) => WordSensesCompanion.insert(
+                id: id,
+                wordId: wordId,
+                senseIndex: senseIndex,
+                partOfSpeech: partOfSpeech,
+                japanese: japanese,
+                cefr: cefr,
+                example: example,
+                exampleJp: exampleJp,
+                collocations: collocations,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$WordSensesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({wordId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (wordId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.wordId,
+                        referencedTable: $$WordSensesTableReferences
+                            ._wordIdTable(db),
+                        referencedColumn: $$WordSensesTableReferences
+                            ._wordIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$WordSensesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WordSensesTable,
+      WordSense,
+      $$WordSensesTableFilterComposer,
+      $$WordSensesTableOrderingComposer,
+      $$WordSensesTableAnnotationComposer,
+      $$WordSensesTableCreateCompanionBuilder,
+      $$WordSensesTableUpdateCompanionBuilder,
+      (WordSense, $$WordSensesTableReferences),
+      WordSense,
+      PrefetchHooks Function({bool wordId})
+    >;
+typedef $$UserWordProgressesTableCreateCompanionBuilder =
+    UserWordProgressesCompanion Function({
+      Value<int> wordId,
+      Value<int> retentionPoint,
+      Value<int> pointDecreasedTotal,
+      Value<bool> isMemorized,
+      Value<bool> isRestricted,
+      Value<bool> isFavorite,
+      Value<int> correctCount,
+      Value<int> wrongCount,
+      Value<DateTime?> lastStudiedAt,
+      Value<DateTime?> lastRestrictedDate,
+      Value<int> srsIntervalDays,
+      Value<double> srsEaseFactor,
+      Value<DateTime?> nextReviewAt,
+    });
+typedef $$UserWordProgressesTableUpdateCompanionBuilder =
+    UserWordProgressesCompanion Function({
+      Value<int> wordId,
+      Value<int> retentionPoint,
+      Value<int> pointDecreasedTotal,
+      Value<bool> isMemorized,
+      Value<bool> isRestricted,
+      Value<bool> isFavorite,
+      Value<int> correctCount,
+      Value<int> wrongCount,
+      Value<DateTime?> lastStudiedAt,
+      Value<DateTime?> lastRestrictedDate,
+      Value<int> srsIntervalDays,
+      Value<double> srsEaseFactor,
+      Value<DateTime?> nextReviewAt,
+    });
+
+final class $$UserWordProgressesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $UserWordProgressesTable,
+          UserWordProgress
+        > {
+  $$UserWordProgressesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $WordsTable _wordIdTable(_$AppDatabase db) =>
+      db.words.createAlias('user_word_progresses__word_id__words__id');
+
+  $$WordsTableProcessedTableManager get wordId {
+    final $_column = $_itemColumn<int>('word_id')!;
+
+    final manager = $$WordsTableTableManager(
+      $_db,
+      $_db.words,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_wordIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$UserWordProgressesTableFilterComposer
+    extends Composer<_$AppDatabase, $UserWordProgressesTable> {
+  $$UserWordProgressesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get retentionPoint => $composableBuilder(
+    column: $table.retentionPoint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pointDecreasedTotal => $composableBuilder(
+    column: $table.pointDecreasedTotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isMemorized => $composableBuilder(
+    column: $table.isMemorized,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isRestricted => $composableBuilder(
+    column: $table.isRestricted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get correctCount => $composableBuilder(
+    column: $table.correctCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get wrongCount => $composableBuilder(
+    column: $table.wrongCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastStudiedAt => $composableBuilder(
+    column: $table.lastStudiedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastRestrictedDate => $composableBuilder(
+    column: $table.lastRestrictedDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get srsIntervalDays => $composableBuilder(
+    column: $table.srsIntervalDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get srsEaseFactor => $composableBuilder(
+    column: $table.srsEaseFactor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextReviewAt => $composableBuilder(
+    column: $table.nextReviewAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$WordsTableFilterComposer get wordId {
+    final $$WordsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wordId,
+      referencedTable: $db.words,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WordsTableFilterComposer(
+            $db: $db,
+            $table: $db.words,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserWordProgressesTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserWordProgressesTable> {
+  $$UserWordProgressesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get retentionPoint => $composableBuilder(
+    column: $table.retentionPoint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pointDecreasedTotal => $composableBuilder(
+    column: $table.pointDecreasedTotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isMemorized => $composableBuilder(
+    column: $table.isMemorized,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isRestricted => $composableBuilder(
+    column: $table.isRestricted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get correctCount => $composableBuilder(
+    column: $table.correctCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get wrongCount => $composableBuilder(
+    column: $table.wrongCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastStudiedAt => $composableBuilder(
+    column: $table.lastStudiedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastRestrictedDate => $composableBuilder(
+    column: $table.lastRestrictedDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get srsIntervalDays => $composableBuilder(
+    column: $table.srsIntervalDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get srsEaseFactor => $composableBuilder(
+    column: $table.srsEaseFactor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get nextReviewAt => $composableBuilder(
+    column: $table.nextReviewAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$WordsTableOrderingComposer get wordId {
+    final $$WordsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wordId,
+      referencedTable: $db.words,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WordsTableOrderingComposer(
+            $db: $db,
+            $table: $db.words,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserWordProgressesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserWordProgressesTable> {
+  $$UserWordProgressesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get retentionPoint => $composableBuilder(
+    column: $table.retentionPoint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get pointDecreasedTotal => $composableBuilder(
+    column: $table.pointDecreasedTotal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isMemorized => $composableBuilder(
+    column: $table.isMemorized,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isRestricted => $composableBuilder(
+    column: $table.isRestricted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get correctCount => $composableBuilder(
+    column: $table.correctCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get wrongCount => $composableBuilder(
+    column: $table.wrongCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastStudiedAt => $composableBuilder(
+    column: $table.lastStudiedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastRestrictedDate => $composableBuilder(
+    column: $table.lastRestrictedDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get srsIntervalDays => $composableBuilder(
+    column: $table.srsIntervalDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get srsEaseFactor => $composableBuilder(
+    column: $table.srsEaseFactor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get nextReviewAt => $composableBuilder(
+    column: $table.nextReviewAt,
+    builder: (column) => column,
+  );
+
+  $$WordsTableAnnotationComposer get wordId {
+    final $$WordsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wordId,
+      referencedTable: $db.words,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WordsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.words,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserWordProgressesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserWordProgressesTable,
+          UserWordProgress,
+          $$UserWordProgressesTableFilterComposer,
+          $$UserWordProgressesTableOrderingComposer,
+          $$UserWordProgressesTableAnnotationComposer,
+          $$UserWordProgressesTableCreateCompanionBuilder,
+          $$UserWordProgressesTableUpdateCompanionBuilder,
+          (UserWordProgress, $$UserWordProgressesTableReferences),
+          UserWordProgress,
+          PrefetchHooks Function({bool wordId})
+        > {
+  $$UserWordProgressesTableTableManager(
+    _$AppDatabase db,
+    $UserWordProgressesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserWordProgressesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserWordProgressesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserWordProgressesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> wordId = const Value.absent(),
+                Value<int> retentionPoint = const Value.absent(),
+                Value<int> pointDecreasedTotal = const Value.absent(),
+                Value<bool> isMemorized = const Value.absent(),
+                Value<bool> isRestricted = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
+                Value<int> correctCount = const Value.absent(),
+                Value<int> wrongCount = const Value.absent(),
+                Value<DateTime?> lastStudiedAt = const Value.absent(),
+                Value<DateTime?> lastRestrictedDate = const Value.absent(),
+                Value<int> srsIntervalDays = const Value.absent(),
+                Value<double> srsEaseFactor = const Value.absent(),
+                Value<DateTime?> nextReviewAt = const Value.absent(),
+              }) => UserWordProgressesCompanion(
+                wordId: wordId,
+                retentionPoint: retentionPoint,
+                pointDecreasedTotal: pointDecreasedTotal,
+                isMemorized: isMemorized,
+                isRestricted: isRestricted,
+                isFavorite: isFavorite,
+                correctCount: correctCount,
+                wrongCount: wrongCount,
+                lastStudiedAt: lastStudiedAt,
+                lastRestrictedDate: lastRestrictedDate,
+                srsIntervalDays: srsIntervalDays,
+                srsEaseFactor: srsEaseFactor,
+                nextReviewAt: nextReviewAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> wordId = const Value.absent(),
+                Value<int> retentionPoint = const Value.absent(),
+                Value<int> pointDecreasedTotal = const Value.absent(),
+                Value<bool> isMemorized = const Value.absent(),
+                Value<bool> isRestricted = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
+                Value<int> correctCount = const Value.absent(),
+                Value<int> wrongCount = const Value.absent(),
+                Value<DateTime?> lastStudiedAt = const Value.absent(),
+                Value<DateTime?> lastRestrictedDate = const Value.absent(),
+                Value<int> srsIntervalDays = const Value.absent(),
+                Value<double> srsEaseFactor = const Value.absent(),
+                Value<DateTime?> nextReviewAt = const Value.absent(),
+              }) => UserWordProgressesCompanion.insert(
+                wordId: wordId,
+                retentionPoint: retentionPoint,
+                pointDecreasedTotal: pointDecreasedTotal,
+                isMemorized: isMemorized,
+                isRestricted: isRestricted,
+                isFavorite: isFavorite,
+                correctCount: correctCount,
+                wrongCount: wrongCount,
+                lastStudiedAt: lastStudiedAt,
+                lastRestrictedDate: lastRestrictedDate,
+                srsIntervalDays: srsIntervalDays,
+                srsEaseFactor: srsEaseFactor,
+                nextReviewAt: nextReviewAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$UserWordProgressesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({wordId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (wordId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.wordId,
+                        referencedTable: $$UserWordProgressesTableReferences
+                            ._wordIdTable(db),
+                        referencedColumn: $$UserWordProgressesTableReferences
+                            ._wordIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$UserWordProgressesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserWordProgressesTable,
+      UserWordProgress,
+      $$UserWordProgressesTableFilterComposer,
+      $$UserWordProgressesTableOrderingComposer,
+      $$UserWordProgressesTableAnnotationComposer,
+      $$UserWordProgressesTableCreateCompanionBuilder,
+      $$UserWordProgressesTableUpdateCompanionBuilder,
+      (UserWordProgress, $$UserWordProgressesTableReferences),
+      UserWordProgress,
+      PrefetchHooks Function({bool wordId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5781,4 +8240,8 @@ class $AppDatabaseManager {
       $$ChapterProgressesTableTableManager(_db, _db.chapterProgresses);
   $$LearningLogsTableTableManager get learningLogs =>
       $$LearningLogsTableTableManager(_db, _db.learningLogs);
+  $$WordSensesTableTableManager get wordSenses =>
+      $$WordSensesTableTableManager(_db, _db.wordSenses);
+  $$UserWordProgressesTableTableManager get userWordProgresses =>
+      $$UserWordProgressesTableTableManager(_db, _db.userWordProgresses);
 }

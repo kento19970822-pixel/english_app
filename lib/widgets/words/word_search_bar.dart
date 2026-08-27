@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../providers/settings_provider.dart';
 
 /// 単語帳上部 検索・フィルター・データ管理バー
 class WordSearchBar extends StatelessWidget {

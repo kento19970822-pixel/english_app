@@ -1355,4 +1355,5 @@ Flutter アプリケーション
 
 | 版番号 / 管理番号 | 更新日 | 主な改修内容 |
 | :--- | :---: | :--- |
+| **VER-20260827-02** | 2026-08-27 | **Active Recall ＆ SRS精密化 ＆ DB第3正規化（3NF）実装**<br>・WordSenses（語義テーブル）および UserWordProgresses（学習進捗・SRSテーブル）を追加（schemaVersion: 13）<br>・SuperMemo SM-2モデルに基づく SrsService（忘却曲線復習間隔・Ease Factor計算エンジン）を導入<br>・認知心理学準拠の ActiveRecallCard（穴埋め想起 ＆ めくり自己評価）を実装<br>・モード選択画面に「SRS 能動的想起復習」バナーと SrsReviewDialog を配置<br>・全65件の自動テスト完全パス、静的解析0警告を達成 |
 | **VER-20260827-01** | 2026-08-27 | **アーキテクチャ刷新・UIコンポーネント分離・パステルダークテーマ・DB軽量学習ログ追加**<br>・words_screen.dart のリファクタリング（WordSearchBar, WordSectionStickyHeader, WordChapterBanner へ分離）<br>・状態管理プロバイダー層（SettingsProvider, BuddyProvider）導入<br>・TTSデバウンス（連打防止＆排他制御）実装<br>・LearningLogs テーブル（schemaVersion 12）追加 ＆ 90日/10,000件のローリング自動プルーニング設計（DB容量肥大化防止）<br>・WCAG 2.1 AA 準拠のコントラスト比 4.5:1 以上担保<br>・スモーキーダークオリーブ（#181B18）を基調としたパステルダークテーマの策定 |
