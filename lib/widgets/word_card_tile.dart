@@ -390,55 +390,58 @@ class _WordCardTileState extends State<WordCardTile> {
                       ),
                       const SizedBox(height: 0.0),
 
-                      // 2行目: 英単語 ＋ 和訳（上下バランスよく配置）
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            widget.word.english,
-                            style: const TextStyle(
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.bold,
-                              color: _textPrimary,
-                              letterSpacing: 0.1,
-                              height: 1.2,
+                      // 2行目: 英単語 ＋ 和訳（1行目との余白を相殺して極限まで引き締め）
+                      Transform.translate(
+                        offset: const Offset(0, -3.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              widget.word.english,
+                              style: const TextStyle(
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.bold,
+                                color: _textPrimary,
+                                letterSpacing: 0.1,
+                                height: 1.2,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: isJapaneseVisible
-                                ? Text(
-                                    widget.word.japanese,
-                                    style: const TextStyle(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: _textPrimary,
-                                      height: 1.2,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  )
-                                : Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.0),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF4EFE6),
-                                        borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(color: _borderColor, width: 0.6),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: isJapaneseVisible
+                                  ? Text(
+                                      widget.word.japanese,
+                                      style: const TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w500,
+                                        color: _textPrimary,
+                                        height: 1.2,
                                       ),
-                                      child: const Text(
-                                        'タップで和訳',
-                                        style: TextStyle(
-                                          fontSize: 9.5,
-                                          fontWeight: FontWeight.w500,
-                                          color: _textSecondary,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    )
+                                  : Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.0),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF4EFE6),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: _borderColor, width: 0.6),
+                                        ),
+                                        child: const Text(
+                                          'タップで和訳',
+                                          style: TextStyle(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.w500,
+                                            color: _textSecondary,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
