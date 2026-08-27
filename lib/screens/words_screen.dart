@@ -459,7 +459,12 @@ class WordsScreenState extends State<WordsScreen> {
     for (int i = 0; i < line.length; i++) {
       final char = line[i];
       if (char == '"') {
-        insideQuotes = !insideQuotes;
+        if (insideQuotes && i + 1 < line.length && line[i + 1] == '"') {
+          buffer.write('"');
+          i++; // Skip the second quote in escaped pair ""
+        } else {
+          insideQuotes = !insideQuotes;
+        }
       } else if (char == ',' && !insideQuotes) {
         result.add(buffer.toString().trim());
         buffer.clear();

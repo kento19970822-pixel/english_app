@@ -54,6 +54,7 @@ class WordDetail {
   final String cefr;
   final List<WordSense> senses;
   final List<String> collocations;
+  final String? baseForm;
   final bool isFavorite;
   final bool isMemorized;
   final bool isRestricted;
@@ -75,6 +76,7 @@ class WordDetail {
     required this.cefr,
     required this.senses,
     required this.collocations,
+    this.baseForm,
     this.isFavorite = false,
     this.isMemorized = false,
     this.isRestricted = false,
@@ -118,23 +120,50 @@ class WordDetail {
     List<String> parsedCollocations = [];
     if (word.collocations != null && word.collocations!.isNotEmpty) {
       final raw = word.collocations!.trim();
+      bool jsonParsed = false;
       if (raw.startsWith('[') && raw.endsWith(']')) {
         try {
           final decoded = jsonDecode(raw) as List<dynamic>;
-          parsedCollocations = decoded
-              .map((e) => e.toString().trim())
-              .where((s) => s.isNotEmpty)
-              .toList();
-        } catch (_) {
-          parsedCollocations = [];
+          for (final item in decoded) {
+            if (item is Map) {
+              final phrase = item['phrase']?.toString().trim() ?? '';
+              final meaning = item['meaning']?.toString().trim() ?? '';
+              if (phrase.isNotEmpty) {
+                parsedCollocations.add(meaning.isNotEmpty ? '$phrase ($meaning)' : phrase);
+              }
+            } else if (item != null) {
+              final s = item.toString().trim();
+              if (s.isNotEmpty) parsedCollocations.add(s);
+            }
+          }
+          if (parsedCollocations.isNotEmpty) jsonParsed = true;
+        } catch (_) {}
+      }
+
+      // 非JSON（Dart Map toString() 形式: {phrase: ..., meaning: ...}）のフォールバックパース
+      if (!jsonParsed) {
+        final pairRegex = RegExp(r'\{[^{}]*phrase\s*:\s*([^,}]+)\s*,\s*meaning\s*:\s*([^}]+)\}');
+        final matches = pairRegex.allMatches(raw);
+        if (matches.isNotEmpty) {
+          for (final m in matches) {
+            final p = m.group(1)?.trim() ?? '';
+            final mn = m.group(2)?.trim() ?? '';
+            if (p.isNotEmpty) {
+              parsedCollocations.add(mn.isNotEmpty ? '$p ($mn)' : p);
+            }
+          }
         }
       }
+
       if (parsedCollocations.isEmpty) {
-        parsedCollocations = raw
-            .split(RegExp(r'[,、\n]'))
-            .map((s) => s.replaceAll(RegExp(r'[\[\]"]'), '').trim())
-            .where((s) => s.isNotEmpty)
-            .toList();
+        final cleaned = raw.replaceAll(RegExp(r'[\[\]"]'), '');
+        final parts = cleaned.split(RegExp(r'[\n;]'));
+        for (final p in parts) {
+          final trimmed = p.trim();
+          if (trimmed.isNotEmpty) {
+            parsedCollocations.add(trimmed);
+          }
+        }
       }
     }
 
@@ -158,6 +187,7 @@ class WordDetail {
       cefr: word.cefr,
       senses: parsedSenses,
       collocations: parsedCollocations,
+      baseForm: word.baseForm,
       isFavorite: word.isFavorite,
       isMemorized: word.isMemorized,
       isRestricted: word.isRestricted,

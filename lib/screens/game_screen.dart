@@ -476,11 +476,38 @@ class _GameScreenState extends State<GameScreen>
     }).trim();
   }
 
+  static String _getPosFamily(String pos, String jp) {
+    final clean = pos.trim().toLowerCase();
+    if (clean == 'verb' || clean == '動' || clean == '動詞' || clean == 'auxiliary' || clean == '助') {
+      return 'verb';
+    }
+    if (clean == 'adjective' || clean == '形' || clean == '形容詞') {
+      return 'adjective';
+    }
+    if (clean == 'adverb' || clean == '副' || clean == '副詞') {
+      return 'adverb';
+    }
+    if (clean == 'preposition' || clean == '前' || clean == '前置詞') {
+      return 'preposition';
+    }
+    if (clean == 'pronoun' || clean == '代' || clean == '代名詞') {
+      return 'pronoun';
+    }
+    if (clean == 'conjunction' || clean == '接' || clean == '接続詞') {
+      return 'conjunction';
+    }
+    final detected = AppDatabase.detectPartOfSpeech(jp);
+    if (detected == '動') return 'verb';
+    if (detected == '形') return 'adjective';
+    if (detected == '副') return 'adverb';
+    if (detected == '前') return 'preposition';
+    if (detected == '接') return 'conjunction';
+    return 'noun';
+  }
+
   List<String> _generateChoices(WordModel correctWord) {
     final correctJapanese = _normalizeChoiceText(correctWord.japanese);
-    final targetPos = correctWord.partOfSpeech.isNotEmpty
-        ? correctWord.partOfSpeech
-        : AppDatabase.detectPartOfSpeech(correctWord.japanese);
+    final targetPosFamily = _getPosFamily(correctWord.partOfSpeech, correctWord.japanese);
 
     // 1. 同一単語の別語義・同スペル単語を完全除外
     final otherWords = allWords.where((w) =>
@@ -488,14 +515,9 @@ class _GameScreenState extends State<GameScreen>
         w.english.toLowerCase().trim() != correctWord.english.toLowerCase().trim()
     ).toList();
 
-    // 2. 同一品詞ダミー厳選（Same-POS Matching: 品詞消去法を防止）
+    // 2. 同一品詞ダミー厳選（Same-POS Matching: 品詞消去法を100%防止）
     final samePosCandidates = otherWords
-        .where((w) {
-          final pos = w.partOfSpeech.isNotEmpty
-              ? w.partOfSpeech
-              : AppDatabase.detectPartOfSpeech(w.japanese);
-          return pos == targetPos;
-        })
+        .where((w) => _getPosFamily(w.partOfSpeech, w.japanese) == targetPosFamily)
         .map((w) => _normalizeChoiceText(w.japanese))
         .where((j) => j.isNotEmpty && j != correctJapanese)
         .toSet()
@@ -506,7 +528,7 @@ class _GameScreenState extends State<GameScreen>
       wrongChoices.addAll(samePosCandidates.take(3));
     } else {
       wrongChoices.addAll(samePosCandidates);
-      // 足りない場合は他の品詞から安全に補填
+      // 万が一足りない場合は他の品詞から安全に補填
       final remainingCandidates = otherWords
           .map((w) => _normalizeChoiceText(w.japanese))
           .where((j) => j.isNotEmpty && j != correctJapanese && !wrongChoices.contains(j))

@@ -169,6 +169,17 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _baseFormMeta = const VerificationMeta(
+    'baseForm',
+  );
+  @override
+  late final GeneratedColumn<String> baseForm = GeneratedColumn<String>(
+    'base_form',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _retentionPointMeta = const VerificationMeta(
     'retentionPoint',
   );
@@ -285,6 +296,7 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     partOfSpeech,
     collocations,
     otherMeanings,
+    baseForm,
     retentionPoint,
     pointDecreasedTotal,
     isMemorized,
@@ -398,6 +410,12 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
           data['other_meanings']!,
           _otherMeaningsMeta,
         ),
+      );
+    }
+    if (data.containsKey('base_form')) {
+      context.handle(
+        _baseFormMeta,
+        baseForm.isAcceptableOrUnknown(data['base_form']!, _baseFormMeta),
       );
     }
     if (data.containsKey('retention_point')) {
@@ -534,6 +552,10 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         DriftSqlType.string,
         data['${effectivePrefix}other_meanings'],
       ),
+      baseForm: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}base_form'],
+      ),
       retentionPoint: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}retention_point'],
@@ -590,6 +612,7 @@ class Word extends DataClass implements Insertable<Word> {
   final String partOfSpeech;
   final String? collocations;
   final String? otherMeanings;
+  final String? baseForm;
   final int retentionPoint;
   final int pointDecreasedTotal;
   final bool isMemorized;
@@ -613,6 +636,7 @@ class Word extends DataClass implements Insertable<Word> {
     required this.partOfSpeech,
     this.collocations,
     this.otherMeanings,
+    this.baseForm,
     required this.retentionPoint,
     required this.pointDecreasedTotal,
     required this.isMemorized,
@@ -648,6 +672,9 @@ class Word extends DataClass implements Insertable<Word> {
     }
     if (!nullToAbsent || otherMeanings != null) {
       map['other_meanings'] = Variable<String>(otherMeanings);
+    }
+    if (!nullToAbsent || baseForm != null) {
+      map['base_form'] = Variable<String>(baseForm);
     }
     map['retention_point'] = Variable<int>(retentionPoint);
     map['point_decreased_total'] = Variable<int>(pointDecreasedTotal);
@@ -690,6 +717,9 @@ class Word extends DataClass implements Insertable<Word> {
       otherMeanings: otherMeanings == null && nullToAbsent
           ? const Value.absent()
           : Value(otherMeanings),
+      baseForm: baseForm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(baseForm),
       retentionPoint: Value(retentionPoint),
       pointDecreasedTotal: Value(pointDecreasedTotal),
       isMemorized: Value(isMemorized),
@@ -725,6 +755,7 @@ class Word extends DataClass implements Insertable<Word> {
       partOfSpeech: serializer.fromJson<String>(json['partOfSpeech']),
       collocations: serializer.fromJson<String?>(json['collocations']),
       otherMeanings: serializer.fromJson<String?>(json['otherMeanings']),
+      baseForm: serializer.fromJson<String?>(json['baseForm']),
       retentionPoint: serializer.fromJson<int>(json['retentionPoint']),
       pointDecreasedTotal: serializer.fromJson<int>(
         json['pointDecreasedTotal'],
@@ -757,6 +788,7 @@ class Word extends DataClass implements Insertable<Word> {
       'partOfSpeech': serializer.toJson<String>(partOfSpeech),
       'collocations': serializer.toJson<String?>(collocations),
       'otherMeanings': serializer.toJson<String?>(otherMeanings),
+      'baseForm': serializer.toJson<String?>(baseForm),
       'retentionPoint': serializer.toJson<int>(retentionPoint),
       'pointDecreasedTotal': serializer.toJson<int>(pointDecreasedTotal),
       'isMemorized': serializer.toJson<bool>(isMemorized),
@@ -783,6 +815,7 @@ class Word extends DataClass implements Insertable<Word> {
     String? partOfSpeech,
     Value<String?> collocations = const Value.absent(),
     Value<String?> otherMeanings = const Value.absent(),
+    Value<String?> baseForm = const Value.absent(),
     int? retentionPoint,
     int? pointDecreasedTotal,
     bool? isMemorized,
@@ -808,6 +841,7 @@ class Word extends DataClass implements Insertable<Word> {
     otherMeanings: otherMeanings.present
         ? otherMeanings.value
         : this.otherMeanings,
+    baseForm: baseForm.present ? baseForm.value : this.baseForm,
     retentionPoint: retentionPoint ?? this.retentionPoint,
     pointDecreasedTotal: pointDecreasedTotal ?? this.pointDecreasedTotal,
     isMemorized: isMemorized ?? this.isMemorized,
@@ -845,6 +879,7 @@ class Word extends DataClass implements Insertable<Word> {
       otherMeanings: data.otherMeanings.present
           ? data.otherMeanings.value
           : this.otherMeanings,
+      baseForm: data.baseForm.present ? data.baseForm.value : this.baseForm,
       retentionPoint: data.retentionPoint.present
           ? data.retentionPoint.value
           : this.retentionPoint,
@@ -889,6 +924,7 @@ class Word extends DataClass implements Insertable<Word> {
           ..write('partOfSpeech: $partOfSpeech, ')
           ..write('collocations: $collocations, ')
           ..write('otherMeanings: $otherMeanings, ')
+          ..write('baseForm: $baseForm, ')
           ..write('retentionPoint: $retentionPoint, ')
           ..write('pointDecreasedTotal: $pointDecreasedTotal, ')
           ..write('isMemorized: $isMemorized, ')
@@ -917,6 +953,7 @@ class Word extends DataClass implements Insertable<Word> {
     partOfSpeech,
     collocations,
     otherMeanings,
+    baseForm,
     retentionPoint,
     pointDecreasedTotal,
     isMemorized,
@@ -944,6 +981,7 @@ class Word extends DataClass implements Insertable<Word> {
           other.partOfSpeech == this.partOfSpeech &&
           other.collocations == this.collocations &&
           other.otherMeanings == this.otherMeanings &&
+          other.baseForm == this.baseForm &&
           other.retentionPoint == this.retentionPoint &&
           other.pointDecreasedTotal == this.pointDecreasedTotal &&
           other.isMemorized == this.isMemorized &&
@@ -969,6 +1007,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
   final Value<String> partOfSpeech;
   final Value<String?> collocations;
   final Value<String?> otherMeanings;
+  final Value<String?> baseForm;
   final Value<int> retentionPoint;
   final Value<int> pointDecreasedTotal;
   final Value<bool> isMemorized;
@@ -992,6 +1031,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.partOfSpeech = const Value.absent(),
     this.collocations = const Value.absent(),
     this.otherMeanings = const Value.absent(),
+    this.baseForm = const Value.absent(),
     this.retentionPoint = const Value.absent(),
     this.pointDecreasedTotal = const Value.absent(),
     this.isMemorized = const Value.absent(),
@@ -1016,6 +1056,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.partOfSpeech = const Value.absent(),
     this.collocations = const Value.absent(),
     this.otherMeanings = const Value.absent(),
+    this.baseForm = const Value.absent(),
     this.retentionPoint = const Value.absent(),
     this.pointDecreasedTotal = const Value.absent(),
     this.isMemorized = const Value.absent(),
@@ -1041,6 +1082,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Expression<String>? partOfSpeech,
     Expression<String>? collocations,
     Expression<String>? otherMeanings,
+    Expression<String>? baseForm,
     Expression<int>? retentionPoint,
     Expression<int>? pointDecreasedTotal,
     Expression<bool>? isMemorized,
@@ -1065,6 +1107,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
       if (partOfSpeech != null) 'part_of_speech': partOfSpeech,
       if (collocations != null) 'collocations': collocations,
       if (otherMeanings != null) 'other_meanings': otherMeanings,
+      if (baseForm != null) 'base_form': baseForm,
       if (retentionPoint != null) 'retention_point': retentionPoint,
       if (pointDecreasedTotal != null)
         'point_decreased_total': pointDecreasedTotal,
@@ -1093,6 +1136,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Value<String>? partOfSpeech,
     Value<String?>? collocations,
     Value<String?>? otherMeanings,
+    Value<String?>? baseForm,
     Value<int>? retentionPoint,
     Value<int>? pointDecreasedTotal,
     Value<bool>? isMemorized,
@@ -1117,6 +1161,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
       partOfSpeech: partOfSpeech ?? this.partOfSpeech,
       collocations: collocations ?? this.collocations,
       otherMeanings: otherMeanings ?? this.otherMeanings,
+      baseForm: baseForm ?? this.baseForm,
       retentionPoint: retentionPoint ?? this.retentionPoint,
       pointDecreasedTotal: pointDecreasedTotal ?? this.pointDecreasedTotal,
       isMemorized: isMemorized ?? this.isMemorized,
@@ -1173,6 +1218,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
     if (otherMeanings.present) {
       map['other_meanings'] = Variable<String>(otherMeanings.value);
     }
+    if (baseForm.present) {
+      map['base_form'] = Variable<String>(baseForm.value);
+    }
     if (retentionPoint.present) {
       map['retention_point'] = Variable<int>(retentionPoint.value);
     }
@@ -1219,6 +1267,7 @@ class WordsCompanion extends UpdateCompanion<Word> {
           ..write('partOfSpeech: $partOfSpeech, ')
           ..write('collocations: $collocations, ')
           ..write('otherMeanings: $otherMeanings, ')
+          ..write('baseForm: $baseForm, ')
           ..write('retentionPoint: $retentionPoint, ')
           ..write('pointDecreasedTotal: $pointDecreasedTotal, ')
           ..write('isMemorized: $isMemorized, ')
@@ -3212,6 +3261,7 @@ typedef $$WordsTableCreateCompanionBuilder = WordsCompanion Function({
   Value<String> partOfSpeech,
   Value<String?> collocations,
   Value<String?> otherMeanings,
+  Value<String?> baseForm,
   Value<int> retentionPoint,
   Value<int> pointDecreasedTotal,
   Value<bool> isMemorized,
@@ -3236,6 +3286,7 @@ typedef $$WordsTableUpdateCompanionBuilder = WordsCompanion Function({
   Value<String> partOfSpeech,
   Value<String?> collocations,
   Value<String?> otherMeanings,
+  Value<String?> baseForm,
   Value<int> retentionPoint,
   Value<int> pointDecreasedTotal,
   Value<bool> isMemorized,
@@ -3321,6 +3372,11 @@ class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
 
   ColumnFilters<String> get otherMeanings => $composableBuilder(
     column: $table.otherMeanings,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get baseForm => $composableBuilder(
+    column: $table.baseForm,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3444,6 +3500,11 @@ class $$WordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get baseForm => $composableBuilder(
+    column: $table.baseForm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get retentionPoint => $composableBuilder(
     column: $table.retentionPoint,
     builder: (column) => ColumnOrderings(column),
@@ -3544,6 +3605,9 @@ class $$WordsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get baseForm =>
+      $composableBuilder(column: $table.baseForm, builder: (column) => column);
+
   GeneratedColumn<int> get retentionPoint => $composableBuilder(
     column: $table.retentionPoint,
     builder: (column) => column,
@@ -3627,6 +3691,7 @@ class $$WordsTableTableManager
                 Value<String> partOfSpeech = const Value.absent(),
                 Value<String?> collocations = const Value.absent(),
                 Value<String?> otherMeanings = const Value.absent(),
+                Value<String?> baseForm = const Value.absent(),
                 Value<int> retentionPoint = const Value.absent(),
                 Value<int> pointDecreasedTotal = const Value.absent(),
                 Value<bool> isMemorized = const Value.absent(),
@@ -3650,6 +3715,7 @@ class $$WordsTableTableManager
                 partOfSpeech: partOfSpeech,
                 collocations: collocations,
                 otherMeanings: otherMeanings,
+                baseForm: baseForm,
                 retentionPoint: retentionPoint,
                 pointDecreasedTotal: pointDecreasedTotal,
                 isMemorized: isMemorized,
@@ -3675,6 +3741,7 @@ class $$WordsTableTableManager
                 Value<String> partOfSpeech = const Value.absent(),
                 Value<String?> collocations = const Value.absent(),
                 Value<String?> otherMeanings = const Value.absent(),
+                Value<String?> baseForm = const Value.absent(),
                 Value<int> retentionPoint = const Value.absent(),
                 Value<int> pointDecreasedTotal = const Value.absent(),
                 Value<bool> isMemorized = const Value.absent(),
@@ -3698,6 +3765,7 @@ class $$WordsTableTableManager
                 partOfSpeech: partOfSpeech,
                 collocations: collocations,
                 otherMeanings: otherMeanings,
+                baseForm: baseForm,
                 retentionPoint: retentionPoint,
                 pointDecreasedTotal: pointDecreasedTotal,
                 isMemorized: isMemorized,

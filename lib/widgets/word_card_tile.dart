@@ -230,7 +230,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                     border: Border.all(color: const Color(0xFFBDD0E0), width: 0.8),
                                   ),
                                   child: Text(
-                                    '[${widget.word.partOfSpeech.isNotEmpty ? widget.word.partOfSpeech : AppDatabase.detectPartOfSpeech(widget.word.japanese)}]',
+                                    '[${AppDatabase.toShortJapanesePos(widget.word.partOfSpeech, fallbackJp: widget.word.japanese)}]',
                                     style: const TextStyle(
                                       fontSize: 9.5,
                                       fontWeight: FontWeight.bold,
@@ -238,6 +238,26 @@ class _WordCardTileState extends State<WordCardTile> {
                                     ),
                                   ),
                                 ),
+                                if (widget.word.baseForm != null && widget.word.baseForm!.isNotEmpty) ...[
+                                  const SizedBox(width: 4),
+                                  // 原形バッジ
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF8E1),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: const Color(0xFFFFE082), width: 0.8),
+                                    ),
+                                    child: Text(
+                                      '原形: ${widget.word.baseForm}',
+                                      style: const TextStyle(
+                                        fontSize: 9.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF8D6E63),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                                 const SizedBox(width: 5),
                                 // 定着度ポイントバッジ ＆ 減算累計ポイント
                                 Container(
@@ -272,6 +292,42 @@ class _WordCardTileState extends State<WordCardTile> {
                                     ],
                                   ),
                                 ),
+                                if (isMemorized) ...[
+                                  const SizedBox(width: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE8F5E9),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      '✓ 覚えた',
+                                      style: TextStyle(
+                                        fontSize: 9.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2E7D32),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                if (isRestricted) ...[
+                                  const SizedBox(width: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF3E0),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      '⚠️ 70pt',
+                                      style: TextStyle(
+                                        fontSize: 9.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.deepOrange,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -329,82 +385,8 @@ class _WordCardTileState extends State<WordCardTile> {
                         ],
                       ),
 
-                      // 2行目: 発音記号 ＆ カテゴリ ＆ 暗記バッジ（覚えた） ＆ 制限フラグ（常に2行目に固定配置）
-                      if ((widget.word.phonetic != null && widget.word.phonetic!.isNotEmpty) ||
-                          widget.word.category.isNotEmpty ||
-                          isMemorized ||
-                          isRestricted) ...[
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            if (widget.word.phonetic != null && widget.word.phonetic!.isNotEmpty) ...[
-                              Text(
-                                widget.word.phonetic!,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: _textSecondary,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                            ],
-                            if (widget.word.category.isNotEmpty) ...[
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEFEAE0),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  widget.word.category,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: _textSecondary,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                            ],
-                            if (isMemorized) ...[
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE8F5E9),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Text(
-                                  '✓ 覚えた',
-                                  style: TextStyle(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF2E7D32),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                            ],
-                            if (isRestricted)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF3E0),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Text(
-                                  '⚠️ 本日上限70pt',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.deepOrange,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-
-                      // 3行目: 日本語訳（タップ切り替え ＆ アフォーダンス表示）
-                      const SizedBox(height: 3),
+                      // 2行目: 日本語訳（タップ切り替え ＆ アフォーダンス表示）
+                      const SizedBox(height: 4),
                       if (isJapaneseVisible)
                         Text(
                           widget.word.japanese,
@@ -441,40 +423,6 @@ class _WordCardTileState extends State<WordCardTile> {
                             ],
                           ),
                         ),
-
-                      // 4行目: 例文 ＆ 例文訳（存在する場合、はみ出しなく自然に全行表示）
-                      if (widget.word.example != null &&
-                          widget.word.example!.trim().isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              widget.word.example!,
-                              style: const TextStyle(
-                                fontSize: 12.0,
-                                fontStyle: FontStyle.italic,
-                                color: Color(0xFF555B58),
-                                height: 1.3,
-                              ),
-                            ),
-                            if (isJapaneseVisible &&
-                                widget.word.exampleJp != null &&
-                                widget.word.exampleJp!.trim().isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                widget.word.exampleJp!,
-                                style: const TextStyle(
-                                  fontSize: 11.0,
-                                  color: Color(0xFF7A827E),
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
                     ],
                   ),
                 ),

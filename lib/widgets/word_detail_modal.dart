@@ -279,10 +279,48 @@ class _WordDetailModalState extends State<WordDetailModal> {
             ),
           ),
 
-          // バッジ群（CEFR / Chap / お気に入り）
+          // バッジ群（原形 / カテゴリ / CEFR / Chap / お気に入り）
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (_detail.baseForm != null && _detail.baseForm!.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF8E1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFFFE082)),
+                  ),
+                  child: Text(
+                    '原形: ${_detail.baseForm}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF8D6E63),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 5),
+              ],
+              if (_detail.category.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFEAE0),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: _borderColor),
+                  ),
+                  child: Text(
+                    _detail.category,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _textSecondary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 5),
+              ],
               // CEFR バッジ
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -300,7 +338,7 @@ class _WordDetailModalState extends State<WordDetailModal> {
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 5),
               // チャプターバッジ
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -509,6 +547,41 @@ class _WordDetailModalState extends State<WordDetailModal> {
           spacing: 8,
           runSpacing: 6,
           children: _detail.collocations.map((colloc) {
+            final match = RegExp(r'^(.*?)\s*\((.*?)\)$').firstMatch(colloc);
+            if (match != null) {
+              final phrase = match.group(1)!;
+              final meaning = match.group(2)!;
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: _cardColor,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _borderColor),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      phrase,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: _textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      meaning,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: _textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(

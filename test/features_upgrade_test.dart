@@ -69,12 +69,10 @@ void main() {
     );
 
     expect(find.text('apple'), findsOneWidget);
+    expect(find.text('[名]'), findsOneWidget);
     expect(find.text('85 pt'), findsOneWidget);
     expect(find.text('✓ 覚えた'), findsOneWidget);
     expect(find.text('Ch.1'), findsOneWidget);
-    expect(find.text('/ˈæp.əl/'), findsOneWidget);
-    expect(find.text('Food'), findsOneWidget);
     expect(find.text('りんご'), findsOneWidget);
-    expect(find.text('I ate an apple.'), findsOneWidget);
   });
 }

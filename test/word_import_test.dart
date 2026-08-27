@@ -98,5 +98,35 @@ void main() {
       expect(words.length, 1);
       expect(words.first.english, 'valid');
     });
+
+    test('insertRawWords properly stores explicit partOfSpeech, collocations, otherMeanings, and baseForm', () async {
+      final sampleData = [
+        {
+          'word': 'went',
+          'CEFR': 'A1',
+          'Japanese': '行った',
+          'partOfSpeech': 'verb',
+          'phonetic': '/wɛnt/',
+          'category': 'Daily',
+          'Example': 'I went to school.',
+          'Example_JP': '私は学校へ行った。',
+          'collocations': '[{"phrase":"go to school","meaning":"通学する"}]',
+          'otherMeanings': '[{"sense_id":1,"part_of_speech":"verb","meaning_ja":"行った"}]',
+          'baseForm': 'go',
+        },
+      ];
+
+      await db.insertRawWords(sampleData);
+      final words = await db.getAllWords();
+
+      expect(words.length, 1);
+      final w = words.first;
+      expect(w.english, 'went');
+      expect(w.partOfSpeech, 'verb');
+      expect(w.baseForm, 'go');
+      expect(w.collocations, contains('go to school'));
+      expect(w.otherMeanings, contains('sense_id'));
+    });
   });
 }
+

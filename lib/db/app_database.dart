@@ -18,7 +18,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -43,23 +43,35 @@ class AppDatabase extends _$AppDatabase {
 
   /// CEFR文字列を数値レベルに変換するヘルパー関数
   int _cefrToLevel(String cefr) {
-    final cleanCefr = cefr.toUpperCase().replaceAll('"', '').trim();
-    switch (cleanCefr) {
-      case 'A1':
-        return 1;
-      case 'A2':
-        return 1;
-      case 'B1':
-        return 2;
-      case 'B2':
-        return 2;
-      case 'C1':
-        return 3;
-      case 'C2':
-        return 3;
-      default:
-        return 1;
+    final clean = cefr.toUpperCase().trim();
+    if (clean.contains('A1') || clean.contains('A2') || clean == '1' || clean.contains('初級')) {
+      return 1;
     }
+    if (clean.contains('B1') || clean.contains('B2') || clean == '2' || clean.contains('中級')) {
+      return 2;
+    }
+    if (clean.contains('C1') || clean.contains('C2') || clean == '3' || clean.contains('上級')) {
+      return 3;
+    }
+    return 1;
+  }
+
+  /// 品詞文字列表記を日本語1文字バッジに正規化するヘルパー関数
+  static String toShortJapanesePos(String pos, {String fallbackJp = ''}) {
+    final clean = pos.trim().toLowerCase();
+    if (clean == 'verb' || clean == '動' || clean == '動詞') return '動';
+    if (clean == 'noun' || clean == '名' || clean == '名詞') return '名';
+    if (clean == 'adjective' || clean == '形' || clean == '形容詞') return '形';
+    if (clean == 'adverb' || clean == '副' || clean == '副詞') return '副';
+    if (clean == 'preposition' || clean == '前' || clean == '前置詞') return '前';
+    if (clean == 'conjunction' || clean == '接' || clean == '接続詞') return '接';
+    if (clean == 'pronoun' || clean == '代' || clean == '代名詞') return '代';
+    if (clean == 'auxiliary' || clean == '助' || clean == '助動詞') return '助';
+    if (clean == 'phrase' || clean == 'idiom' || clean == '熟' || clean == '熟語') return '熟';
+    if (fallbackJp.isNotEmpty) {
+      return detectPartOfSpeech(fallbackJp);
+    }
+    return '名';
   }
 
   /// 日本語訳から簡易品詞タグを判定するヘルパー関数
@@ -70,18 +82,24 @@ class AppDatabase extends _$AppDatabase {
         cleanJp.startsWith('〜で') ||
         cleanJp.startsWith('〜に') ||
         cleanJp.startsWith('〜から') ||
-        cleanJp.startsWith('〜まで')) {
+        cleanJp.startsWith('〜まで') ||
+        cleanJp.startsWith('〜について')) {
       return '前';
     }
     if (cleanJp == 'しかし' ||
-        cleanJp.contains('そして') ||
+        cleanJp == 'そして' ||
         cleanJp.contains('だから') ||
         cleanJp.contains('または')) {
       return '接';
     }
     if (cleanJp.contains('〜する') ||
         cleanJp.endsWith('する') ||
-        cleanJp.startsWith('〜できる') ||
+        cleanJp.endsWith('させる') ||
+        cleanJp.endsWith('できる') ||
+        cleanJp.endsWith('ている') ||
+        cleanJp.endsWith('てある') ||
+        cleanJp.endsWith('行う') ||
+        cleanJp.endsWith('なる') ||
         cleanJp.endsWith('行く') ||
         cleanJp.endsWith('書く') ||
         cleanJp.endsWith('歩く') ||
@@ -100,8 +118,10 @@ class AppDatabase extends _$AppDatabase {
     }
     if (cleanJp.endsWith('い') ||
         cleanJp.endsWith('な') ||
+        cleanJp.endsWith('的') ||
+        cleanJp.endsWith('の') ||
         cleanJp.contains('〜のような') ||
-        cleanJp.contains('的')) {
+        cleanJp.contains('〜らしい')) {
       return '形';
     }
     if (cleanJp.endsWith('に') ||
@@ -226,6 +246,10 @@ class AppDatabase extends _$AppDatabase {
       final category = row['Category'] ?? row['category'] ?? 'General';
       final example = row['Example'] ?? row['example'];
       final exampleJp = row['Example_JP'] ?? row['Example_Jp'] ?? row['example_jp'] ?? row['exampleJp'];
+      final partOfSpeech = row['partOfSpeech'] ?? row['part_of_speech'] ?? row['PartOfSpeech'];
+      final collocations = row['collocations'] ?? row['Collocations'];
+      final otherMeanings = row['otherMeanings'] ?? row['other_meanings'] ?? row['OtherMeanings'];
+      final baseForm = row['baseForm'] ?? row['base_form'] ?? row['BaseForm'];
       final level = _cefrToLevel(cefr);
 
       processedList.add({
@@ -238,6 +262,10 @@ class AppDatabase extends _$AppDatabase {
         'category': category,
         'example': example,
         'exampleJp': exampleJp,
+        'partOfSpeech': partOfSpeech,
+        'collocations': collocations,
+        'otherMeanings': otherMeanings,
+        'baseForm': baseForm,
       });
     }
 
@@ -278,25 +306,30 @@ class AppDatabase extends _$AppDatabase {
         final categoryStr = item['category']?.toString() ?? 'General';
         final exampleStr = item['example']?.toString();
         final exampleJpStr = item['exampleJp']?.toString();
-        final posStr = detectPartOfSpeech(japaneseStr);
+        final rawPos = item['partOfSpeech']?.toString().trim();
+        final posStr = (rawPos != null && rawPos.isNotEmpty) ? rawPos : detectPartOfSpeech(japaneseStr);
+        final collocationsStr = item['collocations']?.toString();
+        final baseFormStr = item['baseForm']?.toString();
 
-        // 複数語義の構造化JSON生成
-        String? otherMeaningsJson;
-        final meanings = japaneseStr
-            .split(RegExp(r'[、,]'))
-            .map((m) => m.trim())
-            .where((m) => m.isNotEmpty)
-            .toList();
-        if (meanings.length > 1) {
-          final senses = meanings.asMap().entries.map((e) => {
-                'sense_id': e.key + 1,
-                'part_of_speech': detectPartOfSpeech(e.value),
-                'meaning_ja': e.value,
-                'cefr': cefrStr,
-                'example_en': e.key == 0 ? exampleStr : null,
-                'example_ja': e.key == 0 ? exampleJpStr : null,
-              }).toList();
-          otherMeaningsJson = jsonEncode(senses);
+        // 複数語義の構造化JSON（明示指定があれば優先、なければカンマ区切りから自動生成）
+        String? otherMeaningsJson = item['otherMeanings']?.toString();
+        if (otherMeaningsJson == null || otherMeaningsJson.trim().isEmpty) {
+          final meanings = japaneseStr
+              .split(RegExp(r'[、,]'))
+              .map((m) => m.trim())
+              .where((m) => m.isNotEmpty)
+              .toList();
+          if (meanings.length > 1) {
+            final senses = meanings.asMap().entries.map((e) => {
+                  'sense_id': e.key + 1,
+                  'part_of_speech': detectPartOfSpeech(e.value),
+                  'meaning_ja': e.value,
+                  'cefr': cefrStr,
+                  'example_en': e.key == 0 ? exampleStr : null,
+                  'example_ja': e.key == 0 ? exampleJpStr : null,
+                }).toList();
+            otherMeaningsJson = jsonEncode(senses);
+          }
         }
 
         batch.insert(
@@ -312,7 +345,9 @@ class AppDatabase extends _$AppDatabase {
             category: Value(categoryStr),
             example: Value(exampleStr),
             exampleJp: Value(exampleJpStr),
+            collocations: Value(collocationsStr),
             otherMeanings: Value(otherMeaningsJson),
+            baseForm: Value(baseFormStr),
             pointDecreasedTotal: const Value(0),
           ),
         );
