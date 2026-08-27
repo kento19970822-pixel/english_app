@@ -117,11 +117,11 @@ class _SrsReviewDialogState extends State<SrsReviewDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'SRS 能動的想起（Active Recall）',
+                      '💡 ひらめき復習クエスト',
                       style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textPrimary),
                     ),
                     Text(
-                      'エビングハウス忘却曲線に基づく最適復習',
+                      'エビングハウス忘却曲線に基づく最適カードめくり',
                       style: TextStyle(fontSize: 11, color: textSecondary),
                     ),
                   ],
@@ -167,8 +167,8 @@ class _SrsReviewDialogState extends State<SrsReviewDialog> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('問題  / ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textSecondary)),
-                                    Text('定着度: pt', style: TextStyle(fontSize: 12, color: primaryAccent, fontWeight: FontWeight.bold)),
+                                    Text('問題 ${_currentIndex + 1} / ${_dueWords.length}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textSecondary)),
+                                    Text('定着度: ${_dueWords[_currentIndex].retentionPoint}pt', style: TextStyle(fontSize: 12, color: primaryAccent, fontWeight: FontWeight.bold)),
                                   ],
                                 ),
                               ),

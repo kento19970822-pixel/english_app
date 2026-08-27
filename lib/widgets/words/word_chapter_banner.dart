@@ -24,9 +24,11 @@ class WordChapterBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chapterNum = int.tryParse(section.title) ?? 1;
+    final chapterNum = int.tryParse(section.title.replaceAll(RegExp(r'[^0-9]'), '')) ??
+        int.tryParse(section.key.replaceAll(RegExp(r'[^0-9]'), '')) ??
+        1;
     final totalCount = section.words.length;
-    final memorizedCount = section.words.where((w) => w.isMemorized).length;
+    final memorizedCount = section.words.where((w) => w.isMemorized || w.retentionPoint >= 80).length;
     final percent = totalCount > 0 ? (memorizedCount / totalCount * 100).toInt() : 0;
     final isMastered = percent >= 80;
 
@@ -123,17 +125,34 @@ class WordChapterBanner extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(3),
-                  child: LinearProgressIndicator(
-                    value: totalCount > 0 ? memorizedCount / totalCount : 0,
-                    minHeight: 5,
-                    backgroundColor: borderColor.withValues(alpha: 0.5),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isMastered ? primaryColor : (percent >= 50 ? const Color(0xFFD97736) : Colors.amber.shade700),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: LinearProgressIndicator(
+                          value: totalCount > 0 ? memorizedCount / totalCount : 0,
+                          minHeight: 6,
+                          backgroundColor: borderColor.withValues(alpha: 0.5),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isMastered
+                                ? primaryColor
+                                : (percent >= 50 ? const Color(0xFFD97736) : Colors.amber.shade700),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$percent%',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: isMastered ? primaryColor : (percent > 0 ? textColor : textSecondaryColor),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

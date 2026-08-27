@@ -575,6 +575,10 @@ class AppDatabase extends _$AppDatabase {
     if (!wasMemorized) {
       await incrementDailyMemorizedCount();
     }
+
+    if (word != null) {
+      await syncChapterProgress(word.chapter);
+    }
   }
 
   /// 暗記フラグ一括リセット: 全単語の暗記フラグ・定着度・制限フラグを初期状態にリセット (F-09/F-15)
@@ -601,9 +605,10 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// 左スワイプ: 0ptリセット ＋ 制限フラグ付与 (F-08)
-  Future<void> resetRetentionManual(int id) {
+  Future<void> resetRetentionManual(int id) async {
+    final word = await (select(words)..where((t) => t.id.equals(id))).getSingleOrNull();
     final now = DateTime.now();
-    return (update(words)..where((t) => t.id.equals(id))).write(
+    await (update(words)..where((t) => t.id.equals(id))).write(
       WordsCompanion(
         retentionPoint: const Value(0),
         isMemorized: const Value(false),
@@ -612,6 +617,9 @@ class AppDatabase extends _$AppDatabase {
         lastRestrictedDate: Value(now),
       ),
     );
+    if (word != null) {
+      await syncChapterProgress(word.chapter);
+    }
   }
 
   /// 暗記フラグ再同期: 80pt未満に落ちた単語のisMemorizedを解除 ＆ チャプター進捗同期 (F-09)
@@ -632,16 +640,7 @@ class AppDatabase extends _$AppDatabase {
 
     // 影響を受けたチャプターの進行状況（暗記率）を再計算
     for (final ch in affectedChapters) {
-      final chWords = await (select(words)..where((t) => t.chapter.equals(ch))).get();
-      if (chWords.isNotEmpty) {
-        final memorizedInCh = chWords.where((w) => w.isMemorized).length;
-        final rate = memorizedInCh / chWords.length;
-        await (update(chapterProgresses)..where((t) => t.chapter.equals(ch))).write(
-          ChapterProgressesCompanion(
-            memorizedRate: Value(rate),
-          ),
-        );
-      }
+      await syncChapterProgress(ch);
     }
     return count;
   }
@@ -863,6 +862,7 @@ class AppDatabase extends _$AppDatabase {
   /// 全チャプターの進行状況を取得
   Future<List<ChapterProgressesData>> getAllChapterProgresses() async {
     await initChapterProgresses();
+    await syncAllChapterProgresses();
     final list = await (select(chapterProgresses)..orderBy([
           (t) => OrderingTerm(expression: t.chapter, mode: OrderingMode.asc),
         ]))
@@ -930,6 +930,7 @@ class AppDatabase extends _$AppDatabase {
   /// 指定難易度レベルに属するチャプター進行状況一覧を取得
   Future<List<ChapterProgressesData>> getChapterProgressesForLevel(int level) async {
     await initChapterProgresses();
+    await syncAllChapterProgresses();
     return (select(chapterProgresses)
           ..where((t) => t.level.equals(level))
           ..orderBy([
@@ -968,8 +969,53 @@ class AppDatabase extends _$AppDatabase {
         .get();
     if (wordsInChapter.isEmpty) return 0.0;
 
-    final targetCount = wordsInChapter.where((w) => w.retentionPoint >= 70).length;
+    final targetCount = wordsInChapter.where((w) => w.isMemorized || w.retentionPoint >= 80).length;
     return (targetCount / wordsInChapter.length) * 100.0;
+  }
+
+  /// 単一チャプターの暗記率・クリア状態を単語データから完全同期
+  Future<void> syncChapterProgress(int chapter) async {
+    final rate = await calculateChapterMemorizedRate(chapter);
+    final isCleared = rate >= 90.0;
+
+    final currentProgress = await (select(chapterProgresses)
+          ..where((t) => t.chapter.equals(chapter)))
+        .getSingleOrNull();
+
+    await (update(chapterProgresses)..where((t) => t.chapter.equals(chapter))).write(
+      ChapterProgressesCompanion(
+        memorizedRate: Value(rate),
+        isCleared: Value(isCleared || (currentProgress?.isCleared ?? false)),
+        clearedAt: isCleared ? Value(DateTime.now()) : const Value.absent(),
+      ),
+    );
+
+    if (isCleared) {
+      final nextChapterNum = chapter + 1;
+      await (update(chapterProgresses)..where((t) => t.chapter.equals(nextChapterNum))).write(
+        const ChapterProgressesCompanion(isUnlocked: Value(true)),
+      );
+    }
+  }
+
+  /// 全チャプターの暗記率・クリア状態・解放状態を単語マスターから一括同期
+  Future<void> syncAllChapterProgresses() async {
+    final allCp = await (select(chapterProgresses)..orderBy([(t) => OrderingTerm.asc(t.chapter)])).get();
+    for (final cp in allCp) {
+      final rate = await calculateChapterMemorizedRate(cp.chapter);
+      final isCleared = rate >= 90.0;
+      await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter))).write(
+        ChapterProgressesCompanion(
+          memorizedRate: Value(rate),
+          isCleared: Value(isCleared || cp.isCleared),
+        ),
+      );
+      if (isCleared || cp.isCleared) {
+        await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter + 1))).write(
+          const ChapterProgressesCompanion(isUnlocked: Value(true)),
+        );
+      }
+    }
   }
 
   /// 【学習モードクリア時】70pt以上の単語が90%以上の場合にクリア判定・次チャプター解放 (F-15)
@@ -1254,22 +1300,28 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// 本日復習期日（nextReviewAt <= now）を迎えている単語一覧（Due Words）を取得
+  /// 出題対象条件: 最低1回以上学習した単語のみを対象とし、未学習単語は除外
   Future<List<Word>> getDueWords({DateTime? now, int limit = 20}) async {
     final currentTime = now ?? DateTime.now();
 
-    // 1. user_word_progresses で期日が来ている wordId を抽出
+    // 1. 学習経験があり（lastStudiedAt != null または 回答実績/定着度あり）、期日が到来しているものを抽出
     final dueQuery = select(userWordProgresses)
-      ..where((t) => t.nextReviewAt.isSmallerOrEqualValue(currentTime) & t.nextReviewAt.isNotNull())
-      ..orderBy([(t) => OrderingTerm.asc(t.nextReviewAt)])
+      ..where((t) =>
+          (t.lastStudiedAt.isNotNull() |
+              t.correctCount.isBiggerThanValue(0) |
+              t.wrongCount.isBiggerThanValue(0) |
+              t.retentionPoint.isBiggerThanValue(0)) &
+          t.nextReviewAt.isNotNull() &
+          t.nextReviewAt.isSmallerOrEqualValue(currentTime))
+      ..orderBy([
+        (t) => OrderingTerm.asc(t.nextReviewAt),
+        (t) => OrderingTerm.asc(t.retentionPoint),
+      ])
       ..limit(limit);
 
     final dueProgresses = await dueQuery.get();
     if (dueProgresses.isEmpty) {
-      // 期日設定済みの単語がない場合、定着度0pt〜79ptの未暗記単語をフォールバック抽出
-      return (select(words)
-            ..where((t) => t.isMemorized.equals(false))
-            ..limit(limit))
-          .get();
+      return [];
     }
 
     final wordIds = dueProgresses.map((p) => p.wordId).toList();
@@ -1324,7 +1376,12 @@ class AppDatabase extends _$AppDatabase {
           } catch (_) {}
         }
 
-        // 3. UserWordProgress 初期化
+        // 3. UserWordProgress 初期化（未学習の単語は nextReviewAt = null）
+        final hasStudied = w.lastStudiedAt != null || w.retentionPoint > 0 || w.correctCount > 0 || w.wrongCount > 0;
+        final nextReview = hasStudied
+            ? (w.lastStudiedAt != null ? w.lastStudiedAt!.add(const Duration(days: 1)) : DateTime.now())
+            : null;
+
         b.insert(
           userWordProgresses,
           UserWordProgressesCompanion(
@@ -1340,7 +1397,7 @@ class AppDatabase extends _$AppDatabase {
             lastRestrictedDate: Value(w.lastRestrictedDate),
             srsIntervalDays: Value(w.isMemorized ? 7 : (w.retentionPoint > 0 ? 1 : 0)),
             srsEaseFactor: const Value(2.5),
-            nextReviewAt: Value(w.lastStudiedAt != null ? w.lastStudiedAt!.add(const Duration(days: 1)) : DateTime.now()),
+            nextReviewAt: Value(nextReview),
           ),
           mode: InsertMode.insertOrReplace,
         );
