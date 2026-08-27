@@ -92,7 +92,23 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
 
   /// 選択中のレベルに対応するチャプター進行状況を取得し、最新解放チャプターを初期選択
   Future<void> _loadChaptersForLevel(int level, {bool preserveSelection = false}) async {
-    setState(() => _isLoadingChapters = true);
+    // メモリ上の進捗データがある場合は即座に切り替え（ローディングスピナーのチラつきを100%防止）
+    if (_allChapterProgresses.isNotEmpty) {
+      final cachedFiltered = _allChapterProgresses.where((cp) => cp.level == level).toList();
+      final cachedUnlocked = cachedFiltered.where((cp) => cp.isUnlocked).toList();
+      final cachedLatest = cachedUnlocked.isNotEmpty
+          ? cachedUnlocked.last.chapter
+          : (cachedFiltered.isNotEmpty ? cachedFiltered.first.chapter : 1);
+
+      setState(() {
+        _currentLevelChapters = cachedFiltered;
+        if (!preserveSelection || !cachedFiltered.any((cp) => cp.chapter == selectedChapter)) {
+          selectedChapter = cachedLatest;
+        }
+      });
+    } else {
+      setState(() => _isLoadingChapters = true);
+    }
 
     final favStamp = await widget.database.getFavoriteStamp();
     final allProgresses = await widget.database.getAllChapterProgresses();

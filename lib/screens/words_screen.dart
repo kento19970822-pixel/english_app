@@ -523,6 +523,7 @@ class WordsScreenState extends State<WordsScreen> {
                   onTap: () => FocusScope.of(context).unfocus(),
                   child: CustomScrollView(
                     controller: _scrollController,
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                     slivers: [
                     // 1. スリム検索・ソート・フィルターバー（上スクロール・引き下げ時に指の動きに追従して滑らかに出現するフローティングヘッダー）
                     SliverAppBar(
@@ -539,12 +540,12 @@ class WordsScreenState extends State<WordsScreen> {
                         collapseMode: CollapseMode.pin,
                         background: Container(
                           color: _bgColor,
-                          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 6.0),
+                          padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0),
                           child: Column(
-                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // 検索バー ＆ 効果音 ＆ 絞り込みボタン ＆ その他データ管理メニュー
+                              // 検索バー（上部）
                               WordSearchBar(
                                 searchController: _searchController,
                                 searchFocusNode: _searchFocusNode,
@@ -557,11 +558,6 @@ class WordsScreenState extends State<WordsScreen> {
                                   setState(() => _searchQuery = '');
                                   _onFilterChanged(resetScroll: true);
                                   _searchFocusNode.requestFocus();
-                                },
-                                soundEnabled: SoundService.instance.isSeEnabled,
-                                onToggleSound: () {
-                                  SoundService.instance.setSeEnabled(!SoundService.instance.isSeEnabled);
-                                  setState(() {});
                                 },
                                 activeFilterCount: _activeFilterCount,
                                 onOpenFilter: _openFilterBottomSheet,
@@ -656,8 +652,7 @@ class WordsScreenState extends State<WordsScreen> {
                               SliverToBoxAdapter(
                                 child: WordChapterBanner(section: section),
                               ),
-                            SliverFixedExtentList(
-                              itemExtent: 74.0,
+                            SliverList(
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) {
                                   final word = section.words[index];
@@ -667,6 +662,11 @@ class WordsScreenState extends State<WordsScreen> {
                                     onSpeak: () => _speak(word.english),
                                     onToggleFavorite: () => _toggleFavoriteFast(word),
                                     onTap: () {
+                                      if (_searchFocusNode.hasFocus || FocusScope.of(context).hasFocus) {
+                                        FocusScope.of(context).unfocus();
+                                        _searchFocusNode.unfocus();
+                                        return;
+                                      }
                                       final allCurrent = _sections.expand((s) => s.words).toList();
                                       final gIdx = allCurrent.indexWhere((w) => w.id == word.id);
                                       WordDetailModal.show(
@@ -678,6 +678,11 @@ class WordsScreenState extends State<WordsScreen> {
                                       );
                                     },
                                     onDoubleTap: () {
+                                      if (_searchFocusNode.hasFocus || FocusScope.of(context).hasFocus) {
+                                        FocusScope.of(context).unfocus();
+                                        _searchFocusNode.unfocus();
+                                        return;
+                                      }
                                       final allCurrent = _sections.expand((s) => s.words).toList();
                                       final gIdx = allCurrent.indexWhere((w) => w.id == word.id);
                                       WordDetailModal.show(

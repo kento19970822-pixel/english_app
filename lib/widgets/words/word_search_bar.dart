@@ -7,7 +7,7 @@ class WordSearchBar extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
   final bool soundEnabled;
-  final VoidCallback onToggleSound;
+  final VoidCallback? onToggleSound;
   final int activeFilterCount;
   final VoidCallback onOpenFilter;
   final Future<void> Function() onSyncFlags;
@@ -26,8 +26,8 @@ class WordSearchBar extends StatelessWidget {
     required this.searchFocusNode,
     required this.onChanged,
     required this.onClear,
-    required this.soundEnabled,
-    required this.onToggleSound,
+    this.soundEnabled = true,
+    this.onToggleSound,
     required this.activeFilterCount,
     required this.onOpenFilter,
     required this.onSyncFlags,
@@ -45,10 +45,10 @@ class WordSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: bgColor,
-      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 6.0),
+      padding: const EdgeInsets.fromLTRB(14.0, 7.0, 10.0, 5.0),
       child: Row(
         children: [
-          // 検索フィールド
+          // 検索フィールド（幅広拡大）
           Expanded(
             child: Container(
               height: 38,
@@ -61,11 +61,14 @@ class WordSearchBar extends StatelessWidget {
                 controller: searchController,
                 focusNode: searchFocusNode,
                 textInputAction: TextInputAction.search,
+                textAlignVertical: TextAlignVertical.center,
                 style: TextStyle(fontSize: 13.5, color: textColor),
                 decoration: InputDecoration(
+                  isDense: true,
                   hintText: '英単語または和訳で検索...',
                   hintStyle: TextStyle(color: textSecondaryColor, fontSize: 13.0),
                   prefixIcon: Icon(Icons.search_rounded, size: 19, color: textSecondaryColor),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 34, minHeight: 38),
                   suffixIcon: searchController.text.isNotEmpty
                       ? IconButton(
                           icon: Icon(Icons.clear_rounded, size: 17, color: textSecondaryColor),
@@ -75,28 +78,15 @@ class WordSearchBar extends StatelessWidget {
                         )
                       : null,
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 9.0),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
                 ),
                 onChanged: onChanged,
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
 
-          // 効果音トグルボタン
-          IconButton(
-            icon: Icon(
-              soundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-              color: soundEnabled ? primaryColor : textSecondaryColor,
-              size: 21,
-            ),
-            tooltip: soundEnabled ? '効果音: ON' : '効果音: OFF',
-            onPressed: onToggleSound,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
-          ),
-
-          // 絞り込みフィルターボタン（バッジ付き）
+          // 絞り込みフィルターボタン（バッジ付き・スリム）
           Stack(
             clipBehavior: Clip.none,
             children: [
@@ -109,11 +99,11 @@ class WordSearchBar extends StatelessWidget {
                 tooltip: '絞り込みフィルター',
                 onPressed: onOpenFilter,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 36),
               ),
               if (activeFilterCount > 0)
                 Positioned(
-                  right: 2,
+                  right: 1,
                   top: 2,
                   child: Container(
                     padding: const EdgeInsets.all(3.5),
@@ -136,11 +126,11 @@ class WordSearchBar extends StatelessWidget {
             ],
           ),
 
-          // データ管理ポップアップメニュー
+          // データ管理ポップアップメニュー（スリム・右寄せ）
           PopupMenuButton<String>(
             icon: Icon(Icons.more_vert_rounded, color: textSecondaryColor, size: 21),
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 34),
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 36),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             onSelected: (value) async {
               if (value == 'sync_flags') {
