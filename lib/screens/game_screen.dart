@@ -236,7 +236,19 @@ class _GameScreenState extends State<GameScreen>
   }
 
   Future<void> _loadWordsFromDb() async {
-    final dbWords = await widget.database.getAllWords();
+    List<Word> dbWords;
+    if (widget.mode == 'learning') {
+      dbWords = await widget.database.getWordsByLevel(selectedLevel);
+    } else if (widget.selectedLevels != null && widget.selectedLevels!.isNotEmpty) {
+      dbWords = await widget.database.getWordsByLevels(widget.selectedLevels!);
+    } else {
+      dbWords = await widget.database.getWordsByLevel(selectedLevel);
+    }
+
+    if (dbWords.isEmpty) {
+      dbWords = await widget.database.getAllWords();
+    }
+
     setState(() {
       allWords = dbWords
           .map((w) => WordModel.fromDrift(w))
@@ -1849,36 +1861,36 @@ class _GameScreenState extends State<GameScreen>
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                                   onTap: () async {
-                                    final allDbWords = await widget.database.getAllWords();
+                                    final targetIds = displayWords.map((mw) => mw.id).toList();
+                                    final queriedWords = await (widget.database.select(widget.database.words)..where((t) => t.id.isIn(targetIds))).get();
+                                    final queriedMap = {for (final w in queriedWords) w.id: w};
                                     final modalWordList = displayWords.map((mw) {
-                                      return allDbWords.firstWhere(
-                                        (w) => w.id == mw.id,
-                                        orElse: () => Word(
-                                          id: mw.id,
-                                          level: mw.level,
-                                          chapter: mw.chapter,
-                                          english: mw.english,
-                                          japanese: mw.japanese,
-                                          partOfSpeech: mw.partOfSpeech,
-                                          cefr: 'A1',
-                                          category: 'General',
-                                          phonetic: '',
-                                          example: '',
-                                          exampleJp: '',
-                                          collocations: '[]',
-                                          otherMeanings: '[]',
-                                          senseIndex: mw.senseIndex,
-                                          totalSenses: mw.totalSenses,
-                                          retentionPoint: mw.retentionPoint,
-                                          pointDecreasedTotal: 0,
-                                          isMemorized: mw.isMemorized,
-                                          isRestricted: mw.isRestricted,
-                                          isFavorite: isFav,
-                                          correctCount: mw.correctCount,
-                                          wrongCount: mw.wrongCount,
-                                          lastStudiedAt: null,
-                                        ),
-                                      );
+                                      return queriedMap[mw.id] ??
+                                          Word(
+                                            id: mw.id,
+                                            level: mw.level,
+                                            chapter: mw.chapter,
+                                            english: mw.english,
+                                            japanese: mw.japanese,
+                                            partOfSpeech: mw.partOfSpeech,
+                                            cefr: 'A1',
+                                            category: 'General',
+                                            phonetic: '',
+                                            example: '',
+                                            exampleJp: '',
+                                            collocations: '[]',
+                                            otherMeanings: '[]',
+                                            senseIndex: mw.senseIndex,
+                                            totalSenses: mw.totalSenses,
+                                            retentionPoint: mw.retentionPoint,
+                                            pointDecreasedTotal: 0,
+                                            isMemorized: mw.isMemorized,
+                                            isRestricted: mw.isRestricted,
+                                            isFavorite: isFav,
+                                            correctCount: mw.correctCount,
+                                            wrongCount: mw.wrongCount,
+                                            lastStudiedAt: null,
+                                          );
                                     }).toList();
 
                                     if (context.mounted) {

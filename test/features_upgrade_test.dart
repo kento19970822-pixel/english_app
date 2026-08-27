@@ -98,7 +98,7 @@ void main() {
     );
 
     expect(find.text('apple'), findsOneWidget);
-    expect(find.text('[名]'), findsOneWidget);
+    expect(find.text('名'), findsOneWidget);
     expect(find.text('85 pt'), findsOneWidget);
     expect(find.text('✓ 覚えた'), findsOneWidget);
     expect(find.text('Ch.1'), findsOneWidget);

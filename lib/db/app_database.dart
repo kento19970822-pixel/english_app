@@ -77,6 +77,26 @@ class AppDatabase extends _$AppDatabase {
     return '名';
   }
 
+  /// 品詞文字列表記を日本語フル表記（名詞/動詞等）に正規化するヘルパー関数
+  static String toFullJapanesePos(String pos, {String fallbackJp = ''}) {
+    final clean = pos.trim().toLowerCase();
+    if (clean == 'verb' || clean == '動' || clean == '動詞') return '動詞';
+    if (clean == 'noun' || clean == '名' || clean == '名詞') return '名詞';
+    if (clean == 'adjective' || clean == '形' || clean == '形容詞') return '形容詞';
+    if (clean == 'adverb' || clean == '副' || clean == '副詞') return '副詞';
+    if (clean == 'preposition' || clean == '前' || clean == '前置詞') return '前置詞';
+    if (clean == 'conjunction' || clean == '接' || clean == '接続詞') return '接続詞';
+    if (clean == 'pronoun' || clean == '代' || clean == '代名詞') return '代名詞';
+    if (clean == 'auxiliary' || clean == '助' || clean == '助動詞') return '助動詞';
+    if (clean == 'phrase' || clean == 'idiom' || clean == '熟' || clean == '熟語') return '熟語';
+    if (clean == 'interjection' || clean == '間' || clean == '間投詞') return '間投詞';
+    if (fallbackJp.isNotEmpty) {
+      final short = detectPartOfSpeech(fallbackJp);
+      return toFullJapanesePos(short);
+    }
+    return '名詞';
+  }
+
   /// 日本語訳から簡易品詞タグを判定するヘルパー関数
   static String detectPartOfSpeech(String jp) {
     final cleanJp = jp.trim();
@@ -142,6 +162,21 @@ class AppDatabase extends _$AppDatabase {
   /// 全単語の取得
   Future<List<Word>> getAllWords() async {
     return select(words).get();
+  }
+
+  /// 指定レベルの単語一覧を取得
+  Future<List<Word>> getWordsByLevel(int level) async {
+    return (select(words)..where((t) => t.level.equals(level))).get();
+  }
+
+  /// 複数レベルの単語一覧を取得
+  Future<List<Word>> getWordsByLevels(List<int> levels) async {
+    return (select(words)..where((t) => t.level.isIn(levels))).get();
+  }
+
+  /// 指定チャプターの単語一覧を取得
+  Future<List<Word>> getWordsByChapter(int chapter) async {
+    return (select(words)..where((t) => t.chapter.equals(chapter))).get();
   }
 
   /// 【1日1回処理】忘却曲線による定着度ポイント減算 ＆ 減算累計加算 ＆ 制限フラグ一括解除 (F-05)
@@ -278,39 +313,42 @@ class AppDatabase extends _$AppDatabase {
       });
     }
 
+    const cefrRank = {'A1': 0, 'A2': 1, 'B1': 2, 'B2': 3, 'C1': 4, 'C2': 5};
     processedList.sort((a, b) {
-      final aLevel = a['level'] as int;
-      final bLevel = b['level'] as int;
-      if (aLevel != bLevel) return aLevel.compareTo(bLevel);
+      final aCefr = a['cefr']?.toString().toUpperCase().trim() ?? 'A1';
+      final bCefr = b['cefr']?.toString().toUpperCase().trim() ?? 'A1';
+      final aRank = cefrRank[aCefr] ?? 99;
+      final bRank = cefrRank[bCefr] ?? 99;
+      if (aRank != bRank) return aRank.compareTo(bRank);
       return (a['originalIndex'] as int).compareTo(b['originalIndex'] as int);
     });
 
     int globalChapter = 1;
-    int currentLevel = -1;
-    int levelWordCount = 0;
+    String currentCefr = '';
+    int cefrWordCount = 0;
 
     await batch((batch) {
       for (final item in processedList) {
-        final level = item['level'] as int;
+        final cefrStr = item['cefr']?.toString().toUpperCase().trim() ?? 'A1';
 
-        if (currentLevel == -1) {
-          currentLevel = level;
-          levelWordCount = 0;
-        } else if (level != currentLevel) {
-          if (levelWordCount > 0) {
+        if (currentCefr.isEmpty) {
+          currentCefr = cefrStr;
+          cefrWordCount = 0;
+        } else if (cefrStr != currentCefr) {
+          if (cefrWordCount > 0) {
             globalChapter++;
           }
-          currentLevel = level;
-          levelWordCount = 0;
-        } else if (levelWordCount > 0 && levelWordCount % 100 == 0) {
+          currentCefr = cefrStr;
+          cefrWordCount = 0;
+        } else if (cefrWordCount > 0 && cefrWordCount % 100 == 0) {
           globalChapter++;
         }
 
-        levelWordCount++;
+        cefrWordCount++;
 
+        final levelVal = item['level'] as int? ?? _cefrToLevel(cefrStr);
         final englishStr = item['english']?.toString() ?? '';
         final japaneseStr = item['japanese']?.toString() ?? '';
-        final cefrStr = item['cefr']?.toString() ?? 'A1';
         final phoneticStr = item['phonetic']?.toString();
         final categoryStr = item['category']?.toString() ?? 'General';
         final exampleStr = item['example']?.toString();
@@ -351,7 +389,7 @@ class AppDatabase extends _$AppDatabase {
             japanese: japaneseStr,
             partOfSpeech: Value(posStr),
             cefr: Value(cefrStr),
-            level: Value(level),
+            level: Value(levelVal),
             chapter: Value(globalChapter),
             phonetic: Value(phoneticStr),
             category: Value(categoryStr),

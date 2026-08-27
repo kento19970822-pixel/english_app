@@ -235,149 +235,156 @@ class _WordDetailModalState extends State<WordDetailModal> {
     );
   }
 
-  /// ヘッダー（英単語・発音記号・TTS・お気に入り・バッジ）
+  /// ヘッダー（1段目: バッジ・音声・お気に入り / 2段目: 横幅いっぱいの英単語 ＆ 発音記号）
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      padding: const EdgeInsets.fromLTRB(20, 4, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // 単語スペル ＆ 発音記号
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        _detail.english,
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: _textPrimary,
-                          letterSpacing: -0.5,
+          // 1段目: 操作ボタン ＆ メタデータバッジ群
+          Row(
+            children: [
+              // 左側: 音声再生ボタン ＆ バッジ群（原形/カテゴリ/CEFR/Chap）
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // TTS発音ボタン
+                      IconButton(
+                        icon: const Icon(Icons.volume_up_rounded, color: _primaryAccent, size: 24),
+                        onPressed: () {
+                          HapticFeedback.selectionClick();
+                          TtsService.instance.speak(_detail.english);
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        splashRadius: 20,
+                        tooltip: '発音を聴く',
+                      ),
+                      const SizedBox(width: 4),
+                      if (_detail.baseForm != null && _detail.baseForm!.isNotEmpty) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF8E1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFFFE082)),
+                          ),
+                          child: Text(
+                            '原形: ${_detail.baseForm}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF8D6E63),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                      ],
+                      if (_detail.category.isNotEmpty) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFEAE0),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: _borderColor),
+                          ),
+                          child: Text(
+                            _detail.category,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _textSecondary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                      ],
+                      // CEFR バッジ
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _primaryAccent.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: _primaryAccent.withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          _detail.cefr,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                            color: _primaryAccent,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    // TTS発音ボタン
-                    IconButton(
-                      icon: const Icon(Icons.volume_up_rounded, color: _primaryAccent, size: 24),
-                      onPressed: () {
-                        HapticFeedback.selectionClick();
-                        TtsService.instance.speak(_detail.english);
-                      },
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      splashRadius: 20,
-                    ),
-                  ],
-                ),
-                if (_detail.phonetic != null && _detail.phonetic!.isNotEmpty)
-                  Text(
-                    _detail.phonetic!,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: _textSecondary,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // バッジ群（原形 / カテゴリ / CEFR / Chap / お気に入り）
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_detail.baseForm != null && _detail.baseForm!.isNotEmpty) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF8E1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFFFE082)),
-                  ),
-                  child: Text(
-                    '原形: ${_detail.baseForm}',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF8D6E63),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 5),
-              ],
-              if (_detail.category.isNotEmpty) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFEAE0),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: _borderColor),
-                  ),
-                  child: Text(
-                    _detail.category,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: _textSecondary,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 5),
-              ],
-              // CEFR バッジ
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _primaryAccent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _primaryAccent.withValues(alpha: 0.3)),
-                ),
-                child: Text(
-                  _detail.cefr,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: _primaryAccent,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 5),
-              // チャプターバッジ
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _secondaryAccent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _secondaryAccent.withValues(alpha: 0.3)),
-                ),
-                child: Text(
-                  'Ch.${_detail.chapter}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: _secondaryAccent,
+                      const SizedBox(width: 5),
+                      // チャプターバッジ
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _secondaryAccent.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: _secondaryAccent.withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          'Ch.${_detail.chapter}',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: _secondaryAccent,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(width: 4),
-              // お気に入りトグルボタン
+
+              // 右側: お気に入りトグルボタン
               IconButton(
                 icon: Icon(
                   _isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
                   color: _isFavorite ? const Color(0xFFD4B86A) : _textSecondary.withValues(alpha: 0.5),
-                  size: 28,
+                  size: 26,
                 ),
                 onPressed: _toggleFavorite,
-                splashRadius: 22,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                splashRadius: 20,
+                tooltip: 'お気に入り',
               ),
             ],
           ),
+          const SizedBox(height: 2),
+
+          // 2段目: 単語スペル ＆ 発音記号（横幅全域を使って大きく明瞭に表示）
+          Text(
+            _detail.english,
+            style: const TextStyle(
+              fontSize: 27,
+              fontWeight: FontWeight.w800,
+              color: _textPrimary,
+              letterSpacing: -0.5,
+              height: 1.15,
+            ),
+          ),
+          if (_detail.phonetic != null && _detail.phonetic!.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              _detail.phonetic!,
+              style: const TextStyle(
+                fontSize: 14,
+                color: _textSecondary,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -408,48 +415,61 @@ class _WordDetailModalState extends State<WordDetailModal> {
           ],
         ),
         const SizedBox(height: 10),
-        ..._detail.senses.asMap().entries.map((entry) {
-          final idx = entry.key;
-          final sense = entry.value;
+        ..._detail.senses.map((sense) {
+          final isSelected = sense.senseId == _currentWord.senseIndex ||
+              (sense.meaningJa == _currentWord.japanese);
           return Container(
             margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _cardColor,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _borderColor),
+              color: isSelected ? _primaryAccent.withValues(alpha: 0.04) : _cardColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? _primaryAccent : _borderColor,
+                width: isSelected ? 1.8 : 1.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isSelected ? _primaryAccent.withValues(alpha: 0.12) : const Color(0x08000000),
+                  blurRadius: isSelected ? 6 : 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 語義番号・品詞・日本語訳
+                // 語義ヘッダー（番号バッジ、品詞、チャプター、意味）
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // 語義番号バッジ（選択中なら強調）
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: _primaryAccent.withValues(alpha: 0.12),
+                        color: isSelected ? _primaryAccent : _primaryAccent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        '${idx + 1}',
-                        style: const TextStyle(
-                          fontSize: 11,
+                        '${sense.senseId}',
+                        style: TextStyle(
+                          fontSize: 12,
                           fontWeight: FontWeight.w800,
-                          color: _primaryAccent,
+                          color: isSelected ? Colors.white : _primaryAccent,
                         ),
                       ),
                     ),
                     const SizedBox(width: 6),
+                    // 品詞バッジ（日本語・角括弧なし）
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE8EEF5),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(color: const Color(0xFFBDD0E0), width: 0.8),
                       ),
                       child: Text(
-                        '[${sense.partOfSpeech}]',
+                        AppDatabase.toFullJapanesePos(sense.partOfSpeech, fallbackJp: sense.meaningJa),
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -458,18 +478,18 @@ class _WordDetailModalState extends State<WordDetailModal> {
                       ),
                     ),
                     if (sense.chapter != null) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 5),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFFEFEAE0),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
                           'Ch.${sense.chapter}',
                           style: const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
                             color: _textSecondary,
                           ),
                         ),
@@ -559,12 +579,15 @@ class _WordDetailModalState extends State<WordDetailModal> {
           children: [
             Icon(Icons.link_rounded, size: 16, color: _secondaryAccent),
             SizedBox(width: 6),
-            Text(
-              'よく使われる組み合わせ（コロケーション）',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: _textPrimary,
+            Expanded(
+              child: Text(
+                'よく使われる組み合わせ（コロケーション）',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: _textPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

@@ -127,7 +127,7 @@ void main() {
     });
 
     test('getCharacterSpecies generates distinct species for all chapters across 8 categories', () {
-      expect(kTotalChapterCount, 312);
+      expect(kTotalChapterCount, 350);
 
       for (int c = 1; c <= kTotalChapterCount; c++) {
         final sp = getCharacterSpecies(c);

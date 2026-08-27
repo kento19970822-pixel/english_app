@@ -350,10 +350,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
               return LayoutBuilder(
                 builder: (context, constraints) {
                   final cellSize = min(constraints.maxWidth, constraints.maxHeight);
-                  // セルサイズに応じてスタンプサイズを大きく動的拡大
-                  final stampSize = max(24.0, cellSize * 0.56);
-                  final dayFontSize = max(10.0, cellSize * 0.18);
-                  final badgeFontSize = max(8.0, cellSize * 0.14);
+                  // セルサイズに応じてスタンプサイズを動的調整（確実なオーバーフロー防止）
+                  final stampSize = max(14.0, cellSize * 0.50);
+                  final dayFontSize = max(9.0, cellSize * 0.18);
+                  final badgeFontSize = max(7.5, cellSize * 0.13);
 
                   return Container(
                     decoration: BoxDecoration(
@@ -369,7 +369,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(3.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -377,7 +377,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           Align(
                             alignment: Alignment.topLeft,
                             child: Padding(
-                              padding: const EdgeInsets.only(left: 3.0, top: 1.0),
+                              padding: const EdgeInsets.only(left: 2.0, top: 0.0),
                               child: Text(
                                 '$day',
                                 style: TextStyle(
@@ -391,32 +391,35 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             ),
                           ),
 
-                          // 中央: 堂々と大きく表示されるスタンプ
+                          // 中央: 堂々と大きく表示されるスタンプ（FittedBoxで安全に縮小フィット）
                           Expanded(
                             child: Center(
                               child: hasActivity
-                                  ? (record.appliedStampId != null && _stampsMap.containsKey(record.appliedStampId!))
-                                      ? Builder(
-                                          builder: (context) {
-                                            final s = _stampsMap[record.appliedStampId]!;
-                                            return PixelStampWidget(
-                                              id: s.id,
-                                              name: s.name,
-                                              rarity: StampRarity.fromString(s.rarity),
-                                              paletteId: s.colorPaletteId,
-                                              patternId: s.patternId,
-                                              frameId: s.frameId,
-                                              effectId: s.effectId,
-                                              isUnlocked: true,
-                                              size: stampSize,
-                                            );
-                                          },
-                                        )
-                                      : Icon(
-                                          Icons.check_circle_rounded,
-                                          size: stampSize * 0.8,
-                                          color: const Color(0xFF4CAF50),
-                                        )
+                                  ? FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: (record.appliedStampId != null && _stampsMap.containsKey(record.appliedStampId!))
+                                          ? Builder(
+                                              builder: (context) {
+                                                final s = _stampsMap[record.appliedStampId]!;
+                                                return PixelStampWidget(
+                                                  id: s.id,
+                                                  name: s.name,
+                                                  rarity: StampRarity.fromString(s.rarity),
+                                                  paletteId: s.colorPaletteId,
+                                                  patternId: s.patternId,
+                                                  frameId: s.frameId,
+                                                  effectId: s.effectId,
+                                                  isUnlocked: true,
+                                                  size: stampSize,
+                                                );
+                                              },
+                                            )
+                                          : Icon(
+                                              Icons.check_circle_rounded,
+                                              size: stampSize * 0.8,
+                                              color: const Color(0xFF4CAF50),
+                                            ),
+                                    )
                                   : const SizedBox.shrink(),
                             ),
                           ),
@@ -425,24 +428,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           if (hasActivity && memorizedCount > 0)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 1.0),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: _primaryAccent.withAlpha(40),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  '+$memorizedCount',
-                                  style: TextStyle(
-                                    fontSize: badgeFontSize,
-                                    fontWeight: FontWeight.bold,
-                                    color: _primaryAccent,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
+                                  decoration: BoxDecoration(
+                                    color: _primaryAccent.withAlpha(40),
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                  child: Text(
+                                    '+$memorizedCount',
+                                    style: TextStyle(
+                                      fontSize: badgeFontSize,
+                                      fontWeight: FontWeight.bold,
+                                      color: _primaryAccent,
+                                    ),
                                   ),
                                 ),
                               ),
                             )
                           else
-                            SizedBox(height: badgeFontSize + 2),
+                            const SizedBox(height: 2),
                         ],
                       ),
                     ),
@@ -604,8 +610,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           const SizedBox(height: 8),
           Container(
-            height: 95,
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            height: 104,
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
             decoration: BoxDecoration(
               color: const Color(0xFFF6F2E7),
               borderRadius: BorderRadius.circular(10),
@@ -619,7 +625,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     final day = index + 1;
                     final stat = dailyStats[index];
                     final count = stat['memorizedCount'] as int;
-                    final maxH = constraints.maxHeight - 22;
+                    final maxH = (constraints.maxHeight - 26).clamp(0.0, double.infinity);
                     final barHeight = maxDailyMemorized > 0 && count > 0
                         ? (count / maxDailyMemorized * maxH).clamp(6.0, maxH)
                         : 0.0;
@@ -641,7 +647,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                     color: Color(0xFF2E7D32),
                                   ),
                                 ),
-                              ),
+                              )
+                            else
+                              const SizedBox(height: 10),
                             Container(
                               height: barHeight,
                               width: double.infinity,
@@ -651,12 +659,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Text(
-                              day % 5 == 1 || day == daysInMonth ? '$day' : '·',
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: day % 5 == 1 ? FontWeight.bold : FontWeight.normal,
-                                color: _textSecondary,
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                day % 5 == 1 || day == daysInMonth ? '$day' : '·',
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: day % 5 == 1 ? FontWeight.bold : FontWeight.normal,
+                                  color: _textSecondary,
+                                ),
                               ),
                             ),
                           ],

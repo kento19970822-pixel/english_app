@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
 
-/// 全チャプター数（31,130単語 ÷ 100単語/章）
-const int kTotalChapterCount = 312;
+/// 全チャプター数（34,693語義 ÷ 100語義/章 = 350章）
+const int kTotalChapterCount = 350;
 
 /// キャラクターの成長・進化段階 (F-13)
 enum CharacterGrowthState {
@@ -44,17 +44,17 @@ enum CharacterCategory {
   }
 }
 
-/// 312チャプターの系統均等・ごちゃまぜ決定論的マッピング (固定シードで完全一意)
+/// 350チャプターの系統均等・ごちゃまぜ決定論的マッピング (固定シードで完全一意)
 final List<CharacterCategory> _kChapterCategories = () {
   final List<CharacterCategory> pool = [
-    ...List.filled(60, CharacterCategory.animal),
-    ...List.filled(35, CharacterCategory.bird),
-    ...List.filled(35, CharacterCategory.aquatic),
-    ...List.filled(35, CharacterCategory.plant),
-    ...List.filled(60, CharacterCategory.monster),
-    ...List.filled(40, CharacterCategory.fantasy),
-    ...List.filled(30, CharacterCategory.humanoid),
-    ...List.filled(17, CharacterCategory.special),
+    ...List.filled(65, CharacterCategory.animal),
+    ...List.filled(40, CharacterCategory.bird),
+    ...List.filled(40, CharacterCategory.aquatic),
+    ...List.filled(40, CharacterCategory.plant),
+    ...List.filled(65, CharacterCategory.monster),
+    ...List.filled(45, CharacterCategory.fantasy),
+    ...List.filled(35, CharacterCategory.humanoid),
+    ...List.filled(20, CharacterCategory.special),
   ];
   final rng = math.Random(20260825);
   for (int i = pool.length - 1; i > 0; i--) {
@@ -80,8 +80,8 @@ final List<int> _kChapterCategoryOffsets = () {
 
 /// キャラクター種族メタデータ (48x48 高精細ドットモデル)
 class CharacterSpecies {
-  final int chapter; // 対応チャプター番号 (1..374)
-  final int id; // 0..373
+  final int chapter; // 対応チャプター番号 (1..350)
+  final int id; // 0..349
   final String name;
   final String japaneseName;
   final CharacterCategory category;
@@ -204,7 +204,7 @@ const List<Map<String, dynamic>> _kSpecialMotifs = [
   {'ja': 'ムーンライト', 'en': 'Moon', 'feat': '三日月型の頭部・夜空色のローブ・星屑の粉', 'p': 0xFFFFF59D, 's': 0xFFFBC02D, 'b': 0xFFFFF9C4, 'a': 0xFF5C6BC0},
 ];
 
-/// 指定チャプター（1..374）に対応する固有キャラクター種族を生成・取得
+/// 指定チャプター（1..350）に対応する固有キャラクター種族を生成・取得
 CharacterSpecies getCharacterSpecies(int chapter) {
   final clampedChap = chapter.clamp(1, kTotalChapterCount);
   final id = clampedChap - 1;

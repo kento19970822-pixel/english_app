@@ -155,6 +155,26 @@ class WordDetail {
       }
     }
 
+    // 重複語義の確実な排除 (品詞 + 日本語意味 + 例文)
+    final List<WordSense> uniqueSenses = [];
+    final Set<String> seenSenseKeys = {};
+    for (final s in parsedSenses) {
+      final key = '${s.partOfSpeech.trim()}|${s.meaningJa.trim()}|${s.exampleEn?.trim() ?? ''}';
+      if (!seenSenseKeys.contains(key)) {
+        seenSenseKeys.add(key);
+        uniqueSenses.add(WordSense(
+          senseId: uniqueSenses.length + 1,
+          partOfSpeech: s.partOfSpeech,
+          meaningJa: s.meaningJa,
+          cefr: s.cefr,
+          chapter: s.chapter,
+          exampleEn: s.exampleEn,
+          exampleJa: s.exampleJa,
+        ));
+      }
+    }
+    parsedSenses = uniqueSenses;
+
     List<String> parsedCollocations = [];
     if (word.collocations != null && word.collocations!.isNotEmpty) {
       final raw = word.collocations!.trim();
