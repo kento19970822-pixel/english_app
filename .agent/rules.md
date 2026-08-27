@@ -48,3 +48,12 @@ git merge feature/xxx
 
 # 4. 作業ブランチの削除
 git branch -d feature/xxx
+```
+
+---
+
+## 3. CI/CDワークフロー（GitHub Actions）の管理規約
+- `.github/workflows/` 配下のワークフローファイル（`.yml`）は、同一目的のものを重複して作成しないこと。
+  - Web版公開: `deploy.yml`（GitHub Pages）
+  - iOS版ビルド: `build_ios.yml`（IPAビルド）
+- 新規ワークフローを追加・変更する際は、既存のワークフローとの重複やトリガー条件（`on.push`）を必ず確認し、多重実行を防止すること。

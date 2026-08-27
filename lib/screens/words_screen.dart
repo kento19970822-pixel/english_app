@@ -653,7 +653,7 @@ class WordsScreenState extends State<WordsScreen> {
                                 child: WordChapterBanner(section: section),
                               ),
                             SliverFixedExtentList(
-                              itemExtent: 78.0,
+                              itemExtent: 85.0,
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) {
                                   final word = section.words[index];
