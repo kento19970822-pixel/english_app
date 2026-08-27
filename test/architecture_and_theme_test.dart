@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:english_app/db/app_database.dart';
 import 'package:english_app/providers/settings_provider.dart';
-import 'package:english_app/providers/buddy_provider.dart';
+import 'package:english_app/services/buddy_service.dart';
 import 'package:english_app/theme/app_theme.dart';
 import 'package:english_app/services/tts_service.dart';
 import 'package:english_app/widgets/words/word_search_bar.dart';
@@ -37,7 +37,7 @@ void main() {
     });
   });
 
-  group('SettingsProvider & BuddyProvider Tests', () {
+  group('SettingsProvider & BuddyService Tests', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
@@ -55,12 +55,10 @@ void main() {
       expect(provider.themeMode, equals(AppThemeMode.light));
     });
 
-    test('BuddyProvider initializes and notifies listeners', () async {
-      final provider = BuddyProvider();
-      expect(provider.selectedSpeciesId, equals(0));
-
-      provider.setSelectedSpeciesId(1);
-      expect(provider.selectedSpeciesId, equals(1));
+    test('BuddyService updates species and notifies listeners', () async {
+      final service = BuddyService.instance;
+      service.setSelectedSpeciesId(1);
+      expect(service.selectedSpeciesId, equals(1));
     });
   });
 
