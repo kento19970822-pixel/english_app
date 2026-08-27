@@ -173,14 +173,14 @@ class _WordCardTileState extends State<WordCardTile> {
                 ? widget.onDoubleTap
                 : (widget.showJapanese ? null : (widget.onDoubleTap ?? widget.onTap)),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 7.0, 12, 7.0),
+              padding: const EdgeInsets.fromLTRB(12, 3.0, 12, 5.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // 左端: 定着度インジケーター（縦バー・上下中央揃え）
                   Container(
                     width: 4.0,
-                    height: 42,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: indicatorColor,
                       borderRadius: BorderRadius.circular(2.5),
@@ -388,9 +388,9 @@ class _WordCardTileState extends State<WordCardTile> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 3.0),
+                      const SizedBox(height: 0.0),
 
-                      // 2行目: 英単語 ＋ 和訳（上下バランスよく中央配置）
+                      // 2行目: 英単語 ＋ 和訳（上下バランスよく配置）
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
