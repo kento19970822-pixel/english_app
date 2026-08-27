@@ -431,15 +431,29 @@ class _GameScreenState extends State<GameScreen>
     final steps = ['3', '2', '1', 'スタート!'];
     for (int i = 0; i < steps.length; i++) {
       if (!mounted || _countdownSessionId != currentSession || !isGameStarted || isGameOver) return;
+
+      // 一時停止中の待機
+      while (isPaused) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted || _countdownSessionId != currentSession || !isGameStarted || isGameOver) return;
+      }
+
       setState(() {
         _countdownText = steps[i];
       });
       _countdownAnimController.forward(from: 0.0);
       if (steps[i] == 'スタート!') {
         _playSE('correct');
-        await Future.delayed(const Duration(milliseconds: 700));
-      } else {
-        await Future.delayed(const Duration(milliseconds: 850));
+      }
+
+      final targetDuration = (steps[i] == 'スタート!') ? 700 : 850;
+      int elapsed = 0;
+      while (elapsed < targetDuration) {
+        if (!mounted || _countdownSessionId != currentSession || !isGameStarted || isGameOver) return;
+        if (!isPaused) {
+          elapsed += 50;
+        }
+        await Future.delayed(const Duration(milliseconds: 50));
       }
     }
 
@@ -965,8 +979,12 @@ class _GameScreenState extends State<GameScreen>
     if (isPaused) {
       _leftDropController.stop();
       _rightDropController.stop();
+      _countdownAnimController.stop();
       _showPauseDialog();
     } else {
+      if (_countdownText != null) {
+        _countdownAnimController.forward();
+      }
       if (leftWord != null && !isGameOver) _leftDropController.forward();
       if (rightWord != null && !isGameOver) _rightDropController.forward();
     }
@@ -1223,7 +1241,7 @@ class _GameScreenState extends State<GameScreen>
           backgroundColor: Colors.white,
           elevation: 0,
           actions: [
-            if (isGameStarted && !isGameOver && _countdownText == null)
+            if (isGameStarted && !isGameOver)
               IconButton(
                 icon: Icon(
                   isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
@@ -1521,42 +1539,58 @@ class _GameScreenState extends State<GameScreen>
       );
     }
 
-    return Wrap(
-      spacing: 4,
-      runSpacing: 2,
-      children: attempts.asMap().entries.map((entry) {
-        final idx = entry.key + 1;
-        final isCorrect = entry.value;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-          decoration: BoxDecoration(
-            color: isCorrect ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(
-              color: isCorrect ? const Color(0xFFA5D6A7) : const Color(0xFFEF9A9A),
-              width: 0.8,
+    final correctCount = attempts.where((a) => a).length;
+    final totalCount = attempts.length;
+    final allCorrect = correctCount == totalCount;
+    final noneCorrect = correctCount == 0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+      decoration: BoxDecoration(
+        color: allCorrect
+            ? const Color(0xFFE8F5E9)
+            : (noneCorrect ? const Color(0xFFFFEBEE) : const Color(0xFFFFF8E1)),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: allCorrect
+              ? const Color(0xFFA5D6A7)
+              : (noneCorrect ? const Color(0xFFEF9A9A) : const Color(0xFFFFE082)),
+          width: 0.8,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$correctCount/$totalCount正解',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: allCorrect
+                  ? const Color(0xFF2E7D32)
+                  : (noneCorrect ? const Color(0xFFC62828) : const Color(0xFFE65100)),
             ),
           ),
-          child: Row(
+          const SizedBox(width: 4),
+          Row(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '$idx回目: ',
-                style: TextStyle(
-                  fontSize: 10,
+            children: attempts.take(5).map((isCorrect) {
+              return Padding(
+                padding: const EdgeInsets.only(left: 1.5),
+                child: Icon(
+                  isCorrect ? Icons.check_rounded : Icons.close_rounded,
+                  size: 11,
                   color: isCorrect ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
-                  fontWeight: FontWeight.bold,
                 ),
-              ),
-              Icon(
-                isCorrect ? Icons.check_rounded : Icons.close_rounded,
-                size: 12,
-                color: isCorrect ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
-              ),
-            ],
+              );
+            }).toList(),
           ),
-        );
-      }).toList(),
+          if (totalCount > 5) ...[
+            const SizedBox(width: 2),
+            const Text('..', style: TextStyle(fontSize: 8, color: Colors.grey, fontWeight: FontWeight.bold)),
+          ],
+        ],
+      ),
     );
   }
 

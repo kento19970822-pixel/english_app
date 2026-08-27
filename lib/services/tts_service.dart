@@ -26,6 +26,19 @@ class TtsService {
       await _flutterTts.setPitch(1.0);
       await _flutterTts.setVolume(1.0);
 
+      // iOS: マナーモード（サイレントスイッチ）時に音を出さない ambient 設定
+      try {
+        await _flutterTts.setIosAudioCategory(
+          IosTextToSpeechAudioCategory.ambient,
+          [
+            IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+          ],
+          IosTextToSpeechAudioMode.defaultMode,
+        );
+      } catch (e) {
+        debugPrint("TtsService iOS AudioCategory Error: $e");
+      }
+
       await _selectAndSetBestVoice();
     } catch (e) {
       debugPrint("TtsService Init Error: $e");
