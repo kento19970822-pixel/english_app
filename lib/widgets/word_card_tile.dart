@@ -173,7 +173,7 @@ class _WordCardTileState extends State<WordCardTile> {
                 ? widget.onDoubleTap
                 : (widget.showJapanese ? null : (widget.onDoubleTap ?? widget.onTap)),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 3.0, 12, 5.0),
+              padding: const EdgeInsets.fromLTRB(12, 0.0, 12, 5.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -390,9 +390,9 @@ class _WordCardTileState extends State<WordCardTile> {
                       ),
                       const SizedBox(height: 0.0),
 
-                      // 2行目: 英単語 ＋ 和訳（1行目との余白を相殺して極限まで引き締め）
+                      // 2行目: 英単語 ＋ 和訳（行間を半分に極限引き締め）
                       Transform.translate(
-                        offset: const Offset(0, -3.0),
+                        offset: const Offset(0, -6.0),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
