@@ -312,94 +312,94 @@ class _WordFilterBottomSheetState extends State<WordFilterBottomSheet> {
                     ),
                     const SizedBox(height: 20),
 
-                    // 3. チャプター / A-Z / カテゴリ（現在のソートモード別）
-                    if (widget.sortMode == 'chap') ...[
-                      const Text(
-                        'チャプター指定',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textPrimary),
+                    // 3. チャプター指定
+                    const Text(
+                      'チャプター指定',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textPrimary),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: _borderColor),
                       ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: _borderColor),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: (['ALL', ..._currentAvailableChapters.map((e) => e.toString())].contains(_selectedChapter))
-                                ? _selectedChapter
-                                : 'ALL',
-                            isExpanded: true,
-                            style: const TextStyle(fontSize: 14, color: _textPrimary, fontWeight: FontWeight.bold),
-                            items: [
-                              const DropdownMenuItem(value: 'ALL', child: Text('すべてのチャプター')),
-                              ..._currentAvailableChapters.map(
-                                (ch) => DropdownMenuItem(
-                                  value: ch.toString(),
-                                  child: Text('Chapter $ch'),
-                                ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: (['ALL', ..._currentAvailableChapters.map((e) => e.toString())].contains(_selectedChapter))
+                              ? _selectedChapter
+                              : 'ALL',
+                          isExpanded: true,
+                          style: const TextStyle(fontSize: 14, color: _textPrimary, fontWeight: FontWeight.bold),
+                          items: [
+                            const DropdownMenuItem(value: 'ALL', child: Text('すべてのチャプター')),
+                            ..._currentAvailableChapters.map(
+                              (ch) => DropdownMenuItem(
+                                value: ch.toString(),
+                                child: Text('Chapter $ch'),
                               ),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) setState(() => _selectedChapter = val);
-                            },
-                          ),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) setState(() => _selectedChapter = val);
+                          },
                         ),
                       ),
-                      const SizedBox(height: 20),
-                    ] else if (widget.sortMode == 'az') ...[
-                      const Text(
-                        '頭文字 (A-Z) 指定',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textPrimary),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          _buildChoiceChip(
-                            label: '全て',
-                            isSelected: _selectedAz == 'ALL',
-                            onTap: () => setState(() => _selectedAz = 'ALL'),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 4. 頭文字 (A-Z) 指定
+                    const Text(
+                      '頭文字 (A-Z) 指定',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textPrimary),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        _buildChoiceChip(
+                          label: '全て',
+                          isSelected: _selectedAz == 'ALL',
+                          onTap: () => setState(() => _selectedAz = 'ALL'),
+                        ),
+                        ...widget.availableAz.map(
+                          (letter) => _buildChoiceChip(
+                            label: letter,
+                            isSelected: _selectedAz == letter,
+                            onTap: () => setState(() => _selectedAz = letter),
                           ),
-                          ...widget.availableAz.map(
-                            (letter) => _buildChoiceChip(
-                              label: letter,
-                              isSelected: _selectedAz == letter,
-                              onTap: () => setState(() => _selectedAz = letter),
-                            ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 5. カテゴリ指定
+                    const Text(
+                      'カテゴリ指定',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textPrimary),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildChoiceChip(
+                          label: '全て',
+                          isSelected: _selectedCategory == 'ALL',
+                          onTap: () => setState(() => _selectedCategory = 'ALL'),
+                        ),
+                        ...widget.availableCategories.map(
+                          (cat) => _buildChoiceChip(
+                            label: cat,
+                            isSelected: _selectedCategory == cat,
+                            onTap: () => setState(() => _selectedCategory = cat),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                    ] else if (widget.sortMode == 'category') ...[
-                      const Text(
-                        'カテゴリ指定',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textPrimary),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _buildChoiceChip(
-                            label: '全て',
-                            isSelected: _selectedCategory == 'ALL',
-                            onTap: () => setState(() => _selectedCategory = 'ALL'),
-                          ),
-                          ...widget.availableCategories.map(
-                            (cat) => _buildChoiceChip(
-                              label: cat,
-                              isSelected: _selectedCategory == cat,
-                              onTap: () => setState(() => _selectedCategory = cat),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                    ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),

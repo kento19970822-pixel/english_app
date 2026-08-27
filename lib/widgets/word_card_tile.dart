@@ -173,14 +173,14 @@ class _WordCardTileState extends State<WordCardTile> {
                 ? widget.onDoubleTap
                 : (widget.showJapanese ? null : (widget.onDoubleTap ?? widget.onTap)),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0.0, 12, 5.0),
+              padding: const EdgeInsets.fromLTRB(12, 7.0, 12, 7.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // 左端: 定着度インジケーター（縦バー・上下中央揃え）
                   Container(
                     width: 4.0,
-                    height: 38,
+                    height: 64,
                     decoration: BoxDecoration(
                       color: indicatorColor,
                       borderRadius: BorderRadius.circular(2.5),
@@ -188,13 +188,13 @@ class _WordCardTileState extends State<WordCardTile> {
                   ),
                   const SizedBox(width: 10),
 
-                // 単語・情報・和訳（ゆとりのある2行構成）
+                // 単語・情報・和訳（洗練された3段構成）
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // 1行目: バッジ群 ＆ 右側操作ボタン（音声 / Ch / お気に入り）
+                      // 1段目: バッジ群 ＆ 右側操作ボタン（音声 / Ch / お気に入り）
                       Row(
                         children: [
                           // 左側: バッジ群
@@ -207,7 +207,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                 children: [
                                   // 品詞バッジ
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0.5),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1.0),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFE8EEF5),
                                       borderRadius: BorderRadius.circular(3),
@@ -216,7 +216,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                     child: Text(
                                       AppDatabase.toShortJapanesePos(widget.word.partOfSpeech, fallbackJp: widget.word.japanese),
                                       style: const TextStyle(
-                                        fontSize: 9.0,
+                                        fontSize: 9.5,
                                         fontWeight: FontWeight.bold,
                                         color: Color(0xFF4A6B82),
                                       ),
@@ -225,7 +225,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                   if (widget.word.totalSenses > 1) ...[
                                     const SizedBox(width: 3),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 3.5, vertical: 1.0),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFEDE7F6),
                                         borderRadius: BorderRadius.circular(3),
@@ -244,7 +244,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                   if (widget.word.baseForm != null && widget.word.baseForm!.isNotEmpty) ...[
                                     const SizedBox(width: 3),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 3.5, vertical: 1.0),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFFFF8E1),
                                         borderRadius: BorderRadius.circular(3),
@@ -263,7 +263,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                   const SizedBox(width: 3),
                                   // 定着度ポイント
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0.5),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1.0),
                                     decoration: BoxDecoration(
                                       color: indicatorColor.withAlpha(30),
                                       borderRadius: BorderRadius.circular(4),
@@ -297,7 +297,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                   if (isMemorized) ...[
                                     const SizedBox(width: 3),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 3.5, vertical: 1.0),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFE8F5E9),
                                         borderRadius: BorderRadius.circular(3),
@@ -315,7 +315,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                   if (isRestricted) ...[
                                     const SizedBox(width: 3),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 3.5, vertical: 1.0),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFFFF3E0),
                                         borderRadius: BorderRadius.circular(3),
@@ -336,7 +336,7 @@ class _WordCardTileState extends State<WordCardTile> {
                           ),
                           const SizedBox(width: 4),
 
-                          // 右側: 音声・Ch・お気に入り（スリム上段配置）
+                          // 右側: 音声・Ch・お気に入り（押しやすいタップ領域）
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -344,16 +344,16 @@ class _WordCardTileState extends State<WordCardTile> {
                                 icon: const Icon(
                                   Icons.volume_up_rounded,
                                   color: _primaryAccent,
-                                  size: 16,
+                                  size: 18,
                                 ),
                                 tooltip: '発音を聴く',
                                 onPressed: widget.onSpeak,
                                 padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                               ),
                               Container(
                                 margin: const EdgeInsets.symmetric(horizontal: 2),
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0.5),
+                                padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1.0),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFEFEAE0),
                                   borderRadius: BorderRadius.circular(4),
@@ -361,7 +361,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                 child: Text(
                                   'Ch.${widget.word.chapter}',
                                   style: const TextStyle(
-                                    fontSize: 8.5,
+                                    fontSize: 9.0,
                                     fontWeight: FontWeight.bold,
                                     color: _textSecondary,
                                   ),
@@ -375,74 +375,69 @@ class _WordCardTileState extends State<WordCardTile> {
                                   color: widget.word.isFavorite
                                       ? Colors.amber.shade700
                                       : const Color(0xFFC0B8A5),
-                                  size: 17,
+                                  size: 19,
                                 ),
                                 onPressed: () {
                                   HapticFeedback.lightImpact();
                                   widget.onToggleFavorite();
                                 },
                                 padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: 0.0),
 
-                      // 2行目: 英単語 ＋ 和訳（行間を半分に極限引き締め）
-                      Transform.translate(
-                        offset: const Offset(0, -6.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              widget.word.english,
-                              style: const TextStyle(
-                                fontSize: 15.5,
-                                fontWeight: FontWeight.bold,
-                                color: _textPrimary,
-                                letterSpacing: 0.1,
-                                height: 1.2,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: isJapaneseVisible
-                                  ? Text(
-                                      widget.word.japanese,
-                                      style: const TextStyle(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w500,
-                                        color: _textPrimary,
-                                        height: 1.2,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    )
-                                  : Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.0),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFF4EFE6),
-                                          borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(color: _borderColor, width: 0.6),
-                                        ),
-                                        child: const Text(
-                                          'タップで和訳',
-                                          style: TextStyle(
-                                            fontSize: 9.5,
-                                            fontWeight: FontWeight.w500,
-                                            color: _textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                            ),
-                          ],
+                      // 2段目: 英単語（カード全体の垂直中央に配置）
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                        child: Text(
+                          widget.word.english,
+                          style: const TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.bold,
+                            color: _textPrimary,
+                            letterSpacing: 0.1,
+                            height: 1.15,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+
+                      // 3段目: 日本語の意味（和訳またはタップで和訳）
+                      isJapaneseVisible
+                          ? Text(
+                              widget.word.japanese,
+                              style: const TextStyle(
+                                fontSize: 13.0,
+                                fontWeight: FontWeight.w500,
+                                color: _textPrimary,
+                                height: 1.15,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          : Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF4EFE6),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: _borderColor, width: 0.6),
+                                ),
+                                child: const Text(
+                                  'タップで和訳',
+                                  style: TextStyle(
+                                    fontSize: 10.0,
+                                    fontWeight: FontWeight.w500,
+                                    color: _textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
                     ],
                   ),
                 ),

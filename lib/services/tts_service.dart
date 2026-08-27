@@ -26,11 +26,14 @@ class TtsService {
       await _flutterTts.setPitch(1.0);
       await _flutterTts.setVolume(1.0);
 
-      // iOS: マナーモード（サイレントスイッチ）時に音を出さない ambient 設定
+      // iOS: マナーモード（サイレントスイッチ）時に音を出さない ambient 設定 ＆ Bluetoothイヤホン同期対応
       try {
         await _flutterTts.setIosAudioCategory(
           IosTextToSpeechAudioCategory.ambient,
           [
+            IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+            IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+            IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
             IosTextToSpeechAudioCategoryOptions.mixWithOthers,
           ],
           IosTextToSpeechAudioMode.defaultMode,
@@ -99,21 +102,30 @@ class TtsService {
 
       final lowerName = name.toLowerCase();
 
-      // 2. 高音質ニューラル / ナチュラル / 拡張キーワード
-      if (lowerName.contains('neural') || lowerName.contains('natural')) {
-        score += 100; // 最上位ニューラル音声 (Windows Cortana / Android Neural / Azure)
-      }
-      if (lowerName.contains('wavenet')) {
-        score += 90; // Google Wavenet
-      }
-      if (lowerName.contains('premium') || lowerName.contains('enhanced')) {
-        score += 80; // iOS / macOS 高音質拡張 (Enhanced / Premium)
-      }
-      if (lowerName.contains('siri')) {
-        score += 70; // Apple Siri 音声
+      // 2. iOS Siri 声4 / Siri 音声（最優先）
+      if (lowerName.contains('voice 4') ||
+          lowerName.contains('voice4') ||
+          lowerName.contains('voice_4') ||
+          (lowerName.contains('siri') && lowerName.contains('4')) ||
+          lowerName.contains('quinn') ||
+          lowerName.contains('aaron')) {
+        score += 250; // iOS Siri (声4) を最優先
+      } else if (lowerName.contains('siri')) {
+        score += 150; // Apple Siri 音声全般
       }
 
-      // 3. 定評のある高品質ネイティブスピーカー名（iOS / Windows / Android / Chrome）
+      // 3. 高音質ニューラル / ナチュラル / 拡張キーワード
+      if (lowerName.contains('neural') || lowerName.contains('natural')) {
+        score += 120; // 最上位ニューラル音声 (Windows Cortana / Android Neural / Azure)
+      }
+      if (lowerName.contains('wavenet')) {
+        score += 110; // Google Wavenet
+      }
+      if (lowerName.contains('premium') || lowerName.contains('enhanced')) {
+        score += 100; // iOS / macOS 高音質拡張 (Enhanced / Premium)
+      }
+
+      // 4. 定評のある高品質ネイティブスピーカー名（iOS / Windows / Android / Chrome）
       if (lowerName.contains('ava') ||
           lowerName.contains('samantha') ||
           lowerName.contains('allison') ||
@@ -140,7 +152,7 @@ class TtsService {
         score += 20;
       }
 
-      // 4. ネットワーク高音質 (Android network/online)
+      // 5. ネットワーク高音質 (Android network/online)
       if (lowerName.contains('network') || lowerName.contains('online')) {
         score += 25;
       }
@@ -160,14 +172,14 @@ class TtsService {
   int _lastSpeakTimestamp = 0;
   String _lastSpokenText = '';
 
-  /// 単語・テキストの音声再生（デバウンス＆排他制御）
+  /// 単語・テキストの音声再生（デバウンス＆排他制御 ＆ 左右イヤホン位相同期）
   Future<void> speak(String text) async {
     final cleanText = text.trim();
     if (cleanText.isEmpty) return;
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    // 100ms以内の同一単語連打はデバウンス（多重発話防止）
-    if (cleanText == _lastSpokenText && (now - _lastSpeakTimestamp) < 120) {
+    // 120ms以内の同一単語連打はデバウンス（多重発話防止）
+    if (cleanText == _lastSpokenText && (now - _lastSpeakTimestamp) < 150) {
       return;
     }
     _lastSpeakTimestamp = now;
@@ -179,6 +191,9 @@ class TtsService {
       }
       // 再生中の音声を確実に停止
       await _flutterTts.stop();
+      // 左右イヤホンへのバッファ重複を防ぐため微小待機
+      await Future.delayed(const Duration(milliseconds: 30));
+
       // 常に英語(en-US)を強制適用
       await _flutterTts.setLanguage("en-US");
       await _flutterTts.setSpeechRate(0.48);

@@ -51,7 +51,6 @@ class _WordDetailModalState extends State<WordDetailModal> {
   late WordDetail _detail;
   bool _isFavorite = false;
   final ScrollController _scrollController = ScrollController();
-  double _dragOffsetY = 0.0;
 
   // テーマカラー
   static const Color _bgColor = Color(0xFFFBF7EE);
@@ -75,7 +74,6 @@ class _WordDetailModalState extends State<WordDetailModal> {
       _currentWord = widget.wordList[_currentIndex];
       _detail = WordDetail.fromWord(_currentWord);
       _isFavorite = _currentWord.isFavorite;
-      _dragOffsetY = 0.0;
     });
     // 単語切り替え時に自動発音
     TtsService.instance.speak(_currentWord.english);
@@ -117,120 +115,77 @@ class _WordDetailModalState extends State<WordDetailModal> {
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    final maxHeight = mediaQuery.size.height * 0.88;
+    final modalHeight = mediaQuery.size.height * 0.82;
 
-    return Transform.translate(
-      offset: Offset(0, _dragOffsetY),
-      child: GestureDetector(
-        onVerticalDragUpdate: (details) {
-          if (_scrollController.hasClients && _scrollController.offset <= 0) {
-            if (details.primaryDelta != null && details.primaryDelta! > 0) {
-              setState(() {
-                _dragOffsetY = (_dragOffsetY + details.primaryDelta!).clamp(0.0, 300.0);
-              });
-            }
-          }
-        },
-        onVerticalDragEnd: (details) {
-          if (_dragOffsetY > 80.0) {
-            Navigator.of(context).pop();
-          } else {
-            setState(() {
-              _dragOffsetY = 0.0;
-            });
-          }
-        },
-        child: Container(
-          constraints: BoxConstraints(maxHeight: maxHeight),
-          decoration: const BoxDecoration(
-            color: _bgColor,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x22000000),
-                blurRadius: 16,
-                offset: Offset(0, -4),
-              ),
-            ],
+    return Container(
+      height: modalHeight,
+      decoration: const BoxDecoration(
+        color: _bgColor,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x22000000),
+            blurRadius: 16,
+            offset: Offset(0, -4),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // スワイプバーハンドル
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 10, bottom: 6),
-                  width: 44,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: _borderColor,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // スワイプバーハンドル
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(top: 10, bottom: 6),
+              width: 44,
+              height: 5,
+              decoration: BoxDecoration(
+                color: _borderColor,
+                borderRadius: BorderRadius.circular(3),
               ),
-
-              // ヘッダー部
-              _buildHeader(),
-
-              const Divider(height: 1, color: _borderColor),
-
-              // コンテンツ部（スクロール）
-              Flexible(
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification is OverscrollNotification && notification.overscroll < 0) {
-                      setState(() {
-                        _dragOffsetY = (_dragOffsetY - notification.overscroll * 0.5).clamp(0.0, 300.0);
-                      });
-                    }
-                    if (notification is ScrollEndNotification) {
-                      if (_dragOffsetY > 80.0) {
-                        Navigator.of(context).pop();
-                      } else if (_dragOffsetY > 0) {
-                        setState(() {
-                          _dragOffsetY = 0.0;
-                        });
-                      }
-                    }
-                    return false;
-                  },
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics(),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 語義一覧 & 例文
-                        _buildSensesSection(),
-
-                        const SizedBox(height: 16),
-
-                        // コロケーション・連語情報（存在する場合）
-                        if (_detail.collocations.isNotEmpty) ...[
-                          _buildCollocationsSection(),
-                          const SizedBox(height: 16),
-                        ],
-
-                        // 学習進捗ステータス
-                        _buildLearningStatusSection(),
-
-                        const SizedBox(height: 12),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              const Divider(height: 1, color: _borderColor),
-
-              // ボトム操作ナビゲーションバー
-              _buildBottomNav(),
-            ],
+            ),
           ),
-        ),
+
+          // ヘッダー部
+          _buildHeader(),
+
+          const Divider(height: 1, color: _borderColor),
+
+          // コンテンツ部（スクロール）
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 語義一覧 & 例文
+                  _buildSensesSection(),
+
+                  const SizedBox(height: 16),
+
+                  // コロケーション・連語情報（存在する場合）
+                  if (_detail.collocations.isNotEmpty) ...[
+                    _buildCollocationsSection(),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // 学習進捗ステータス
+                  _buildLearningStatusSection(),
+
+                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
+          ),
+
+          const Divider(height: 1, color: _borderColor),
+
+          // ボトム操作ナビゲーションバー
+          _buildBottomNav(),
+        ],
       ),
     );
   }
