@@ -348,7 +348,7 @@ class WordsScreenState extends State<WordsScreen> {
         final memorized = list.where((w) => w.isMemorized).length;
         sections.add(WordSection(
           key: 'ch_$ch',
-          title: 'Chapter $ch',
+          title: '$ch',
           words: list,
           memorizedCount: memorized,
         ));
@@ -358,10 +358,17 @@ class WordsScreenState extends State<WordsScreen> {
     _sections = sections;
   }
 
-  void _onFilterChanged() {
+  void _onFilterChanged({bool resetScroll = false}) {
     setState(() {
       _applyFilterAndGrouping();
     });
+    if (resetScroll && _scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   void _updateWordInPlace(Word updatedWord) {
@@ -517,92 +524,104 @@ class WordsScreenState extends State<WordsScreen> {
                   child: CustomScrollView(
                     controller: _scrollController,
                     slivers: [
-                    // 1. スリム検索・ソート・フィルターバー（自動伸縮でオーバーフロー防止）
-                    SliverToBoxAdapter(
-                      child: Container(
-                        color: _bgColor,
-                        padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 6.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // 検索バー ＆ 効果音 ＆ 絞り込みボタン ＆ その他データ管理メニュー
-                            WordSearchBar(
-                              searchController: _searchController,
-                              searchFocusNode: _searchFocusNode,
-                              onChanged: (val) {
-                                setState(() => _searchQuery = val.trim());
-                                _onFilterChanged();
-                              },
-                              onClear: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = '');
-                                _onFilterChanged();
-                                _searchFocusNode.requestFocus();
-                              },
-                              soundEnabled: SoundService.instance.isSeEnabled,
-                              onToggleSound: () {
-                                SoundService.instance.setSeEnabled(!SoundService.instance.isSeEnabled);
-                                setState(() {});
-                              },
-                              activeFilterCount: _activeFilterCount,
-                              onOpenFilter: _openFilterBottomSheet,
-                              onSyncFlags: _showSyncMemorizedFlagsDialog,
-                              onResetWordsDb: () async {
-                                await _rebuildDatabase();
-                              },
-                              onResetLearningData: () async {
-                                final messenger = ScaffoldMessenger.of(context);
-                                await widget.database.resetAllLearningData();
-                                await _loadWords();
-                                messenger.showSnackBar(
-                                  const SnackBar(content: Text('学習データを初期化しました')),
-                                );
-                              },
-                              bgColor: _bgColor,
-                              borderColor: _borderColor,
-                              primaryColor: _primaryAccent,
-                              textColor: _textPrimary,
-                              textSecondaryColor: _textSecondary,
-                            ),
-                            const SizedBox(height: 6),
+                    // 1. スリム検索・ソート・フィルターバー（上スクロール・引き下げ時に指の動きに追従して滑らかに出現するフローティングヘッダー）
+                    SliverAppBar(
+                      floating: true,
+                      snap: false,
+                      pinned: false,
+                      automaticallyImplyLeading: false,
+                      backgroundColor: _bgColor,
+                      elevation: 0,
+                      toolbarHeight: _activeFilterCount > 0 ? 155 : 128,
+                      expandedHeight: _activeFilterCount > 0 ? 155 : 128,
+                      collapsedHeight: _activeFilterCount > 0 ? 155 : 128,
+                      flexibleSpace: FlexibleSpaceBar(
+                        collapseMode: CollapseMode.pin,
+                        background: Container(
+                          color: _bgColor,
+                          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 6.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // 検索バー ＆ 効果音 ＆ 絞り込みボタン ＆ その他データ管理メニュー
+                              WordSearchBar(
+                                searchController: _searchController,
+                                searchFocusNode: _searchFocusNode,
+                                onChanged: (val) {
+                                  setState(() => _searchQuery = val.trim());
+                                  _onFilterChanged(resetScroll: true);
+                                },
+                                onClear: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                  _onFilterChanged(resetScroll: true);
+                                  _searchFocusNode.requestFocus();
+                                },
+                                soundEnabled: SoundService.instance.isSeEnabled,
+                                onToggleSound: () {
+                                  SoundService.instance.setSeEnabled(!SoundService.instance.isSeEnabled);
+                                  setState(() {});
+                                },
+                                activeFilterCount: _activeFilterCount,
+                                onOpenFilter: _openFilterBottomSheet,
+                                onSyncFlags: _showSyncMemorizedFlagsDialog,
+                                onResetWordsDb: () async {
+                                  await _rebuildDatabase();
+                                },
+                                onResetLearningData: () async {
+                                  final messenger = ScaffoldMessenger.of(context);
+                                  await widget.database.resetAllLearningData();
+                                  await _loadWords();
+                                  messenger.showSnackBar(
+                                    const SnackBar(content: Text('学習データを初期化しました')),
+                                  );
+                                },
+                                bgColor: _bgColor,
+                                borderColor: _borderColor,
+                                primaryColor: _primaryAccent,
+                                textColor: _textPrimary,
+                                textSecondaryColor: _textSecondary,
+                              ),
+                              const SizedBox(height: 6),
 
-                            // ソート切替（Chap / A-Z / Cat.） ＆ 和訳常時トグルボタン
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 30,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE8E2D5),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        _buildSortButton('Chap', 'chap'),
-                                        _buildSortButton('A-Z', 'az'),
-                                        _buildSortButton('Cat.', 'category'),
-                                      ],
+                              // ソート切替（Chap / A-Z / Cat.） ＆ 和訳常時トグルボタン
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE8E2D5),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          _buildSortButton('Chap', 'chap'),
+                                          _buildSortButton('A-Z', 'az'),
+                                          _buildSortButton('Cat.', 'category'),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                _buildToggleChip(
-                                  label: _showJapanese ? '和訳: ON' : '和訳: OFF',
-                                  isSelected: _showJapanese,
-                                  accentColor: _primaryAccent,
-                                  height: 30,
-                                  onTap: () {
-                                    setState(() => _showJapanese = !_showJapanese);
-                                  },
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
+                                  const SizedBox(width: 8),
+                                  _buildToggleChip(
+                                    label: _showJapanese ? '和訳: ON' : '和訳: OFF',
+                                    isSelected: _showJapanese,
+                                    accentColor: _primaryAccent,
+                                    height: 30,
+                                    onTap: () {
+                                      setState(() => _showJapanese = !_showJapanese);
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
 
-                            // アクティブフィルタータグ & 件数表示
-                            _buildActiveFilterSummaryBar(),
-                          ],
+                              // アクティブフィルタータグ & 件数表示
+                              _buildActiveFilterSummaryBar(),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -730,10 +749,8 @@ class WordsScreenState extends State<WordsScreen> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          setState(() {
-            _sortMode = modeKey;
-            _applyFilterAndGrouping();
-          });
+          _sortMode = modeKey;
+          _onFilterChanged(resetScroll: true);
         },
         child: Container(
           decoration: BoxDecoration(
@@ -852,15 +869,13 @@ class WordsScreenState extends State<WordsScreen> {
       availableAz: availableAz,
       availableCategories: availableCategories,
       onApply: (newState) {
-        setState(() {
-          _filterUnlearned = newState.filterUnlearned;
-          _filterFavorite = newState.filterFavorite;
-          _selectedCefr = newState.selectedCefr;
-          _selectedChap = newState.selectedChapter == 'ALL' ? 0 : int.tryParse(newState.selectedChapter) ?? 0;
-          _selectedAz = newState.selectedAz;
-          _selectedCategory = newState.selectedCategory;
-          _applyFilterAndGrouping();
-        });
+        _filterUnlearned = newState.filterUnlearned;
+        _filterFavorite = newState.filterFavorite;
+        _selectedCefr = newState.selectedCefr;
+        _selectedChap = newState.selectedChapter == 'ALL' ? 0 : int.tryParse(newState.selectedChapter) ?? 0;
+        _selectedAz = newState.selectedAz;
+        _selectedCategory = newState.selectedCategory;
+        _onFilterChanged(resetScroll: true);
       },
     );
   }
@@ -893,40 +908,38 @@ class WordsScreenState extends State<WordsScreen> {
             ),
           ),
           if (_filterUnlearned) ...[
-            _buildActiveTag('未暗記', () => setState(() { _filterUnlearned = false; _applyFilterAndGrouping(); })),
+            _buildActiveTag('未暗記', () { _filterUnlearned = false; _onFilterChanged(resetScroll: true); }),
             const SizedBox(width: 4),
           ],
           if (_filterFavorite) ...[
-            _buildActiveTag('お気に入り', () => setState(() { _filterFavorite = false; _applyFilterAndGrouping(); })),
+            _buildActiveTag('お気に入り', () { _filterFavorite = false; _onFilterChanged(resetScroll: true); }),
             const SizedBox(width: 4),
           ],
           if (_selectedCefr != 'ALL') ...[
-            _buildActiveTag('CEFR: $_selectedCefr', () => setState(() { _selectedCefr = 'ALL'; _applyFilterAndGrouping(); })),
+            _buildActiveTag('CEFR: $_selectedCefr', () { _selectedCefr = 'ALL'; _onFilterChanged(resetScroll: true); }),
             const SizedBox(width: 4),
           ],
           if (_selectedChap != 0) ...[
-            _buildActiveTag('Ch.$_selectedChap', () => setState(() { _selectedChap = 0; _applyFilterAndGrouping(); })),
+            _buildActiveTag('Ch.$_selectedChap', () { _selectedChap = 0; _onFilterChanged(resetScroll: true); }),
             const SizedBox(width: 4),
           ],
           if (_selectedAz != 'ALL') ...[
-            _buildActiveTag('A-Z: $_selectedAz', () => setState(() { _selectedAz = 'ALL'; _applyFilterAndGrouping(); })),
+            _buildActiveTag('A-Z: $_selectedAz', () { _selectedAz = 'ALL'; _onFilterChanged(resetScroll: true); }),
             const SizedBox(width: 4),
           ],
           if (_selectedCategory != 'ALL') ...[
-            _buildActiveTag('Cat: $_selectedCategory', () => setState(() { _selectedCategory = 'ALL'; _applyFilterAndGrouping(); })),
+            _buildActiveTag('Cat: $_selectedCategory', () { _selectedCategory = 'ALL'; _onFilterChanged(resetScroll: true); }),
             const SizedBox(width: 4),
           ],
           InkWell(
             onTap: () {
-              setState(() {
-                _filterUnlearned = false;
-                _filterFavorite = false;
-                _selectedCefr = 'ALL';
-                _selectedChap = 0;
-                _selectedAz = 'ALL';
-                _selectedCategory = 'ALL';
-                _applyFilterAndGrouping();
-              });
+              _filterUnlearned = false;
+              _filterFavorite = false;
+              _selectedCefr = 'ALL';
+              _selectedChap = 0;
+              _selectedAz = 'ALL';
+              _selectedCategory = 'ALL';
+              _onFilterChanged(resetScroll: true);
             },
             borderRadius: BorderRadius.circular(4),
             child: Padding(

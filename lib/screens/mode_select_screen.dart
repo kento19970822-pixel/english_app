@@ -8,6 +8,7 @@ import 'calendar_screen.dart';
 import 'character_gallery_screen.dart';
 import 'game_screen.dart';
 import 'stamp_gallery_screen.dart';
+import '../services/srs_service.dart';
 import '../widgets/srs_review_dialog.dart';
 
 class ModeSelectScreen extends StatefulWidget {
@@ -36,6 +37,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
   List<ChapterProgressesData> _currentLevelChapters = [];
   bool _isLoadingChapters = true;
   Stamp? _favoriteStamp;
+  int _dueCount = 0;
   final ScrollController _scrollController = ScrollController();
 
   // 定数カラーパレット
@@ -94,6 +96,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
 
     final favStamp = await widget.database.getFavoriteStamp();
     final allProgresses = await widget.database.getAllChapterProgresses();
+    final dueCount = await SrsService.instance.getDueWordsCount(widget.database);
     
     // レベルマッピング (初級: lvl 1 / 中級: lvl 2 / 上級: lvl 3)
     final filtered = allProgresses.where((cp) => cp.level == level).toList();
@@ -107,6 +110,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
     if (mounted) {
       setState(() {
         _favoriteStamp = favStamp;
+        _dueCount = dueCount;
         _allChapterProgresses = allProgresses;
         _currentLevelChapters = filtered;
         if (!preserveSelection || !filtered.any((cp) => cp.chapter == selectedChapter)) {
@@ -115,6 +119,11 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
         _isLoadingChapters = false;
       });
     }
+  }
+
+  /// 外部（タブ切り替えや単語帳更新時）から最新チャプター進行状況を再ロード
+  void reloadChapters() {
+    _loadChaptersForLevel(selectedLevel, preserveSelection: true);
   }
 
   CharacterGrowthState _getBuddyGrowthState() {
@@ -232,6 +241,19 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                   tooltip: 'キャラクター図鑑',
                                   onTap: () => _openSubScreen(CharacterGalleryScreen(database: widget.database)),
                                 ),
+                                const SizedBox(width: 6),
+                                // 4つ目のクイックアクション: 🎫 ひらめき復習チケット (SRS能動的想起)
+                                _buildQuickActionBtn(
+                                  icon: Icons.confirmation_number_rounded,
+                                  iconColor: const Color(0xFFED8936),
+                                  tooltip: 'ひらめき復習チケット',
+                                  badgeCount: _dueCount,
+                                  onTap: () => SrsReviewDialog.show(
+                                    context,
+                                    widget.database,
+                                    onComplete: () => _loadChaptersForLevel(selectedLevel, preserveSelection: true),
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 10),
@@ -316,64 +338,6 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SizedBox(height: 10),
-
-                          // SRS 能動的想起（Active Recall）復習バナー
-                          InkWell(
-                            onTap: () => SrsReviewDialog.show(
-                              context,
-                              widget.database,
-                              onComplete: () => setState(() {}),
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    const Color(0xFFED8936).withAlpha(35),
-                                    const Color(0xFF5F9E98).withAlpha(25),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFED8936).withAlpha(80)),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFED8936),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 16),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'SRS 能動的想起（Active Recall）',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                            color: _textPrimary,
-                                          ),
-                                        ),
-                                        Text(
-                                          '忘却曲線に基づく本日の最適復習を開始',
-                                          style: TextStyle(fontSize: 10.5, color: _textSecondary),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const Icon(Icons.chevron_right_rounded, color: _textSecondary, size: 20),
-                                ],
-                              ),
-                            ),
-                          ),
-
                           if (selectedMode == 'learning') ...[
                             const SizedBox(height: 12),
                             Row(
@@ -394,7 +358,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Text(
-                                    '解放条件: 70pt以上の単語が90%以上',
+                                    '解放条件: 80pt以上の単語が90%以上',
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
@@ -713,6 +677,8 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
     required IconData icon,
     required String tooltip,
     required VoidCallback onTap,
+    Color? iconColor,
+    int badgeCount = 0,
   }) {
     return Tooltip(
       message: tooltip,
@@ -721,14 +687,43 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(10),
-          child: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: _cardColor,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: _borderColor),
-            ),
-            child: Icon(icon, size: 20, color: _primaryAccent),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: _cardColor,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _borderColor),
+                ),
+                child: Icon(icon, size: 20, color: iconColor ?? _primaryAccent),
+              ),
+              if (badgeCount > 0)
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFED8936),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white, width: 1.2),
+                    ),
+                    constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                    child: Center(
+                      child: Text(
+                        '$badgeCount',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -809,6 +804,14 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
 
     return GestureDetector(
       onTap: () {
+        if (modeKey == 'srs') {
+          SrsReviewDialog.show(
+            context,
+            widget.database,
+            onComplete: () => setState(() {}),
+          );
+          return;
+        }
         setState(() {
           selectedMode = modeKey;
           if (modeKey != 'learning' && _selectedLevels.isEmpty) {

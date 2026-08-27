@@ -164,7 +164,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                     _recordsKey.currentState?.closeSubView();
                   }
                 } else {
-                  if (index == 1) {
+                  if (index == 0) {
+                    // ゲームタブ選択時は最新のチャプター解放・暗記率・相棒状態を即時再読み込み
+                    _modeSelectKey.currentState?.reloadChapters();
+                  } else if (index == 1) {
                     // 単語帳タブ選択時は最新の定着度ポイント・暗記フラグを即時再読み込み
                     _wordsKey.currentState?.refreshWords();
                   } else if (index == 2) {

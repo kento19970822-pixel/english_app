@@ -85,10 +85,11 @@ void main() {
     });
 
     test('getDueWords returns words that have nextReviewAt <= now', () async {
-      // 復習期日を過去日時に設定
+      // 復習期日を過去日時に設定（学習実績あり）
       final yesterday = DateTime.now().subtract(const Duration(days: 1));
       await (db.update(db.userWordProgresses)..where((t) => t.wordId.equals(1))).write(
         UserWordProgressesCompanion(
+          lastStudiedAt: drift.Value(yesterday),
           nextReviewAt: drift.Value(yesterday),
         ),
       );
