@@ -164,14 +164,14 @@ class _WordCardTileState extends State<WordCardTile> {
                 },
           onDoubleTap: widget.showJapanese ? null : (widget.onDoubleTap ?? widget.onTap),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 7, 12, 7),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // 左端: 定着度インジケーター（縦バー）
                 Container(
                   width: 4.0,
-                  height: 44,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: indicatorColor,
                     borderRadius: BorderRadius.circular(2.5),
@@ -379,20 +379,20 @@ class _WordCardTileState extends State<WordCardTile> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 1),
+                      const SizedBox(height: 3),
 
                       // 2行目: 英単語 ＋ 和訳（横並びでスッキリ配置）
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
                             widget.word.english,
                             style: const TextStyle(
-                              fontSize: 16.0,
+                              fontSize: 15.5,
                               fontWeight: FontWeight.bold,
                               color: _textPrimary,
                               letterSpacing: 0.1,
+                              height: 1.2,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -404,6 +404,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w500,
                                       color: _textPrimary,
+                                      height: 1.2,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -411,7 +412,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                 : Align(
                                     alignment: Alignment.centerLeft,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFF4EFE6),
                                         borderRadius: BorderRadius.circular(4),
@@ -420,7 +421,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                       child: const Text(
                                         'タップで和訳',
                                         style: TextStyle(
-                                          fontSize: 10.5,
+                                          fontSize: 10.0,
                                           fontWeight: FontWeight.w500,
                                           color: _textSecondary,
                                         ),

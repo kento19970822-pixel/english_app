@@ -135,7 +135,7 @@ void main() {
       );
 
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.byIcon(Icons.volume_up_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.filter_alt_rounded), findsOneWidget);
       expect(find.text('2'), findsOneWidget); // Badge count
     });
   });
