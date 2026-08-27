@@ -7,6 +7,7 @@ import '../db/app_database.dart';
 class WordCardTile extends StatefulWidget {
   final Word word;
   final bool showJapanese;
+  final bool isKeyboardActive;
   final VoidCallback onSpeak;
   final VoidCallback onToggleFavorite;
   final VoidCallback? onSwipeRight; // 右スワイプ: 暗記済み化 (80pt)
@@ -18,6 +19,7 @@ class WordCardTile extends StatefulWidget {
     super.key,
     required this.word,
     required this.showJapanese,
+    this.isKeyboardActive = false,
     required this.onSpeak,
     required this.onToggleFavorite,
     this.onSwipeRight,
@@ -127,57 +129,64 @@ class _WordCardTileState extends State<WordCardTile> {
         ),
       ),
       child: Container(
-      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 3.5),
-      decoration: BoxDecoration(
-        color: _cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isMemorized
-              ? const Color(0xFFC8E6C9)
-              : (widget.word.isFavorite ? const Color(0xFFFFE082) : _borderColor),
-          width: isMemorized || widget.word.isFavorite ? 1.2 : 0.8,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 3,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
+        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 3.0),
+        decoration: BoxDecoration(
+          color: _cardColor,
           borderRadius: BorderRadius.circular(12),
-          onTap: widget.showJapanese
-              ? widget.onTap
-              : () {
-                  final currentlyVisible = _overrideShowJapanese ?? false;
-                  final willShow = !currentlyVisible;
-                  setState(() {
-                    _overrideShowJapanese = willShow;
-                  });
-                  if (willShow) {
-                    widget.onSpeak();
-                  }
-                },
-          onDoubleTap: widget.showJapanese ? null : (widget.onDoubleTap ?? widget.onTap),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // 左端: 定着度インジケーター（縦バー）
-                Container(
-                  width: 4.0,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: indicatorColor,
-                    borderRadius: BorderRadius.circular(2.5),
+          border: Border.all(
+            color: isMemorized
+                ? const Color(0xFFC8E6C9)
+                : (widget.word.isFavorite ? const Color(0xFFFFE082) : _borderColor),
+            width: isMemorized || widget.word.isFavorite ? 1.2 : 0.8,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x06000000),
+              blurRadius: 3,
+              offset: Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            splashColor: widget.isKeyboardActive ? Colors.transparent : null,
+            highlightColor: widget.isKeyboardActive ? Colors.transparent : null,
+            hoverColor: widget.isKeyboardActive ? Colors.transparent : null,
+            onTap: widget.isKeyboardActive
+                ? widget.onTap
+                : (widget.showJapanese
+                    ? widget.onTap
+                    : () {
+                        final currentlyVisible = _overrideShowJapanese ?? false;
+                        final willShow = !currentlyVisible;
+                        setState(() {
+                          _overrideShowJapanese = willShow;
+                        });
+                        if (willShow) {
+                          widget.onSpeak();
+                        }
+                      }),
+            onDoubleTap: widget.isKeyboardActive
+                ? widget.onDoubleTap
+                : (widget.showJapanese ? null : (widget.onDoubleTap ?? widget.onTap)),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 5.5, 12, 5.5),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 左端: 定着度インジケーター（縦バー・上下中央揃え）
+                  Container(
+                    width: 4.0,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: indicatorColor,
+                      borderRadius: BorderRadius.circular(2.5),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
+                  const SizedBox(width: 10),
 
                 // 単語・情報・和訳（ゆとりのある2行構成）
                 Expanded(
@@ -327,7 +336,7 @@ class _WordCardTileState extends State<WordCardTile> {
                           ),
                           const SizedBox(width: 4),
 
-                          // 右側: 音声・Ch・お気に入り
+                          // 右側: 音声・Ch・お気に入り（スリム上段配置）
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -335,16 +344,16 @@ class _WordCardTileState extends State<WordCardTile> {
                                 icon: const Icon(
                                   Icons.volume_up_rounded,
                                   color: _primaryAccent,
-                                  size: 17,
+                                  size: 16,
                                 ),
                                 tooltip: '発音を聴く',
                                 onPressed: widget.onSpeak,
                                 padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
                               ),
                               Container(
                                 margin: const EdgeInsets.symmetric(horizontal: 2),
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0.5),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFEFEAE0),
                                   borderRadius: BorderRadius.circular(4),
@@ -352,7 +361,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                 child: Text(
                                   'Ch.${widget.word.chapter}',
                                   style: const TextStyle(
-                                    fontSize: 9.0,
+                                    fontSize: 8.5,
                                     fontWeight: FontWeight.bold,
                                     color: _textSecondary,
                                   ),
@@ -366,22 +375,22 @@ class _WordCardTileState extends State<WordCardTile> {
                                   color: widget.word.isFavorite
                                       ? Colors.amber.shade700
                                       : const Color(0xFFC0B8A5),
-                                  size: 18,
+                                  size: 17,
                                 ),
                                 onPressed: () {
                                   HapticFeedback.lightImpact();
                                   widget.onToggleFavorite();
                                 },
                                 padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 2.5),
 
-                      // 2行目: 英単語 ＋ 和訳（横並びでスッキリ配置）
+                      // 2行目: 英単語 ＋ 和訳（上下バランスよく中央配置）
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -392,7 +401,7 @@ class _WordCardTileState extends State<WordCardTile> {
                               fontWeight: FontWeight.bold,
                               color: _textPrimary,
                               letterSpacing: 0.1,
-                              height: 1.2,
+                              height: 1.15,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -404,7 +413,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w500,
                                       color: _textPrimary,
-                                      height: 1.2,
+                                      height: 1.15,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -412,7 +421,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                 : Align(
                                     alignment: Alignment.centerLeft,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.0),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFF4EFE6),
                                         borderRadius: BorderRadius.circular(4),
@@ -421,7 +430,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                       child: const Text(
                                         'タップで和訳',
                                         style: TextStyle(
-                                          fontSize: 10.0,
+                                          fontSize: 9.5,
                                           fontWeight: FontWeight.w500,
                                           color: _textSecondary,
                                         ),

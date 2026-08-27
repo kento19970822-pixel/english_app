@@ -652,13 +652,15 @@ class WordsScreenState extends State<WordsScreen> {
                               SliverToBoxAdapter(
                                 child: WordChapterBanner(section: section),
                               ),
-                            SliverList(
+                            SliverFixedExtentList(
+                              itemExtent: 68.0,
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) {
                                   final word = section.words[index];
                                   return WordCardTile(
                                     word: word,
                                     showJapanese: _showJapanese,
+                                    isKeyboardActive: _searchFocusNode.hasFocus,
                                     onSpeak: () => _speak(word.english),
                                     onToggleFavorite: () => _toggleFavoriteFast(word),
                                     onTap: () {
