@@ -30,6 +30,25 @@ class SoundService extends ChangeNotifier {
         final player = _getPlayer();
         await player.setReleaseMode(ReleaseMode.stop);
         await player.setVolume(1.0);
+
+        // iOS: マナーモード（サイレントスイッチ）時に音を出さない ambient 設定
+        await AudioPlayer.global.setAudioContext(
+          AudioContext(
+            iOS: AudioContextIOS(
+              category: AVAudioSessionCategory.ambient,
+              options: const {
+                AVAudioSessionOptions.mixWithOthers,
+              },
+            ),
+            android: const AudioContextAndroid(
+              isSpeakerphoneOn: true,
+              stayAwake: false,
+              contentType: AndroidContentType.sonification,
+              usageType: AndroidUsageType.assistanceSonification,
+              audioFocus: AndroidAudioFocus.none,
+            ),
+          ),
+        );
       } catch (_) {}
     } catch (e) {
       debugPrint('SoundService Init Error: $e');
