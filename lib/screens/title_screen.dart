@@ -51,6 +51,7 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
 
   Future<void> _loadInitialData() async {
     try {
+      await widget.database.initWordsIfEmpty();
       await widget.database.initChapterProgresses();
       final streak = await widget.database.calculateStreak();
       final totalDays = await widget.database.calculateTotalStudiedDays();

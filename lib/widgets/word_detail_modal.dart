@@ -79,6 +79,15 @@ class _WordDetailModalState extends State<WordDetailModal> {
     });
     // 単語切り替え時に自動発音
     TtsService.instance.speak(_currentWord.english);
+
+    // 同一英単語の他語義（他チャプター含む）を非同期読み込み
+    widget.database.getAllSensesForWord(_currentWord.english).then((siblings) {
+      if (mounted && siblings.isNotEmpty && siblings.length > 1) {
+        setState(() {
+          _detail = WordDetail.fromWordWithSiblings(_currentWord, siblings);
+        });
+      }
+    }).catchError((_) {});
   }
 
   Future<void> _toggleFavorite() async {
@@ -448,6 +457,24 @@ class _WordDetailModalState extends State<WordDetailModal> {
                         ),
                       ),
                     ),
+                    if (sense.chapter != null) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFEAE0),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Ch.${sense.chapter}',
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: _textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(

@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:drift/drift.dart';
 
 // テーブル定義ファイルの読み込み
@@ -18,7 +20,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -35,6 +37,7 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('PRAGMA foreign_keys = ON');
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_chapter ON words (chapter);');
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_cefr ON words (cefr);');
+      await customStatement('CREATE INDEX IF NOT EXISTS idx_words_english ON words (english);');
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_memorized ON words (is_memorized);');
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_favorite ON words (is_favorite);');
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_restricted ON words (is_restricted);');
@@ -250,6 +253,9 @@ class AppDatabase extends _$AppDatabase {
       final collocations = row['collocations'] ?? row['Collocations'];
       final otherMeanings = row['otherMeanings'] ?? row['other_meanings'] ?? row['OtherMeanings'];
       final baseForm = row['baseForm'] ?? row['base_form'] ?? row['BaseForm'];
+      final senseIndex = int.tryParse(row['senseIndex'] ?? row['sense_index'] ?? '1') ?? 1;
+      final totalSenses = int.tryParse(row['totalSenses'] ?? row['total_senses'] ?? '1') ?? 1;
+      final wordGroup = english.toLowerCase();
       final level = _cefrToLevel(cefr);
 
       processedList.add({
@@ -266,6 +272,9 @@ class AppDatabase extends _$AppDatabase {
         'collocations': collocations,
         'otherMeanings': otherMeanings,
         'baseForm': baseForm,
+        'senseIndex': senseIndex,
+        'totalSenses': totalSenses,
+        'wordGroup': wordGroup,
       });
     }
 
@@ -310,6 +319,9 @@ class AppDatabase extends _$AppDatabase {
         final posStr = (rawPos != null && rawPos.isNotEmpty) ? rawPos : detectPartOfSpeech(japaneseStr);
         final collocationsStr = item['collocations']?.toString();
         final baseFormStr = item['baseForm']?.toString();
+        final senseIndexVal = item['senseIndex'] as int? ?? 1;
+        final totalSensesVal = item['totalSenses'] as int? ?? 1;
+        final wordGroupStr = item['wordGroup']?.toString();
 
         // 複数語義の構造化JSON（明示指定があれば優先、なければカンマ区切りから自動生成）
         String? otherMeaningsJson = item['otherMeanings']?.toString();
@@ -348,6 +360,9 @@ class AppDatabase extends _$AppDatabase {
             collocations: Value(collocationsStr),
             otherMeanings: Value(otherMeaningsJson),
             baseForm: Value(baseFormStr),
+            senseIndex: Value(senseIndexVal),
+            totalSenses: Value(totalSensesVal),
+            wordGroup: Value(wordGroupStr),
             pointDecreasedTotal: const Value(0),
           ),
         );
@@ -357,6 +372,74 @@ class AppDatabase extends _$AppDatabase {
     // チャプター進行状況テーブルも再生成
     await delete(chapterProgresses).go();
     await initChapterProgresses();
+  }
+
+  /// 初回起動時またはテーブルが空の場合にCSVから単語データを自動シード
+  Future<void> initWordsIfEmpty() async {
+    final count = await (select(words)..limit(1)).get();
+    if (count.isNotEmpty) return;
+
+    try {
+      final csvString = await rootBundle.loadString('assets/words.csv');
+      final lines = csvString.split(RegExp(r'\r?\n'));
+      if (lines.isEmpty) return;
+
+      List<String> parseCsvLine(String line) {
+        final List<String> result = [];
+        final StringBuffer buffer = StringBuffer();
+        bool insideQuotes = false;
+        for (int i = 0; i < line.length; i++) {
+          final char = line[i];
+          if (char == '"') {
+            if (insideQuotes && i + 1 < line.length && line[i + 1] == '"') {
+              buffer.write('"');
+              i++;
+            } else {
+              insideQuotes = !insideQuotes;
+            }
+          } else if (char == ',' && !insideQuotes) {
+            result.add(buffer.toString().trim());
+            buffer.clear();
+          } else {
+            buffer.write(char);
+          }
+        }
+        result.add(buffer.toString().trim());
+        return result;
+      }
+
+      final rawHeader = parseCsvLine(lines.first);
+      final header = rawHeader.map((h) => h.replaceAll('"', '').trim()).toList();
+      final List<Map<String, String>> rawData = [];
+
+      for (var i = 1; i < lines.length; i++) {
+        final line = lines[i].trim();
+        if (line.isEmpty) continue;
+        final values = parseCsvLine(line);
+        if (values.length >= header.length) {
+          final map = <String, String>{};
+          for (var j = 0; j < header.length; j++) {
+            map[header[j]] = values[j];
+          }
+          rawData.add(map);
+        }
+      }
+
+      if (rawData.isNotEmpty) {
+        await insertRawWords(rawData);
+      }
+    } catch (e) {
+      debugPrint('initWordsIfEmpty error: $e');
+    }
+  }
+
+  /// 同一英単語の全語義（他チャプター含む）を取得
+  Future<List<Word>> getAllSensesForWord(String english) async {
+    final clean = english.toLowerCase().trim();
+    return (select(words)
+          ..where((t) => t.english.equals(clean) | t.wordGroup.equals(clean))
+          ..orderBy([(t) => OrderingTerm.asc(t.senseIndex)]))
+        .get();
   }
 
   /// 全単語データの削除

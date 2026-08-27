@@ -46,6 +46,8 @@ void main() {
       example: 'I ate an apple.',
       exampleJp: 'りんごを食べました。',
       partOfSpeech: '名',
+      senseIndex: 1,
+      totalSenses: 1,
       retentionPoint: 85,
       pointDecreasedTotal: 0,
       isMemorized: true,

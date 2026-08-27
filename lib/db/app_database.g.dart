@@ -180,6 +180,41 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _senseIndexMeta = const VerificationMeta(
+    'senseIndex',
+  );
+  @override
+  late final GeneratedColumn<int> senseIndex = GeneratedColumn<int>(
+    'sense_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _totalSensesMeta = const VerificationMeta(
+    'totalSenses',
+  );
+  @override
+  late final GeneratedColumn<int> totalSenses = GeneratedColumn<int>(
+    'total_senses',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _wordGroupMeta = const VerificationMeta(
+    'wordGroup',
+  );
+  @override
+  late final GeneratedColumn<String> wordGroup = GeneratedColumn<String>(
+    'word_group',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _retentionPointMeta = const VerificationMeta(
     'retentionPoint',
   );
@@ -297,6 +332,9 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
     collocations,
     otherMeanings,
     baseForm,
+    senseIndex,
+    totalSenses,
+    wordGroup,
     retentionPoint,
     pointDecreasedTotal,
     isMemorized,
@@ -416,6 +454,27 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
       context.handle(
         _baseFormMeta,
         baseForm.isAcceptableOrUnknown(data['base_form']!, _baseFormMeta),
+      );
+    }
+    if (data.containsKey('sense_index')) {
+      context.handle(
+        _senseIndexMeta,
+        senseIndex.isAcceptableOrUnknown(data['sense_index']!, _senseIndexMeta),
+      );
+    }
+    if (data.containsKey('total_senses')) {
+      context.handle(
+        _totalSensesMeta,
+        totalSenses.isAcceptableOrUnknown(
+          data['total_senses']!,
+          _totalSensesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('word_group')) {
+      context.handle(
+        _wordGroupMeta,
+        wordGroup.isAcceptableOrUnknown(data['word_group']!, _wordGroupMeta),
       );
     }
     if (data.containsKey('retention_point')) {
@@ -556,6 +615,18 @@ class $WordsTable extends Words with TableInfo<$WordsTable, Word> {
         DriftSqlType.string,
         data['${effectivePrefix}base_form'],
       ),
+      senseIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sense_index'],
+      )!,
+      totalSenses: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_senses'],
+      )!,
+      wordGroup: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}word_group'],
+      ),
       retentionPoint: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}retention_point'],
@@ -613,6 +684,9 @@ class Word extends DataClass implements Insertable<Word> {
   final String? collocations;
   final String? otherMeanings;
   final String? baseForm;
+  final int senseIndex;
+  final int totalSenses;
+  final String? wordGroup;
   final int retentionPoint;
   final int pointDecreasedTotal;
   final bool isMemorized;
@@ -637,6 +711,9 @@ class Word extends DataClass implements Insertable<Word> {
     this.collocations,
     this.otherMeanings,
     this.baseForm,
+    required this.senseIndex,
+    required this.totalSenses,
+    this.wordGroup,
     required this.retentionPoint,
     required this.pointDecreasedTotal,
     required this.isMemorized,
@@ -675,6 +752,11 @@ class Word extends DataClass implements Insertable<Word> {
     }
     if (!nullToAbsent || baseForm != null) {
       map['base_form'] = Variable<String>(baseForm);
+    }
+    map['sense_index'] = Variable<int>(senseIndex);
+    map['total_senses'] = Variable<int>(totalSenses);
+    if (!nullToAbsent || wordGroup != null) {
+      map['word_group'] = Variable<String>(wordGroup);
     }
     map['retention_point'] = Variable<int>(retentionPoint);
     map['point_decreased_total'] = Variable<int>(pointDecreasedTotal);
@@ -720,6 +802,11 @@ class Word extends DataClass implements Insertable<Word> {
       baseForm: baseForm == null && nullToAbsent
           ? const Value.absent()
           : Value(baseForm),
+      senseIndex: Value(senseIndex),
+      totalSenses: Value(totalSenses),
+      wordGroup: wordGroup == null && nullToAbsent
+          ? const Value.absent()
+          : Value(wordGroup),
       retentionPoint: Value(retentionPoint),
       pointDecreasedTotal: Value(pointDecreasedTotal),
       isMemorized: Value(isMemorized),
@@ -756,6 +843,9 @@ class Word extends DataClass implements Insertable<Word> {
       collocations: serializer.fromJson<String?>(json['collocations']),
       otherMeanings: serializer.fromJson<String?>(json['otherMeanings']),
       baseForm: serializer.fromJson<String?>(json['baseForm']),
+      senseIndex: serializer.fromJson<int>(json['senseIndex']),
+      totalSenses: serializer.fromJson<int>(json['totalSenses']),
+      wordGroup: serializer.fromJson<String?>(json['wordGroup']),
       retentionPoint: serializer.fromJson<int>(json['retentionPoint']),
       pointDecreasedTotal: serializer.fromJson<int>(
         json['pointDecreasedTotal'],
@@ -789,6 +879,9 @@ class Word extends DataClass implements Insertable<Word> {
       'collocations': serializer.toJson<String?>(collocations),
       'otherMeanings': serializer.toJson<String?>(otherMeanings),
       'baseForm': serializer.toJson<String?>(baseForm),
+      'senseIndex': serializer.toJson<int>(senseIndex),
+      'totalSenses': serializer.toJson<int>(totalSenses),
+      'wordGroup': serializer.toJson<String?>(wordGroup),
       'retentionPoint': serializer.toJson<int>(retentionPoint),
       'pointDecreasedTotal': serializer.toJson<int>(pointDecreasedTotal),
       'isMemorized': serializer.toJson<bool>(isMemorized),
@@ -816,6 +909,9 @@ class Word extends DataClass implements Insertable<Word> {
     Value<String?> collocations = const Value.absent(),
     Value<String?> otherMeanings = const Value.absent(),
     Value<String?> baseForm = const Value.absent(),
+    int? senseIndex,
+    int? totalSenses,
+    Value<String?> wordGroup = const Value.absent(),
     int? retentionPoint,
     int? pointDecreasedTotal,
     bool? isMemorized,
@@ -842,6 +938,9 @@ class Word extends DataClass implements Insertable<Word> {
         ? otherMeanings.value
         : this.otherMeanings,
     baseForm: baseForm.present ? baseForm.value : this.baseForm,
+    senseIndex: senseIndex ?? this.senseIndex,
+    totalSenses: totalSenses ?? this.totalSenses,
+    wordGroup: wordGroup.present ? wordGroup.value : this.wordGroup,
     retentionPoint: retentionPoint ?? this.retentionPoint,
     pointDecreasedTotal: pointDecreasedTotal ?? this.pointDecreasedTotal,
     isMemorized: isMemorized ?? this.isMemorized,
@@ -880,6 +979,13 @@ class Word extends DataClass implements Insertable<Word> {
           ? data.otherMeanings.value
           : this.otherMeanings,
       baseForm: data.baseForm.present ? data.baseForm.value : this.baseForm,
+      senseIndex: data.senseIndex.present
+          ? data.senseIndex.value
+          : this.senseIndex,
+      totalSenses: data.totalSenses.present
+          ? data.totalSenses.value
+          : this.totalSenses,
+      wordGroup: data.wordGroup.present ? data.wordGroup.value : this.wordGroup,
       retentionPoint: data.retentionPoint.present
           ? data.retentionPoint.value
           : this.retentionPoint,
@@ -925,6 +1031,9 @@ class Word extends DataClass implements Insertable<Word> {
           ..write('collocations: $collocations, ')
           ..write('otherMeanings: $otherMeanings, ')
           ..write('baseForm: $baseForm, ')
+          ..write('senseIndex: $senseIndex, ')
+          ..write('totalSenses: $totalSenses, ')
+          ..write('wordGroup: $wordGroup, ')
           ..write('retentionPoint: $retentionPoint, ')
           ..write('pointDecreasedTotal: $pointDecreasedTotal, ')
           ..write('isMemorized: $isMemorized, ')
@@ -954,6 +1063,9 @@ class Word extends DataClass implements Insertable<Word> {
     collocations,
     otherMeanings,
     baseForm,
+    senseIndex,
+    totalSenses,
+    wordGroup,
     retentionPoint,
     pointDecreasedTotal,
     isMemorized,
@@ -982,6 +1094,9 @@ class Word extends DataClass implements Insertable<Word> {
           other.collocations == this.collocations &&
           other.otherMeanings == this.otherMeanings &&
           other.baseForm == this.baseForm &&
+          other.senseIndex == this.senseIndex &&
+          other.totalSenses == this.totalSenses &&
+          other.wordGroup == this.wordGroup &&
           other.retentionPoint == this.retentionPoint &&
           other.pointDecreasedTotal == this.pointDecreasedTotal &&
           other.isMemorized == this.isMemorized &&
@@ -1008,6 +1123,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
   final Value<String?> collocations;
   final Value<String?> otherMeanings;
   final Value<String?> baseForm;
+  final Value<int> senseIndex;
+  final Value<int> totalSenses;
+  final Value<String?> wordGroup;
   final Value<int> retentionPoint;
   final Value<int> pointDecreasedTotal;
   final Value<bool> isMemorized;
@@ -1032,6 +1150,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.collocations = const Value.absent(),
     this.otherMeanings = const Value.absent(),
     this.baseForm = const Value.absent(),
+    this.senseIndex = const Value.absent(),
+    this.totalSenses = const Value.absent(),
+    this.wordGroup = const Value.absent(),
     this.retentionPoint = const Value.absent(),
     this.pointDecreasedTotal = const Value.absent(),
     this.isMemorized = const Value.absent(),
@@ -1057,6 +1178,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
     this.collocations = const Value.absent(),
     this.otherMeanings = const Value.absent(),
     this.baseForm = const Value.absent(),
+    this.senseIndex = const Value.absent(),
+    this.totalSenses = const Value.absent(),
+    this.wordGroup = const Value.absent(),
     this.retentionPoint = const Value.absent(),
     this.pointDecreasedTotal = const Value.absent(),
     this.isMemorized = const Value.absent(),
@@ -1083,6 +1207,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Expression<String>? collocations,
     Expression<String>? otherMeanings,
     Expression<String>? baseForm,
+    Expression<int>? senseIndex,
+    Expression<int>? totalSenses,
+    Expression<String>? wordGroup,
     Expression<int>? retentionPoint,
     Expression<int>? pointDecreasedTotal,
     Expression<bool>? isMemorized,
@@ -1108,6 +1235,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
       if (collocations != null) 'collocations': collocations,
       if (otherMeanings != null) 'other_meanings': otherMeanings,
       if (baseForm != null) 'base_form': baseForm,
+      if (senseIndex != null) 'sense_index': senseIndex,
+      if (totalSenses != null) 'total_senses': totalSenses,
+      if (wordGroup != null) 'word_group': wordGroup,
       if (retentionPoint != null) 'retention_point': retentionPoint,
       if (pointDecreasedTotal != null)
         'point_decreased_total': pointDecreasedTotal,
@@ -1137,6 +1267,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
     Value<String?>? collocations,
     Value<String?>? otherMeanings,
     Value<String?>? baseForm,
+    Value<int>? senseIndex,
+    Value<int>? totalSenses,
+    Value<String?>? wordGroup,
     Value<int>? retentionPoint,
     Value<int>? pointDecreasedTotal,
     Value<bool>? isMemorized,
@@ -1162,6 +1295,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
       collocations: collocations ?? this.collocations,
       otherMeanings: otherMeanings ?? this.otherMeanings,
       baseForm: baseForm ?? this.baseForm,
+      senseIndex: senseIndex ?? this.senseIndex,
+      totalSenses: totalSenses ?? this.totalSenses,
+      wordGroup: wordGroup ?? this.wordGroup,
       retentionPoint: retentionPoint ?? this.retentionPoint,
       pointDecreasedTotal: pointDecreasedTotal ?? this.pointDecreasedTotal,
       isMemorized: isMemorized ?? this.isMemorized,
@@ -1221,6 +1357,15 @@ class WordsCompanion extends UpdateCompanion<Word> {
     if (baseForm.present) {
       map['base_form'] = Variable<String>(baseForm.value);
     }
+    if (senseIndex.present) {
+      map['sense_index'] = Variable<int>(senseIndex.value);
+    }
+    if (totalSenses.present) {
+      map['total_senses'] = Variable<int>(totalSenses.value);
+    }
+    if (wordGroup.present) {
+      map['word_group'] = Variable<String>(wordGroup.value);
+    }
     if (retentionPoint.present) {
       map['retention_point'] = Variable<int>(retentionPoint.value);
     }
@@ -1268,6 +1413,9 @@ class WordsCompanion extends UpdateCompanion<Word> {
           ..write('collocations: $collocations, ')
           ..write('otherMeanings: $otherMeanings, ')
           ..write('baseForm: $baseForm, ')
+          ..write('senseIndex: $senseIndex, ')
+          ..write('totalSenses: $totalSenses, ')
+          ..write('wordGroup: $wordGroup, ')
           ..write('retentionPoint: $retentionPoint, ')
           ..write('pointDecreasedTotal: $pointDecreasedTotal, ')
           ..write('isMemorized: $isMemorized, ')
@@ -3262,6 +3410,9 @@ typedef $$WordsTableCreateCompanionBuilder = WordsCompanion Function({
   Value<String?> collocations,
   Value<String?> otherMeanings,
   Value<String?> baseForm,
+  Value<int> senseIndex,
+  Value<int> totalSenses,
+  Value<String?> wordGroup,
   Value<int> retentionPoint,
   Value<int> pointDecreasedTotal,
   Value<bool> isMemorized,
@@ -3287,6 +3438,9 @@ typedef $$WordsTableUpdateCompanionBuilder = WordsCompanion Function({
   Value<String?> collocations,
   Value<String?> otherMeanings,
   Value<String?> baseForm,
+  Value<int> senseIndex,
+  Value<int> totalSenses,
+  Value<String?> wordGroup,
   Value<int> retentionPoint,
   Value<int> pointDecreasedTotal,
   Value<bool> isMemorized,
@@ -3377,6 +3531,21 @@ class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
 
   ColumnFilters<String> get baseForm => $composableBuilder(
     column: $table.baseForm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get senseIndex => $composableBuilder(
+    column: $table.senseIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalSenses => $composableBuilder(
+    column: $table.totalSenses,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get wordGroup => $composableBuilder(
+    column: $table.wordGroup,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3505,6 +3674,21 @@ class $$WordsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get senseIndex => $composableBuilder(
+    column: $table.senseIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalSenses => $composableBuilder(
+    column: $table.totalSenses,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get wordGroup => $composableBuilder(
+    column: $table.wordGroup,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get retentionPoint => $composableBuilder(
     column: $table.retentionPoint,
     builder: (column) => ColumnOrderings(column),
@@ -3608,6 +3792,19 @@ class $$WordsTableAnnotationComposer
   GeneratedColumn<String> get baseForm =>
       $composableBuilder(column: $table.baseForm, builder: (column) => column);
 
+  GeneratedColumn<int> get senseIndex => $composableBuilder(
+    column: $table.senseIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalSenses => $composableBuilder(
+    column: $table.totalSenses,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get wordGroup =>
+      $composableBuilder(column: $table.wordGroup, builder: (column) => column);
+
   GeneratedColumn<int> get retentionPoint => $composableBuilder(
     column: $table.retentionPoint,
     builder: (column) => column,
@@ -3692,6 +3889,9 @@ class $$WordsTableTableManager
                 Value<String?> collocations = const Value.absent(),
                 Value<String?> otherMeanings = const Value.absent(),
                 Value<String?> baseForm = const Value.absent(),
+                Value<int> senseIndex = const Value.absent(),
+                Value<int> totalSenses = const Value.absent(),
+                Value<String?> wordGroup = const Value.absent(),
                 Value<int> retentionPoint = const Value.absent(),
                 Value<int> pointDecreasedTotal = const Value.absent(),
                 Value<bool> isMemorized = const Value.absent(),
@@ -3716,6 +3916,9 @@ class $$WordsTableTableManager
                 collocations: collocations,
                 otherMeanings: otherMeanings,
                 baseForm: baseForm,
+                senseIndex: senseIndex,
+                totalSenses: totalSenses,
+                wordGroup: wordGroup,
                 retentionPoint: retentionPoint,
                 pointDecreasedTotal: pointDecreasedTotal,
                 isMemorized: isMemorized,
@@ -3742,6 +3945,9 @@ class $$WordsTableTableManager
                 Value<String?> collocations = const Value.absent(),
                 Value<String?> otherMeanings = const Value.absent(),
                 Value<String?> baseForm = const Value.absent(),
+                Value<int> senseIndex = const Value.absent(),
+                Value<int> totalSenses = const Value.absent(),
+                Value<String?> wordGroup = const Value.absent(),
                 Value<int> retentionPoint = const Value.absent(),
                 Value<int> pointDecreasedTotal = const Value.absent(),
                 Value<bool> isMemorized = const Value.absent(),
@@ -3766,6 +3972,9 @@ class $$WordsTableTableManager
                 collocations: collocations,
                 otherMeanings: otherMeanings,
                 baseForm: baseForm,
+                senseIndex: senseIndex,
+                totalSenses: totalSenses,
+                wordGroup: wordGroup,
                 retentionPoint: retentionPoint,
                 pointDecreasedTotal: pointDecreasedTotal,
                 isMemorized: isMemorized,

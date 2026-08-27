@@ -2,12 +2,20 @@
 """
 tools/enrich_word_data.py
 
-Enriches assets/words.csv with:
-1. Standardizing and assigning accurate Part of Speech (partOfSpeech)
-2. Generating structured JSON for multiple senses (otherMeanings)
-3. Attaching practical high-frequency collocations (collocations)
-4. Linking irregular past tense/participle/plural forms to base forms (baseForm)
-5. Formatting clean CSV output with all 11 schema columns.
+Expands and enriches assets/words.csv into a Sense-Level Database:
+1. Each distinct word sense becomes an independent learning row with:
+   - word (English spelling)
+   - senseIndex (1, 2, 3...)
+   - totalSenses (total count of senses for this word)
+   - CEFR (CEFR level for this sense)
+   - Japanese (Specific meaning of this sense)
+   - partOfSpeech (Specific POS for this sense)
+   - phonetic (Phonetic notation)
+   - category (Category)
+   - Example (Sense-specific English example)
+   - Example_JP (Sense-specific Japanese example translation)
+   - collocations (JSON collocations)
+   - baseForm (Base form if irregular)
 """
 
 import csv
@@ -304,7 +312,6 @@ BASE_FORM_DICT = {
     "set": "set",
     "shone": "shine",
     "shot": "shoot",
-    "sold": "sell",
     "struck": "strike",
     "swept": "sweep",
     "swore": "swear", "sworn": "swear",
@@ -339,76 +346,76 @@ BASE_FORM_DICT = {
 # Special core words with curated multi-senses
 CURATED_SENSES_DICT = {
     "can": [
-        {"sense_id": 1, "part_of_speech": "auxiliary", "meaning_ja": "〜できる、〜してもよい", "example_en": "I can speak English.", "example_ja": "私は英語を話すことができます。"},
-        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "缶、缶詰", "example_en": "Open a can of soup.", "example_ja": "スープの缶を開ける。"},
+        {"sense_id": 1, "part_of_speech": "auxiliary", "meaning_ja": "〜できる、〜してもよい", "example_en": "I can speak English.", "example_ja": "私は英語を話すことができます。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "缶、缶詰", "example_en": "Open a can of soup.", "example_ja": "スープの缶を開ける。", "cefr": "A2"},
     ],
     "will": [
-        {"sense_id": 1, "part_of_speech": "auxiliary", "meaning_ja": "〜だろう、〜するつもりだ", "example_en": "I will call you tomorrow.", "example_ja": "明日電話します。"},
-        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "意志、遺言", "example_en": "She has a strong will.", "example_ja": "彼女は強い意志を持っている。"},
+        {"sense_id": 1, "part_of_speech": "auxiliary", "meaning_ja": "〜だろう、〜するつもりだ", "example_en": "I will call you tomorrow.", "example_ja": "明日電話します。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "意志、遺言", "example_en": "She has a strong will.", "example_ja": "彼女は強い意志を持っている。", "cefr": "B1"},
     ],
     "like": [
-        {"sense_id": 1, "part_of_speech": "verb", "meaning_ja": "好む、好きである", "example_en": "I like music.", "example_ja": "私は音楽が好きです。"},
-        {"sense_id": 2, "part_of_speech": "preposition", "meaning_ja": "〜のような、〜のように", "example_en": "He looks like his father.", "example_ja": "彼はお父さんに似ている。"},
+        {"sense_id": 1, "part_of_speech": "verb", "meaning_ja": "好む、好きである", "example_en": "I like music.", "example_ja": "私は音楽が好きです。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "preposition", "meaning_ja": "〜のような、〜のように", "example_en": "He looks like his father.", "example_ja": "彼はお父さんに似ている。", "cefr": "A2"},
     ],
     "well": [
-        {"sense_id": 1, "part_of_speech": "adverb", "meaning_ja": "上手に、十分に", "example_en": "She sings very well.", "example_ja": "彼女はとても上手に歌う。"},
-        {"sense_id": 2, "part_of_speech": "adjective", "meaning_ja": "健康な、良好な", "example_en": "I am feeling well today.", "example_ja": "今日は気分が良いです。"},
-        {"sense_id": 3, "part_of_speech": "noun", "meaning_ja": "井戸", "example_en": "Draw water from a well.", "example_ja": "井戸から水を汲む。"},
+        {"sense_id": 1, "part_of_speech": "adverb", "meaning_ja": "上手に、十分に", "example_en": "She sings very well.", "example_ja": "彼女はとても上手に歌う。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "adjective", "meaning_ja": "健康な、良好な", "example_en": "I am feeling well today.", "example_ja": "今日は気分が良いです。", "cefr": "A2"},
+        {"sense_id": 3, "part_of_speech": "noun", "meaning_ja": "井戸", "example_en": "Draw water from a well.", "example_ja": "井戸から水を汲む。", "cefr": "B1"},
     ],
     "right": [
-        {"sense_id": 1, "part_of_speech": "adjective", "meaning_ja": "正しい、右の", "example_en": "That is the right answer.", "example_ja": "それが正しい答えです。"},
-        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "権利、右側", "example_en": "Everyone has the right to learn.", "example_ja": "誰にでも学ぶ権利がある。"},
-        {"sense_id": 3, "part_of_speech": "adverb", "meaning_ja": "ちょうど、右へ", "example_en": "Turn right at the corner.", "example_ja": "角を右に曲がってください。"},
+        {"sense_id": 1, "part_of_speech": "adjective", "meaning_ja": "正しい、右の", "example_en": "That is the right answer.", "example_ja": "それが正しい答えです。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "権利、右側", "example_en": "Everyone has the right to learn.", "example_ja": "誰にでも学ぶ権利がある。", "cefr": "B1"},
+        {"sense_id": 3, "part_of_speech": "adverb", "meaning_ja": "ちょうど、右へ", "example_en": "Turn right at the corner.", "example_ja": "角を右に曲がってください。", "cefr": "A1"},
     ],
     "light": [
-        {"sense_id": 1, "part_of_speech": "noun", "meaning_ja": "光、明かり", "example_en": "Turn on the light.", "example_ja": "明かりをつけてください。"},
-        {"sense_id": 2, "part_of_speech": "adjective", "meaning_ja": "明るい、軽い", "example_en": "This bag is very light.", "example_ja": "このカバンはとても軽い。"},
-        {"sense_id": 3, "part_of_speech": "verb", "meaning_ja": "照らす、火をつける", "example_en": "Light a candle.", "example_ja": "ろうそくに火をつける。"},
+        {"sense_id": 1, "part_of_speech": "noun", "meaning_ja": "光、明かり", "example_en": "Turn on the light.", "example_ja": "明かりをつけてください。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "adjective", "meaning_ja": "明るい、軽い", "example_en": "This bag is very light.", "example_ja": "このカバンはとても軽い。", "cefr": "A2"},
+        {"sense_id": 3, "part_of_speech": "verb", "meaning_ja": "照らす、火をつける", "example_en": "Light a candle.", "example_ja": "ろうそくに火をつける。", "cefr": "B1"},
     ],
     "book": [
-        {"sense_id": 1, "part_of_speech": "noun", "meaning_ja": "本、書籍", "example_en": "I am reading a book.", "example_ja": "私は本を読んでいます。"},
-        {"sense_id": 2, "part_of_speech": "verb", "meaning_ja": "予約する", "example_en": "Book a table for two.", "example_ja": "2人席を予約する。"},
+        {"sense_id": 1, "part_of_speech": "noun", "meaning_ja": "本、書籍", "example_en": "I am reading a book.", "example_ja": "私は本を読んでいます。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "verb", "meaning_ja": "予約する", "example_en": "Book a table for two.", "example_ja": "2人席を予約する。", "cefr": "B1"},
     ],
     "park": [
-        {"sense_id": 1, "part_of_speech": "noun", "meaning_ja": "公園", "example_en": "Let's walk in the park.", "example_ja": "公園を散歩しよう。"},
-        {"sense_id": 2, "part_of_speech": "verb", "meaning_ja": "駐車する", "example_en": "Park the car here.", "example_ja": "ここに車を停めてください。"},
+        {"sense_id": 1, "part_of_speech": "noun", "meaning_ja": "公園", "example_en": "Let's walk in the park.", "example_ja": "公園を散歩しよう。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "verb", "meaning_ja": "駐車する", "example_en": "Park the car here.", "example_ja": "ここに車を停めてください。", "cefr": "A2"},
     ],
     "order": [
-        {"sense_id": 1, "part_of_speech": "noun", "meaning_ja": "順序、秩序、注文", "example_en": "In alphabetical order.", "example_ja": "アルファベット順に。"},
-        {"sense_id": 2, "part_of_speech": "verb", "meaning_ja": "注文する、命じる", "example_en": "Order food online.", "example_ja": "オンラインで食事を注文する。"},
+        {"sense_id": 1, "part_of_speech": "noun", "meaning_ja": "順序、秩序、注文", "example_en": "In alphabetical order.", "example_ja": "アルファベット順に。", "cefr": "A2"},
+        {"sense_id": 2, "part_of_speech": "verb", "meaning_ja": "注文する、命じる", "example_en": "Order food online.", "example_ja": "オンラインで食事を注文する。", "cefr": "A2"},
     ],
     "present": [
-        {"sense_id": 1, "part_of_speech": "noun", "meaning_ja": "プレゼント、現在", "example_en": "A birthday present.", "example_ja": "誕生日プレゼント。"},
-        {"sense_id": 2, "part_of_speech": "adjective", "meaning_ja": "出席している、現在の", "example_en": "The present situation.", "example_ja": "現在の状況。"},
-        {"sense_id": 3, "part_of_speech": "verb", "meaning_ja": "提示する、贈呈する", "example_en": "Present the report.", "example_ja": "レポートを発表する。"},
+        {"sense_id": 1, "part_of_speech": "noun", "meaning_ja": "プレゼント、現在", "example_en": "A birthday present.", "example_ja": "誕生日プレゼント。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "adjective", "meaning_ja": "出席している、現在の", "example_en": "The present situation.", "example_ja": "現在の状況。", "cefr": "B1"},
+        {"sense_id": 3, "part_of_speech": "verb", "meaning_ja": "提示する、贈呈する", "example_en": "Present the report.", "example_ja": "レポートを発表する。", "cefr": "B1"},
     ],
     "fine": [
-        {"sense_id": 1, "part_of_speech": "adjective", "meaning_ja": "元気な、素晴らしい、細かい", "example_en": "I am doing fine.", "example_ja": "元気にやっています。"},
-        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "罰金", "example_en": "Pay a parking fine.", "example_ja": "駐車違反の罰金を払う。"},
+        {"sense_id": 1, "part_of_speech": "adjective", "meaning_ja": "元気な、素晴らしい、細かい", "example_en": "I am doing fine.", "example_ja": "元気にやっています。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "罰金", "example_en": "Pay a parking fine.", "example_ja": "駐車違反の罰金を払う。", "cefr": "B1"},
     ],
     "watch": [
-        {"sense_id": 1, "part_of_speech": "verb", "meaning_ja": "見る、見守る", "example_en": "Watch a movie.", "example_ja": "映画を見る。"},
-        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "腕時計", "example_en": "Look at your watch.", "example_ja": "腕時計を見る。"},
+        {"sense_id": 1, "part_of_speech": "verb", "meaning_ja": "見る、見守る", "example_en": "Watch a movie.", "example_ja": "映画を見る。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "腕時計", "example_en": "Look at your watch.", "example_ja": "腕時計を見る。", "cefr": "A2"},
     ],
     "close": [
-        {"sense_id": 1, "part_of_speech": "verb", "meaning_ja": "閉じる、閉まる", "example_en": "Close the window.", "example_ja": "窓を閉めてください。"},
-        {"sense_id": 2, "part_of_speech": "adjective", "meaning_ja": "近い、親しい", "example_en": "A close friend.", "example_ja": "親しい友人。"},
+        {"sense_id": 1, "part_of_speech": "verb", "meaning_ja": "閉じる、閉まる", "example_en": "Close the window.", "example_ja": "窓を閉めてください。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "adjective", "meaning_ja": "近い、親しい", "example_en": "A close friend.", "example_ja": "親しい友人。", "cefr": "A2"},
     ],
     "lead": [
-        {"sense_id": 1, "part_of_speech": "verb", "meaning_ja": "導く、案内する、先頭に立つ", "example_en": "Lead the team to victory.", "example_ja": "チームを勝利に導く。"},
-        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "鉛（なまり）", "example_en": "A heavy lead pipe.", "example_ja": "重い鉛のパイプ。"},
+        {"sense_id": 1, "part_of_speech": "verb", "meaning_ja": "導く、案内する、先頭に立つ", "example_en": "Lead the team to victory.", "example_ja": "チームを勝利に導く。", "cefr": "A2"},
+        {"sense_id": 2, "part_of_speech": "noun", "meaning_ja": "鉛（なまり）", "example_en": "A heavy lead pipe.", "example_ja": "重い鉛のパイプ。", "cefr": "B2"},
     ],
     "out": [
-        {"sense_id": 1, "part_of_speech": "adverb", "meaning_ja": "外へ、外に、外出して", "example_en": "Let us go out for lunch.", "example_ja": "お昼ご飯を食べに外へ行きましょう。"},
-        {"sense_id": 2, "part_of_speech": "preposition", "meaning_ja": "〜の外へ", "example_en": "Walk out the door.", "example_ja": "ドアから外へ出る。"},
+        {"sense_id": 1, "part_of_speech": "adverb", "meaning_ja": "外へ、外に、外出して", "example_en": "Let us go out for lunch.", "example_ja": "お昼ご飯を食べに外へ行きましょう。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "preposition", "meaning_ja": "〜の外へ", "example_en": "Walk out the door.", "example_ja": "ドアから外へ出る。", "cefr": "A2"},
     ],
     "up": [
-        {"sense_id": 1, "part_of_speech": "adverb", "meaning_ja": "上へ、上がって", "example_en": "Look up at the sky.", "example_ja": "空を見上げる。"},
-        {"sense_id": 2, "part_of_speech": "preposition", "meaning_ja": "〜を登って、〜の上に", "example_en": "Climb up the hill.", "example_ja": "丘を登る。"},
+        {"sense_id": 1, "part_of_speech": "adverb", "meaning_ja": "上へ、上がって", "example_en": "Look up at the sky.", "example_ja": "空を見上げる。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "preposition", "meaning_ja": "〜を登って、〜の上に", "example_en": "Climb up the hill.", "example_ja": "丘を登る。", "cefr": "A2"},
     ],
     "down": [
-        {"sense_id": 1, "part_of_speech": "adverb", "meaning_ja": "下へ、下がって", "example_en": "Sit down, please.", "example_ja": "座ってください。"},
-        {"sense_id": 2, "part_of_speech": "preposition", "meaning_ja": "〜を下って", "example_en": "Walk down the street.", "example_ja": "通りを歩き下る。"},
+        {"sense_id": 1, "part_of_speech": "adverb", "meaning_ja": "下へ、下がって", "example_en": "Sit down, please.", "example_ja": "座ってください。", "cefr": "A1"},
+        {"sense_id": 2, "part_of_speech": "preposition", "meaning_ja": "〜を下って", "example_en": "Walk down the street.", "example_ja": "通りを歩き下る。", "cefr": "A2"},
     ],
 }
 
@@ -472,10 +479,9 @@ def detect_part_of_speech(japanese_def: str, english_word: str = "") -> str:
     first_def = re.split(r"[、,]", japanese_def)[0].strip()
 
     # Verbs: 〜する, 〜させる, 〜できる, 〜ている, or Japanese verb endings (る, く, す, つ, ぬ, ぶ, む, う, ぐ)
-    if first_def.startswith("〜する") or first_def.endswith("する") or first_def.endswith("させる") or first_def.endswith("できる") or first_def.endswith("行う") or first_def.endswith("なる") or first_def.endswith("ている") or first_def.endswith("てある"):
+    if first_def.startswith("〜する") or first_def.endswith("する") or first_def.endswith("させる") or first_def.endswith("できる") or first_def.endswith("ている") or first_def.endswith("てある") or first_def.endswith("行う") or first_def.endswith("なる"):
         return "verb"
     if re.search(r"[うくすつぬふむゆるぐずづぶぷ]$", first_def) and not first_def.endswith("という") and not first_def.endswith("よう"):
-        # Exclude typical nouns ending in u-sounds if they don't look like verbs
         if not re.search(r"(理由|方法|様子|俳優|学校|自由|宇宙|今日|昨日|明日|牛乳|道具|人物|物語|歴史|世界|情報|友人|家族|会社|仕事)$", first_def):
             return "verb"
 
@@ -497,8 +503,8 @@ def detect_part_of_speech(japanese_def: str, english_word: str = "") -> str:
     return "noun"
 
 
-def enrich_word(row: dict) -> dict:
-    """Enriches a single CSV row with part of speech, collocations, other meanings JSON, and baseForm."""
+def expand_word_to_senses(row: dict) -> list:
+    """Expands a word row into 1 or more distinct Word Sense rows."""
     word = row.get("word", "").strip().lower()
     japanese = row.get("Japanese", "").strip()
     cefr = row.get("CEFR", "A1").strip()
@@ -506,79 +512,92 @@ def enrich_word(row: dict) -> dict:
     category = row.get("category", "General").strip()
     example = row.get("Example", "").strip()
     example_jp = row.get("Example_JP", "").strip()
+    base_form = BASE_FORM_DICT.get(word, "")
 
-    # 1. Part of Speech
-    if word in CURATED_SENSES_DICT:
-        pos = CURATED_SENSES_DICT[word][0]["part_of_speech"]
-    else:
-        pos = detect_part_of_speech(japanese, word)
-
-    # 2. Other Meanings (Multiple Senses)
-    other_meanings_json = ""
-    if word in CURATED_SENSES_DICT:
-        senses = CURATED_SENSES_DICT[word]
-        # Attach CEFR to senses
-        for s in senses:
-            s["cefr"] = cefr
-        other_meanings_json = json.dumps(senses, ensure_ascii=False)
-    else:
-        # Split Japanese definitions by comma/punctuation if multiple definitions exist
-        meanings = [m.strip() for m in re.split(r"[、,]", japanese) if m.strip()]
-        if len(meanings) > 1:
-            senses = []
-            for i, m in enumerate(meanings):
-                senses.append({
-                    "sense_id": i + 1,
-                    "part_of_speech": detect_part_of_speech(m, word if i == 0 else ""),
-                    "meaning_ja": m,
-                    "cefr": cefr,
-                    "example_en": example if i == 0 else None,
-                    "example_ja": example_jp if i == 0 else None,
-                })
-            other_meanings_json = json.dumps(senses, ensure_ascii=False)
-
-    # 3. Collocations
     collocations_json = ""
     if word in COLLOCATIONS_DICT:
         colls = COLLOCATIONS_DICT[word]
         collocations_json = json.dumps(colls, ensure_ascii=False)
 
-    # 4. Base Form (Lemma)
-    base_form = BASE_FORM_DICT.get(word, "")
+    senses_list = []
 
-    return {
-        "word": word,
-        "CEFR": cefr,
-        "Japanese": japanese,
-        "partOfSpeech": pos,
-        "phonetic": phonetic,
-        "category": category,
-        "Example": example,
-        "Example_JP": example_jp,
-        "collocations": collocations_json,
-        "otherMeanings": other_meanings_json,
-        "baseForm": base_form,
-    }
+    if word in CURATED_SENSES_DICT:
+        curated_senses = CURATED_SENSES_DICT[word]
+        total = len(curated_senses)
+        for i, s in enumerate(curated_senses):
+            senses_list.append({
+                "word": word,
+                "senseIndex": i + 1,
+                "totalSenses": total,
+                "CEFR": s.get("cefr", cefr),
+                "Japanese": s["meaning_ja"],
+                "partOfSpeech": s["part_of_speech"],
+                "phonetic": phonetic,
+                "category": category,
+                "Example": s.get("example_en", example),
+                "Example_JP": s.get("example_ja", example_jp),
+                "collocations": collocations_json,
+                "baseForm": base_form,
+            })
+    else:
+        meanings = [m.strip() for m in re.split(r"[、,]", japanese) if m.strip()]
+        if len(meanings) > 1:
+            total = len(meanings)
+            for i, m in enumerate(meanings):
+                pos = detect_part_of_speech(m, word if i == 0 else "")
+                senses_list.append({
+                    "word": word,
+                    "senseIndex": i + 1,
+                    "totalSenses": total,
+                    "CEFR": cefr,
+                    "Japanese": m,
+                    "partOfSpeech": pos,
+                    "phonetic": phonetic,
+                    "category": category,
+                    "Example": example if i == 0 else "",
+                    "Example_JP": example_jp if i == 0 else "",
+                    "collocations": collocations_json if i == 0 else "",
+                    "baseForm": base_form,
+                })
+        else:
+            pos = detect_part_of_speech(japanese, word)
+            senses_list.append({
+                "word": word,
+                "senseIndex": 1,
+                "totalSenses": 1,
+                "CEFR": cefr,
+                "Japanese": japanese,
+                "partOfSpeech": pos,
+                "phonetic": phonetic,
+                "category": category,
+                "Example": example,
+                "Example_JP": example_jp,
+                "collocations": collocations_json,
+                "baseForm": base_form,
+            })
+
+    return senses_list
 
 
 def main():
     csv_path = r"d:\dev\projects\english_app\assets\words.csv"
 
-    print(f"Reading {csv_path}...")
-    enriched_rows = []
+    print(f"Reading {csv_path} for Sense-level Expansion...")
+    all_senses = []
     with open(csv_path, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
             if not row.get("word"):
                 continue
-            enriched = enrich_word(row)
-            enriched_rows.append(enriched)
+            senses = expand_word_to_senses(row)
+            all_senses.extend(senses)
 
-    print(f"Total processed words: {len(enriched_rows)}")
+    print(f"Total Expanded Sense Records: {len(all_senses)}")
 
-    # Write enriched CSV
     fieldnames = [
         "word",
+        "senseIndex",
+        "totalSenses",
         "CEFR",
         "Japanese",
         "partOfSpeech",
@@ -587,38 +606,35 @@ def main():
         "Example",
         "Example_JP",
         "collocations",
-        "otherMeanings",
         "baseForm",
     ]
 
     with open(csv_path, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(enriched_rows)
+        writer.writerows(all_senses)
 
-    print(f"Successfully wrote enriched CSV to {csv_path} with {len(enriched_rows)} words!")
+    print(f"Successfully generated Sense-Level words.csv ({len(all_senses)} rows)!")
 
-    # Summary breakdown
+    # Breakdown stats
+    multi_sense_words = set()
+    single_sense_words = set()
     pos_counts = {}
-    with_other_meanings = 0
-    with_collocations = 0
-    with_base_form = 0
 
-    for r in enriched_rows:
-        p = r["partOfSpeech"]
+    for s in all_senses:
+        w = s["word"]
+        if s["totalSenses"] > 1:
+            multi_sense_words.add(w)
+        else:
+            single_sense_words.add(w)
+        p = s["partOfSpeech"]
         pos_counts[p] = pos_counts.get(p, 0) + 1
-        if r["otherMeanings"]:
-            with_other_meanings += 1
-        if r["collocations"]:
-            with_collocations += 1
-        if r["baseForm"]:
-            with_base_form += 1
 
-    print("\n--- Summary Breakdown ---")
-    print(f"Words with multiple senses (otherMeanings): {with_other_meanings}")
-    print(f"Words with collocations: {with_collocations}")
-    print(f"Words linked to base forms (baseForm): {with_base_form}")
-    print("Part of speech distribution:")
+    print("\n--- Sense Level Breakdown ---")
+    print(f"Total Unique Words: {len(multi_sense_words) + len(single_sense_words)}")
+    print(f"Words with Multiple Senses: {len(multi_sense_words)}")
+    print(f"Total Sense Records in DB: {len(all_senses)}")
+    print("Part of speech distribution across senses:")
     for p, c in sorted(pos_counts.items(), key=lambda x: x[1], reverse=True):
         print(f"  {p:15}: {c}")
 

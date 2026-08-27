@@ -21,6 +21,11 @@ class Words extends Table {
   TextColumn get otherMeanings => text().nullable()();
   TextColumn get baseForm => text().nullable()();
 
+  // 語義（Sense）単位モデル用カラム (ステップ2)
+  IntColumn get senseIndex => integer().withDefault(const Constant(1))();
+  IntColumn get totalSenses => integer().withDefault(const Constant(1))();
+  TextColumn get wordGroup => text().nullable()();
+
   // F-05 / F-08用拡張カラム
   IntColumn get retentionPoint => integer().withDefault(const Constant(0))();
   IntColumn get pointDecreasedTotal => integer().withDefault(const Constant(0))();

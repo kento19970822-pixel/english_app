@@ -238,6 +238,26 @@ class _WordCardTileState extends State<WordCardTile> {
                                     ),
                                   ),
                                 ),
+                                if (widget.word.totalSenses > 1) ...[
+                                  const SizedBox(width: 4),
+                                  // 語義番号バッジ
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEDE7F6),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: const Color(0xFFD1C4E9), width: 0.8),
+                                    ),
+                                    child: Text(
+                                      '語義 ${widget.word.senseIndex}/${widget.word.totalSenses}',
+                                      style: const TextStyle(
+                                        fontSize: 9.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF5E35B1),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                                 if (widget.word.baseForm != null && widget.word.baseForm!.isNotEmpty) ...[
                                   const SizedBox(width: 4),
                                   // 原形バッジ

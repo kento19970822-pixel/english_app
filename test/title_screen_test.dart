@@ -7,12 +7,16 @@ import 'package:english_app/screens/title_screen.dart';
 void main() {
   testWidgets('TitleScreen pumps and renders title and tap to start', (tester) async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
+    await db.insertRawWords([
+      {'word': 'apple', 'Japanese': 'りんご', 'CEFR': 'A1'}
+    ]);
     await tester.pumpWidget(
       MaterialApp(
         home: TitleScreen(database: db),
       ),
     );
-    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('ENGLISH QUEST'), findsOneWidget);
     expect(find.text('TAP TO START'), findsOneWidget);

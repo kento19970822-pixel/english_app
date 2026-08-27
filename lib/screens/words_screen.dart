@@ -490,7 +490,7 @@ class WordsScreenState extends State<WordsScreen> {
       for (var i = 1; i < lines.length; i++) {
         final line = lines[i].trim();
         if (line.isEmpty) continue;
-        final values = _parseCsvLine(line).map((v) => v.replaceAll('"', '').trim()).toList();
+        final values = _parseCsvLine(line);
         if (values.length >= header.length) {
           final map = <String, String>{};
           for (var j = 0; j < header.length; j++) {

@@ -25,6 +25,8 @@ class WordModel {
   bool isFavorite;
   final int correctCount;
   final int wrongCount;
+  final int senseIndex;
+  final int totalSenses;
 
   WordModel({
     required this.id,
@@ -39,6 +41,8 @@ class WordModel {
     this.isFavorite = false,
     this.correctCount = 0,
     this.wrongCount = 0,
+    this.senseIndex = 1,
+    this.totalSenses = 1,
   });
 
   factory WordModel.fromDrift(Word driftWord) {
@@ -81,6 +85,8 @@ class WordModel {
       isFavorite: driftWord.isFavorite,
       correctCount: driftWord.correctCount,
       wrongCount: driftWord.wrongCount,
+      senseIndex: driftWord.senseIndex,
+      totalSenses: driftWord.totalSenses,
     );
   }
 }
@@ -1861,6 +1867,8 @@ class _GameScreenState extends State<GameScreen>
                                           exampleJp: '',
                                           collocations: '[]',
                                           otherMeanings: '[]',
+                                          senseIndex: mw.senseIndex,
+                                          totalSenses: mw.totalSenses,
                                           retentionPoint: mw.retentionPoint,
                                           pointDecreasedTotal: 0,
                                           isMemorized: mw.isMemorized,

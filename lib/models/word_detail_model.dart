@@ -1,4 +1,4 @@
-// コード管理番号: VER-20260827-01
+// コード管理番号: VER-20260827-02
 import 'dart:convert';
 import '../db/app_database.dart';
 
@@ -8,6 +8,7 @@ class WordSense {
   final String partOfSpeech; // '名', '動', '形', '副', '前', etc.
   final String meaningJa;
   final String cefr;
+  final int? chapter;
   final String? exampleEn;
   final String? exampleJa;
 
@@ -16,6 +17,7 @@ class WordSense {
     required this.partOfSpeech,
     required this.meaningJa,
     required this.cefr,
+    this.chapter,
     this.exampleEn,
     this.exampleJa,
   });
@@ -26,6 +28,7 @@ class WordSense {
       partOfSpeech: json['part_of_speech'] as String? ?? '名',
       meaningJa: json['meaning_ja'] as String? ?? '',
       cefr: json['cefr'] as String? ?? 'A1',
+      chapter: json['chapter'] as int?,
       exampleEn: json['example_en'] as String?,
       exampleJa: json['example_ja'] as String?,
     );
@@ -36,6 +39,7 @@ class WordSense {
         'part_of_speech': partOfSpeech,
         'meaning_ja': meaningJa,
         'cefr': cefr,
+        if (chapter != null) 'chapter': chapter,
         'example_en': exampleEn,
         'example_ja': exampleJa,
       };
@@ -52,6 +56,9 @@ class WordDetail {
   final String primaryPos;
   final String primaryMeaningJa;
   final String cefr;
+  final int senseIndex;
+  final int totalSenses;
+  final String? wordGroup;
   final List<WordSense> senses;
   final List<String> collocations;
   final String? baseForm;
@@ -74,6 +81,9 @@ class WordDetail {
     required this.primaryPos,
     required this.primaryMeaningJa,
     required this.cefr,
+    this.senseIndex = 1,
+    this.totalSenses = 1,
+    this.wordGroup,
     required this.senses,
     required this.collocations,
     this.baseForm,
@@ -87,34 +97,62 @@ class WordDetail {
     this.lastStudiedAt,
   });
 
-  factory WordDetail.fromWord(Word word) {
-    List<WordSense> parsedSenses = [];
-
-    if (word.otherMeanings != null && word.otherMeanings!.isNotEmpty) {
-      try {
-        final decoded = jsonDecode(word.otherMeanings!) as List<dynamic>;
-        parsedSenses = decoded
-            .map((e) => WordSense.fromJson(e as Map<String, dynamic>))
-            .toList();
-      } catch (_) {
-        parsedSenses = [];
-      }
+  factory WordDetail.fromWordWithSiblings(Word word, List<Word> siblingSenses) {
+    List<WordSense> senses = [];
+    if (siblingSenses.isNotEmpty) {
+      senses = siblingSenses.map((s) {
+        final p = s.partOfSpeech.isNotEmpty
+            ? s.partOfSpeech
+            : AppDatabase.detectPartOfSpeech(s.japanese);
+        return WordSense(
+          senseId: s.senseIndex,
+          partOfSpeech: p,
+          meaningJa: s.japanese,
+          cefr: s.cefr,
+          chapter: s.chapter,
+          exampleEn: s.example,
+          exampleJa: s.exampleJp,
+        );
+      }).toList();
     }
 
+    return _fromWordInternal(word, customSenses: senses);
+  }
+
+  factory WordDetail.fromWord(Word word) {
+    return _fromWordInternal(word);
+  }
+
+  static WordDetail _fromWordInternal(Word word, {List<WordSense>? customSenses}) {
+    List<WordSense> parsedSenses = customSenses ?? [];
+
     if (parsedSenses.isEmpty) {
-      // JSONがない場合は第1語義から生成
-      parsedSenses = [
-        WordSense(
-          senseId: 1,
-          partOfSpeech: word.partOfSpeech.isNotEmpty
-              ? word.partOfSpeech
-              : AppDatabase.detectPartOfSpeech(word.japanese),
-          meaningJa: word.japanese,
-          cefr: word.cefr,
-          exampleEn: word.example,
-          exampleJa: word.exampleJp,
-        ),
-      ];
+      if (word.otherMeanings != null && word.otherMeanings!.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(word.otherMeanings!) as List<dynamic>;
+          parsedSenses = decoded
+              .map((e) => WordSense.fromJson(e as Map<String, dynamic>))
+              .toList();
+        } catch (_) {
+          parsedSenses = [];
+        }
+      }
+
+      if (parsedSenses.isEmpty) {
+        parsedSenses = [
+          WordSense(
+            senseId: word.senseIndex,
+            partOfSpeech: word.partOfSpeech.isNotEmpty
+                ? word.partOfSpeech
+                : AppDatabase.detectPartOfSpeech(word.japanese),
+            meaningJa: word.japanese,
+            cefr: word.cefr,
+            chapter: word.chapter,
+            exampleEn: word.example,
+            exampleJa: word.exampleJp,
+          ),
+        ];
+      }
     }
 
     List<String> parsedCollocations = [];
@@ -140,7 +178,6 @@ class WordDetail {
         } catch (_) {}
       }
 
-      // 非JSON（Dart Map toString() 形式: {phrase: ..., meaning: ...}）のフォールバックパース
       if (!jsonParsed) {
         final pairRegex = RegExp(r'\{[^{}]*phrase\s*:\s*([^,}]+)\s*,\s*meaning\s*:\s*([^}]+)\}');
         final matches = pairRegex.allMatches(raw);
@@ -181,10 +218,11 @@ class WordDetail {
       chapter: word.chapter,
       level: word.level,
       primaryPos: pos,
-      primaryMeaningJa: parsedSenses.isNotEmpty
-          ? parsedSenses.first.meaningJa
-          : word.japanese,
+      primaryMeaningJa: word.japanese,
       cefr: word.cefr,
+      senseIndex: word.senseIndex,
+      totalSenses: word.totalSenses,
+      wordGroup: word.wordGroup,
       senses: parsedSenses,
       collocations: parsedCollocations,
       baseForm: word.baseForm,
