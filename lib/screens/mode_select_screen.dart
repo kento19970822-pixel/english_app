@@ -255,7 +255,13 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                 _buildQuickActionBtn(
                                   icon: Icons.pets_rounded,
                                   tooltip: 'キャラクター図鑑',
-                                  onTap: () => _openSubScreen(CharacterGalleryScreen(database: widget.database)),
+                                  onTap: () => _openSubScreen(
+                                    CharacterGalleryScreen(
+                                      database: widget.database,
+                                      initialProgresses: _allChapterProgresses,
+                                      initialFavoriteStamp: _favoriteStamp,
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(width: 6),
                                 // 4つ目のクイックアクション: 🎫 ひらめき復習チケット (SRS能動的想起)

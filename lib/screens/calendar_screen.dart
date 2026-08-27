@@ -42,13 +42,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final records = await widget.database.getDailyRecordsByMonth(
-        _focusedMonth.year,
-        _focusedMonth.month,
-      );
-      final streak = await widget.database.calculateStreak();
-      final totalDays = await widget.database.calculateTotalStudiedDays();
-      final allStamps = await widget.database.getAllStamps();
+      final results = await Future.wait([
+        widget.database.getDailyRecordsByMonth(
+          _focusedMonth.year,
+          _focusedMonth.month,
+        ),
+        widget.database.calculateStreak(),
+        widget.database.calculateTotalStudiedDays(),
+        widget.database.getAllStamps(),
+      ]);
+
+      final records = results[0] as List<DailyRecord>;
+      final streak = results[1] as int;
+      final totalDays = results[2] as int;
+      final allStamps = results[3] as List<Stamp>;
 
       final Map<String, DailyRecord> map = {};
       for (final r in records) {

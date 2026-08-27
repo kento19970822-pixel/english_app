@@ -9,11 +9,15 @@ import '../widgets/pixel_character_widget.dart';
 class CharacterGalleryScreen extends StatefulWidget {
   final AppDatabase database;
   final VoidCallback? onBack;
+  final List<ChapterProgressesData>? initialProgresses;
+  final Stamp? initialFavoriteStamp;
 
   const CharacterGalleryScreen({
     super.key,
     required this.database,
     this.onBack,
+    this.initialProgresses,
+    this.initialFavoriteStamp,
   });
 
   @override
@@ -22,7 +26,7 @@ class CharacterGalleryScreen extends StatefulWidget {
 
 class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
   int _activeBuddyId = 0; // 0..373 (対応チャプター: _activeBuddyId + 1)
-  List<ChapterProgressesData> _chapterProgresses = [];
+  Map<int, ChapterProgressesData> _chapterProgressesMap = {};
   bool _isLoading = true;
   Stamp? _favoriteStamp;
   CharacterCategory? _selectedCategoryFilter; // null = 全て
@@ -41,6 +45,14 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
     super.initState();
     _activeBuddyId = BuddyService.instance.selectedSpeciesId;
     _scrollController.addListener(_onScroll);
+
+    if (widget.initialProgresses != null && widget.initialProgresses!.isNotEmpty) {
+      _favoriteStamp = widget.initialFavoriteStamp;
+      _chapterProgressesMap = {
+        for (final cp in widget.initialProgresses!) cp.chapter: cp,
+      };
+      _isLoading = false;
+    }
     _loadData();
   }
 
@@ -70,15 +82,23 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    if (_chapterProgressesMap.isEmpty) {
+      setState(() => _isLoading = true);
+    }
     try {
-      final favStamp = await widget.database.getFavoriteStamp();
-      final progresses = await widget.database.getAllChapterProgresses();
+      final results = await Future.wait([
+        widget.database.getFavoriteStamp(),
+        widget.database.getAllChapterProgresses(),
+      ]);
+      final favStamp = results[0] as Stamp?;
+      final progresses = results[1] as List<ChapterProgressesData>;
 
       if (mounted) {
         setState(() {
           _favoriteStamp = favStamp;
-          _chapterProgresses = progresses;
+          _chapterProgressesMap = {
+            for (final cp in progresses) cp.chapter: cp,
+          };
           _isLoading = false;
         });
       }
@@ -89,10 +109,10 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
     }
   }
 
-  /// チャプター進行状況からキャラクターの成長状態を厳格に判定
+  /// チャプター進行状況からキャラクターの成長状態を厳格に判定 (O(1) 高速ルックアップ)
   CharacterGrowthState _getSpeciesGrowthState(int speciesId) {
     final chapter = speciesId + 1;
-    final progress = _chapterProgresses.where((cp) => cp.chapter == chapter).firstOrNull;
+    final progress = _chapterProgressesMap[chapter];
     if (progress == null) return CharacterGrowthState.locked;
     return PixelCharacterWidget.stateFromRate(progress.memorizedRate, progress.isUnlocked);
   }
