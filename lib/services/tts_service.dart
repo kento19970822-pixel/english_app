@@ -144,15 +144,27 @@ class TtsService {
     return bestVoice;
   }
 
-  /// 単語・テキストの音声再生
+  int _lastSpeakTimestamp = 0;
+  String _lastSpokenText = '';
+
+  /// 単語・テキストの音声再生（デバウンス＆排他制御）
   Future<void> speak(String text) async {
     final cleanText = text.trim();
     if (cleanText.isEmpty) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    // 100ms以内の同一単語連打はデバウンス（多重発話防止）
+    if (cleanText == _lastSpokenText && (now - _lastSpeakTimestamp) < 120) {
+      return;
+    }
+    _lastSpeakTimestamp = now;
+    _lastSpokenText = cleanText;
 
     try {
       if (!_isInitialized || _selectedVoiceName == null) {
         await initialize();
       }
+      // 再生中の音声を確実に停止
       await _flutterTts.stop();
       // 常に英語(en-US)を強制適用
       await _flutterTts.setLanguage("en-US");
@@ -160,7 +172,6 @@ class TtsService {
       await _flutterTts.speak(cleanText);
     } catch (e) {
       debugPrint("TtsService speak error: $e");
-      // リセットと再試行
       _isInitialized = false;
     }
   }
@@ -169,6 +180,7 @@ class TtsService {
   Future<void> stop() async {
     try {
       await _flutterTts.stop();
+      _lastSpokenText = '';
     } catch (e) {
       debugPrint("TtsService stop error: $e");
     }

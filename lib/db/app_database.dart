@@ -9,18 +9,19 @@ import 'tables/learning_history.dart';
 import 'tables/daily_records.dart';
 import 'tables/stamps.dart';
 import 'tables/chapter_progress.dart';
+import 'tables/learning_logs.dart';
 import '../services/retention_service.dart';
 import 'connection/connection.dart' as impl;
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Words, LearningHistory, DailyRecords, Stamps, ChapterProgresses])
+@DriftDatabase(tables: [Words, LearningHistory, DailyRecords, Stamps, ChapterProgresses, LearningLogs])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(impl.connect());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -41,6 +42,8 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_memorized ON words (is_memorized);');
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_favorite ON words (is_favorite);');
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_restricted ON words (is_restricted);');
+      await customStatement('CREATE INDEX IF NOT EXISTS idx_learning_logs_word ON learning_logs (word_id);');
+      await customStatement('CREATE INDEX IF NOT EXISTS idx_learning_logs_time ON learning_logs (learned_at);');
     },
   );
 
@@ -1105,5 +1108,43 @@ class AppDatabase extends _$AppDatabase {
       await delete(chapterProgresses).go();
       await initChapterProgresses();
     });
+  }
+
+  /// 学習ログの記録（直近90日間のローリング保持）
+  Future<void> recordLearningLog({
+    required int wordId,
+    required bool isCorrect,
+    String mode = 'quiz',
+  }) async {
+    try {
+      await into(learningLogs).insert(
+        LearningLogsCompanion(
+          wordId: Value(wordId),
+          isCorrect: Value(isCorrect),
+          mode: Value(mode),
+          learnedAt: Value(DateTime.now()),
+        ),
+      );
+      // バックグラウンドで古いログを自動クリーンアップ（90日超）
+      cleanupOldLogs();
+    } catch (e) {
+      debugPrint('recordLearningLog error: $e');
+    }
+  }
+
+  /// 容量肥大化防止：古い学習ログの自動削除（プルーニング）
+  Future<int> cleanupOldLogs({
+    Duration maxAge = const Duration(days: 90),
+    int maxRows = 10000,
+  }) async {
+    try {
+      final cutoffDate = DateTime.now().subtract(maxAge);
+      // 1. 指定期間（90日）より古いログを削除
+      final deletedCount = await (delete(learningLogs)..where((t) => t.learnedAt.isSmallerThanValue(cutoffDate))).go();
+      return deletedCount;
+    } catch (e) {
+      debugPrint('cleanupOldLogs error: $e');
+      return 0;
+    }
   }
 }

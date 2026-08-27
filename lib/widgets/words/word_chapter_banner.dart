@@ -1,0 +1,145 @@
+// コード管理番号: VER-20260827-07
+import 'package:flutter/material.dart';
+import '../../models/word_section.dart';
+import '../pixel_character_widget.dart';
+
+/// チャプタードット絵キャラクター＆進捗バナー Widget
+class WordChapterBanner extends StatelessWidget {
+  final WordSection section;
+  final Color cardColor;
+  final Color borderColor;
+  final Color textColor;
+  final Color textSecondaryColor;
+  final Color primaryColor;
+
+  const WordChapterBanner({
+    super.key,
+    required this.section,
+    this.cardColor = const Color(0xFFFFFDF9),
+    this.borderColor = const Color(0xFFE0D8C8),
+    this.textColor = const Color(0xFF2C3E50),
+    this.textSecondaryColor = const Color(0xFF5D6D7E),
+    this.primaryColor = const Color(0xFF2E8B57),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final chapterNum = int.tryParse(section.title) ?? 1;
+    final totalCount = section.words.length;
+    final memorizedCount = section.words.where((w) => w.isMemorized).length;
+    final percent = totalCount > 0 ? (memorizedCount / totalCount * 100).toInt() : 0;
+    final isMastered = percent >= 80;
+
+    final species = getCharacterSpecies(chapterNum);
+    final charName = percent > 0 ? species.japaneseName : '? ? ? ? ?';
+
+    final growthState = PixelCharacterWidget.stateFromRate(percent.toDouble(), percent > 0);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isMastered ? primaryColor.withValues(alpha: 0.5) : borderColor,
+          width: isMastered ? 1.5 : 1.0,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 4,
+            offset: Offset(0, 1.5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // ドット絵キャラクター
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: PixelCharacterWidget(
+              speciesIndex: (chapterNum - 1).clamp(0, kTotalChapterCount - 1),
+              growthState: growthState,
+              actionState: isMastered ? CharacterActionState.humming : CharacterActionState.idle,
+              size: 44,
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // キャラクター情報 & 進捗
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Ch.$chapterNum: $charName',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    if (isMastered)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'MASTER ✨',
+                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)),
+                        ),
+                      )
+                    else if (percent > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF8E1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          '育成中 🌱',
+                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF8D6E63)),
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFEAE0),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          '🔒 未学習',
+                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF7F8C8D)),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: totalCount > 0 ? memorizedCount / totalCount : 0,
+                    minHeight: 5,
+                    backgroundColor: borderColor.withValues(alpha: 0.5),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      isMastered ? primaryColor : (percent >= 50 ? const Color(0xFFD97736) : Colors.amber.shade700),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

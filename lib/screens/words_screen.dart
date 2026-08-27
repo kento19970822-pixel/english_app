@@ -7,60 +7,17 @@ import '../services/buddy_service.dart';
 import '../services/sound_service.dart';
 import '../services/tts_service.dart';
 import '../widgets/custom_fast_scrollbar.dart';
-import '../widgets/pixel_character_widget.dart';
-import '../widgets/sticky_section_header.dart';
 import '../widgets/word_card_tile.dart';
 import '../widgets/word_detail_modal.dart';
 import '../widgets/word_filter_bottom_sheet.dart';
 
-/// 単語セクションデータクラス
-class WordSection {
-  final String key;
-  final String title;
-  final String? subtitle;
-  final List<Word> words;
-  final int memorizedCount;
+import '../models/word_section.dart';
+import '../theme/app_theme.dart';
+import '../widgets/words/word_search_bar.dart';
+import '../widgets/words/word_section_sticky_header.dart';
+import '../widgets/words/word_chapter_banner.dart';
 
-  const WordSection({
-    required this.key,
-    required this.title,
-    this.subtitle,
-    required this.words,
-    required this.memorizedCount,
-  });
-}
 
-class _SectionStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final WordSection section;
-  final String sortMode;
-
-  _SectionStickyHeaderDelegate({
-    required this.section,
-    required this.sortMode,
-  });
-
-  @override
-  double get minExtent => 48.0;
-
-  @override
-  double get maxExtent => 48.0;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return StickySectionHeader(
-      title: section.title,
-      subtitle: section.subtitle,
-      totalCount: section.words.length,
-      memorizedCount: section.memorizedCount,
-      sortMode: sortMode,
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _SectionStickyHeaderDelegate oldDelegate) {
-    return oldDelegate.section != section || oldDelegate.sortMode != sortMode;
-  }
-}
 
 class WordsScreen extends StatefulWidget {
   final AppDatabase database;
@@ -94,14 +51,15 @@ class WordsScreenState extends State<WordsScreen> {
   final ScrollController _filterScrollController = ScrollController();
   bool _showScrollToTop = false;
 
-  // パステルテーマカラー
-  static const Color _bgColor = Color(0xFFFBF7EE);
-  static const Color _cardColor = Color(0xFFFFFDF9);
-  static const Color _primaryAccent = Color(0xFF5F9E98);
-  static const Color _secondaryAccent = Color(0xFFECA882);
-  static const Color _textPrimary = Color(0xFF2C302E);
-  static const Color _textSecondary = Color(0xFF6B726E);
-  static const Color _borderColor = Color(0xFFE5DEC9);
+  // パステルテーマカラー（ライト/ダーク動的対応）
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+  Color get _bgColor => _isDark ? AppTheme.darkBg : AppTheme.lightBg;
+  Color get _cardColor => _isDark ? AppTheme.darkCard : AppTheme.lightCard;
+  Color get _primaryAccent => _isDark ? AppTheme.darkPrimary : AppTheme.lightPrimary;
+  Color get _secondaryAccent => _isDark ? AppTheme.darkSecondary : AppTheme.lightSecondary;
+  Color get _textPrimary => _isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary;
+  Color get _textSecondary => _isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
+  Color get _borderColor => _isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
 
   @override
   void initState() {
@@ -183,7 +141,7 @@ class WordsScreenState extends State<WordsScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: _cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.published_with_changes_rounded, color: _primaryAccent, size: 24),
             SizedBox(width: 8),
@@ -193,14 +151,14 @@ class WordsScreenState extends State<WordsScreen> {
             ),
           ],
         ),
-        content: const Text(
+        content: Text(
           '忘却曲線やプレイ結果により定着度が80pt未満になった単語の【暗記済み】フラグを取り外し、現在の定着度と再同期します。\n\n※80pt以上の暗記済み単語やお気に入り登録は維持されます。',
           style: TextStyle(fontSize: 13, color: _textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル', style: TextStyle(color: _textSecondary)),
+            child: Text('キャンセル', style: TextStyle(color: _textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -209,7 +167,7 @@ class WordsScreenState extends State<WordsScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('再同期を実行'),
+            child: Text('再同期を実行'),
           ),
         ],
       ),
@@ -548,7 +506,7 @@ class WordsScreenState extends State<WordsScreen> {
             )
           : null,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: _primaryAccent))
+          ? Center(child: CircularProgressIndicator(color: _primaryAccent))
           : SafeArea(
               child: CustomFastScrollbar(
                 controller: _scrollController,
@@ -569,135 +527,43 @@ class WordsScreenState extends State<WordsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             // 検索バー ＆ 効果音 ＆ 絞り込みボタン ＆ その他データ管理メニュー
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFEFEAE0),
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: _borderColor),
-                                    ),
-                                    child: TextField(
-                                      controller: _searchController,
-                                      focusNode: _searchFocusNode,
-                                      textAlignVertical: TextAlignVertical.center,
-                                      textInputAction: TextInputAction.search,
-                                      decoration: InputDecoration(
-                                        hintText: '英単語または和訳で検索...',
-                                        hintStyle: const TextStyle(fontSize: 13, color: _textSecondary),
-                                        prefixIcon: IconButton(
-                                          icon: const Icon(Icons.search_rounded, size: 20, color: _textSecondary),
-                                          onPressed: () {
-                                            setState(() => _searchQuery = _searchController.text.trim());
-                                            _onFilterChanged();
-                                            FocusScope.of(context).unfocus();
-                                          },
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                        ),
-                                        suffixIcon: _searchController.text.isNotEmpty
-                                            ? IconButton(
-                                                icon: const Icon(Icons.cancel_rounded, size: 18, color: _textSecondary),
-                                                onPressed: () {
-                                                  _searchController.clear();
-                                                  setState(() => _searchQuery = '');
-                                                  _onFilterChanged();
-                                                  _searchFocusNode.requestFocus();
-                                                },
-                                                padding: EdgeInsets.zero,
-                                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                              )
-                                            : null,
-                                        border: InputBorder.none,
-                                        isDense: true,
-                                        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-                                      ),
-                                      style: const TextStyle(fontSize: 14, color: _textPrimary),
-                                      onSubmitted: (val) {
-                                        setState(() => _searchQuery = val.trim());
-                                        _onFilterChanged();
-                                        FocusScope.of(context).unfocus();
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                ListenableBuilder(
-                                  listenable: SoundService.instance,
-                                  builder: (context, _) {
-                                    final seOn = SoundService.instance.isSeEnabled;
-                                    return IconButton(
-                                      icon: Icon(
-                                        seOn ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-                                        color: seOn ? _primaryAccent : _textSecondary.withAlpha(150),
-                                        size: 22,
-                                      ),
-                                      tooltip: seOn ? '効果音: ON' : '効果音: OFF',
-                                      onPressed: () {
-                                        SoundService.instance.setSeEnabled(!seOn);
-                                      },
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
-                                    );
-                                  },
-                                ),
-                                // 絞り込みフィルターボタン
-                                Badge(
-                                  isLabelVisible: _hasActiveFilters,
-                                  label: Text('$_activeFilterCount', style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
-                                  backgroundColor: _primaryAccent,
-                                  offset: const Offset(-2, 2),
-                                  child: IconButton(
-                                    icon: Icon(
-                                      Icons.tune_rounded,
-                                      color: _hasActiveFilters ? _primaryAccent : _textSecondary,
-                                      size: 22,
-                                    ),
-                                    tooltip: '絞り込みフィルター',
-                                    onPressed: _openFilterBottomSheet,
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
-                                  ),
-                                ),
-                                // その他メニュー（DB再同期・再構築）
-                                PopupMenuButton<String>(
-                                  icon: const Icon(Icons.more_vert_rounded, color: _textSecondary, size: 22),
-                                  tooltip: 'その他・データ管理',
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(minWidth: 30, minHeight: 34),
-                                  onSelected: (val) {
-                                    if (val == 'sync_flags') {
-                                      _showSyncMemorizedFlagsDialog();
-                                    } else if (val == 'rebuild_db') {
-                                      _rebuildDatabase();
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    const PopupMenuItem(
-                                      value: 'sync_flags',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.published_with_changes_rounded, size: 18, color: _primaryAccent),
-                                          SizedBox(width: 8),
-                                          Text('暗記フラグ再同期 (80pt未満解除)', style: TextStyle(fontSize: 13)),
-                                        ],
-                                      ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'rebuild_db',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.sync_rounded, size: 18, color: _secondaryAccent),
-                                          SizedBox(width: 8),
-                                          Text('DB完全再構築 (CSVデータ再読み込み)', style: TextStyle(fontSize: 13)),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                            WordSearchBar(
+                              searchController: _searchController,
+                              searchFocusNode: _searchFocusNode,
+                              onChanged: (val) {
+                                setState(() => _searchQuery = val.trim());
+                                _onFilterChanged();
+                              },
+                              onClear: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                                _onFilterChanged();
+                                _searchFocusNode.requestFocus();
+                              },
+                              soundEnabled: SoundService.instance.isSeEnabled,
+                              onToggleSound: () {
+                                SoundService.instance.setSeEnabled(!SoundService.instance.isSeEnabled);
+                                setState(() {});
+                              },
+                              activeFilterCount: _activeFilterCount,
+                              onOpenFilter: _openFilterBottomSheet,
+                              onSyncFlags: _showSyncMemorizedFlagsDialog,
+                              onResetWordsDb: () async {
+                                await _rebuildDatabase();
+                              },
+                              onResetLearningData: () async {
+                                final messenger = ScaffoldMessenger.of(context);
+                                await widget.database.resetAllLearningData();
+                                await _loadWords();
+                                messenger.showSnackBar(
+                                  const SnackBar(content: Text('学習データを初期化しました')),
+                                );
+                              },
+                              bgColor: _bgColor,
+                              borderColor: _borderColor,
+                              primaryColor: _primaryAccent,
+                              textColor: _textPrimary,
+                              textSecondaryColor: _textSecondary,
                             ),
                             const SizedBox(height: 6),
 
@@ -743,7 +609,7 @@ class WordsScreenState extends State<WordsScreen> {
 
                     // 2. セクションごとの吸い付き＆押し出しスライバーグループ
                     if (_sections.isEmpty)
-                      const SliverFillRemaining(
+                      SliverFillRemaining(
                         child: Center(
                           child: Text(
                             '該当する単語が見つかりません',
@@ -757,14 +623,19 @@ class WordsScreenState extends State<WordsScreen> {
                           slivers: [
                             SliverPersistentHeader(
                               pinned: true,
-                              delegate: _SectionStickyHeaderDelegate(
+                              delegate: WordSectionStickyHeaderDelegate(
                                 section: section,
                                 sortMode: _sortMode,
+                                bgColor: _bgColor,
+                                borderColor: _borderColor,
+                                primaryColor: _primaryAccent,
+                                textColor: _textPrimary,
+                                textSecondaryColor: _textSecondary,
                               ),
                             ),
                             if (_sortMode == 'chap')
                               SliverToBoxAdapter(
-                                child: _buildChapterCharacterBanner(section),
+                                child: WordChapterBanner(section: section),
                               ),
                             SliverFixedExtentList(
                               itemExtent: 74.0,
@@ -850,120 +721,6 @@ class WordsScreenState extends State<WordsScreen> {
               ),
             ),
           ),
-    );
-  }
-
-  Widget _buildChapterCharacterBanner(WordSection section) {
-    if (section.words.isEmpty) return const SizedBox.shrink();
-    final chapter = section.words.first.chapter;
-    final speciesIndex = chapter - 1;
-    final species = getCharacterSpecies(chapter);
-
-    // フィルター状態に関わらず、チャプター全体の全単語を基準に暗記率（80pt以上基準）と成長段階を算出
-    final chapterAllWords = _allWords.where((w) => w.chapter == chapter).toList();
-    final int totalWordsInChapter = chapterAllWords.isNotEmpty ? chapterAllWords.length : section.words.length;
-    final int memorizedCount = chapterAllWords.where((w) => w.isMemorized || w.retentionPoint >= 80).length;
-    final double rate = totalWordsInChapter > 0 ? (memorizedCount / totalWordsInChapter) * 100.0 : 0.0;
-    final growthState = PixelCharacterWidget.stateFromRate(rate, true);
-    final isCleared = rate >= 80.0;
-    final isLocked = growthState == CharacterGrowthState.locked;
-
-    // 要件9: 1段へ統合表示「元気 52%（52/100）」
-    String statusText;
-    Color statusColor;
-    if (isLocked || rate <= 0) {
-      statusText = '🔒 未学習 0% (0/$totalWordsInChapter)';
-      statusColor = _textSecondary;
-    } else if (isCleared) {
-      statusText = '🌟 進化 ${rate.toInt()}% ($memorizedCount/$totalWordsInChapter)';
-      statusColor = const Color(0xFF6A1B9A);
-    } else if (rate >= 50.0) {
-      statusText = '😊 元気 ${rate.toInt()}% ($memorizedCount/$totalWordsInChapter)';
-      statusColor = Colors.green.shade700;
-    } else {
-      statusText = '🥀 元気ない ${rate.toInt()}% ($memorizedCount/$totalWordsInChapter)';
-      statusColor = Colors.deepOrange;
-    }
-
-    final isCurrentBuddy = (speciesIndex == BuddyService.instance.selectedSpeciesId);
-    final favStamp = isCurrentBuddy ? BuddyService.instance.favoriteStamp : null;
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: _cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _borderColor),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 4,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          PixelCharacterWidget(
-            speciesIndex: speciesIndex,
-            growthState: growthState,
-            actionState: isCleared ? CharacterActionState.walk : CharacterActionState.idle,
-            favoriteStamp: favStamp,
-            size: 42,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        'Ch.$chapter: ${isLocked ? '？？？？？' : species.japaneseName}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isLocked ? _textSecondary : _textPrimary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      species.category.icon,
-                      style: const TextStyle(fontSize: 11),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: statusColor,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: (rate / 100.0).clamp(0.0, 1.0),
-                    backgroundColor: const Color(0xFFEFEAE0),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isCleared ? const Color(0xFF8E24AA) : _primaryAccent,
-                    ),
-                    minHeight: 5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1114,7 +871,7 @@ class WordsScreenState extends State<WordsScreen> {
         alignment: Alignment.centerLeft,
         child: Text(
           '表示中: $_totalFilteredCount 件',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
             color: _textSecondary,
@@ -1129,7 +886,7 @@ class WordsScreenState extends State<WordsScreen> {
         children: [
           Text(
             '$_totalFilteredCount件 ',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
               color: _textSecondary,
@@ -1172,8 +929,8 @@ class WordsScreenState extends State<WordsScreen> {
               });
             },
             borderRadius: BorderRadius.circular(4),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               child: Text(
                 '全解除',
                 style: TextStyle(fontSize: 11, color: _secondaryAccent, fontWeight: FontWeight.bold),
@@ -1198,15 +955,16 @@ class WordsScreenState extends State<WordsScreen> {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _primaryAccent),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _primaryAccent),
           ),
           const SizedBox(width: 2),
           InkWell(
             onTap: onRemove,
-            child: const Icon(Icons.close_rounded, size: 13, color: _primaryAccent),
+            child: Icon(Icons.close_rounded, size: 13, color: _primaryAccent),
           ),
         ],
       ),
     );
   }
 }
+

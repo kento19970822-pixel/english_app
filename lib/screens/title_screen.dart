@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
 import '../main.dart';
+import '../providers/settings_provider.dart';
 import '../services/buddy_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/pixel_character_widget.dart';
 
 class TitleScreen extends StatefulWidget {
@@ -23,14 +25,15 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
   bool _isLoading = true;
   bool _isTransitioning = false;
 
-  // 定数パステルカラー
-  static const Color _bgColor = Color(0xFFFBF7EE);
-  static const Color _cardColor = Color(0xFFFFFDF9);
-  static const Color _primaryAccent = Color(0xFF5F9E98);
-  static const Color _secondaryAccent = Color(0xFFECA882);
-  static const Color _textPrimary = Color(0xFF2C302E);
-  static const Color _textSecondary = Color(0xFF6B726E);
-  static const Color _borderColor = Color(0xFFE5DEC9);
+  // パステルテーマカラー（ライト/ダーク動的対応）
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+  Color get _bgColor => _isDark ? AppTheme.darkBg : AppTheme.lightBg;
+  Color get _cardColor => _isDark ? AppTheme.darkCard : AppTheme.lightCard;
+  Color get _primaryAccent => _isDark ? AppTheme.darkPrimary : AppTheme.lightPrimary;
+  Color get _secondaryAccent => _isDark ? AppTheme.darkSecondary : AppTheme.lightSecondary;
+  Color get _textPrimary => _isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary;
+  Color get _textSecondary => _isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
+  Color get _borderColor => _isDark ? AppTheme.darkBorder : AppTheme.lightBorder;
 
   @override
   void initState() {
@@ -101,12 +104,12 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
     return Scaffold(
       backgroundColor: _bgColor,
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   CircularProgressIndicator(color: _primaryAccent),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
                     'データを準備中...',
                     style: TextStyle(
@@ -148,7 +151,7 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.auto_awesome_rounded, color: _secondaryAccent, size: 22),
+                                Icon(Icons.auto_awesome_rounded, color: _secondaryAccent, size: 22),
                                 const SizedBox(width: 8),
                                 Text(
                                   'ENGLISH QUEST',
@@ -167,11 +170,11 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                const Icon(Icons.auto_awesome_rounded, color: _secondaryAccent, size: 22),
+                                Icon(Icons.auto_awesome_rounded, color: _secondaryAccent, size: 22),
                               ],
                             ),
                             const SizedBox(height: 4),
-                            const Text(
+                            Text(
                               '落下パズル × 忘却曲線 英単語ゲーム',
                               style: TextStyle(
                                 fontSize: 12,
@@ -232,11 +235,11 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.local_fire_department_rounded, color: _secondaryAccent, size: 18),
+                              Icon(Icons.local_fire_department_rounded, color: _secondaryAccent, size: 18),
                               const SizedBox(width: 6),
                               Text(
                                 '$_streakCount 日連続学習中！',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                   color: _textPrimary,
@@ -245,7 +248,7 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
                               const SizedBox(width: 10),
                               Text(
                                 '(累計 $_totalDays 日)',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   color: _textSecondary,
                                 ),
@@ -302,7 +305,7 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
                       const Spacer(flex: 1),
 
                       // 5. フッター（バージョン表記）
-                      const Text(
+                      Text(
                         'Version 1.0.0 • Offline Ready',
                         style: TextStyle(
                           fontSize: 11,

@@ -3370,6 +3370,356 @@ class ChapterProgressesCompanion
   }
 }
 
+class $LearningLogsTable extends LearningLogs
+    with TableInfo<$LearningLogsTable, LearningLog> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LearningLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _wordIdMeta = const VerificationMeta('wordId');
+  @override
+  late final GeneratedColumn<int> wordId = GeneratedColumn<int>(
+    'word_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES words (id)',
+    ),
+  );
+  static const VerificationMeta _isCorrectMeta = const VerificationMeta(
+    'isCorrect',
+  );
+  @override
+  late final GeneratedColumn<bool> isCorrect = GeneratedColumn<bool>(
+    'is_correct',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_correct" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _modeMeta = const VerificationMeta('mode');
+  @override
+  late final GeneratedColumn<String> mode = GeneratedColumn<String>(
+    'mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('quiz'),
+  );
+  static const VerificationMeta _learnedAtMeta = const VerificationMeta(
+    'learnedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> learnedAt = GeneratedColumn<DateTime>(
+    'learned_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    wordId,
+    isCorrect,
+    mode,
+    learnedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'learning_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LearningLog> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('word_id')) {
+      context.handle(
+        _wordIdMeta,
+        wordId.isAcceptableOrUnknown(data['word_id']!, _wordIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_wordIdMeta);
+    }
+    if (data.containsKey('is_correct')) {
+      context.handle(
+        _isCorrectMeta,
+        isCorrect.isAcceptableOrUnknown(data['is_correct']!, _isCorrectMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_isCorrectMeta);
+    }
+    if (data.containsKey('mode')) {
+      context.handle(
+        _modeMeta,
+        mode.isAcceptableOrUnknown(data['mode']!, _modeMeta),
+      );
+    }
+    if (data.containsKey('learned_at')) {
+      context.handle(
+        _learnedAtMeta,
+        learnedAt.isAcceptableOrUnknown(data['learned_at']!, _learnedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LearningLog map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LearningLog(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      wordId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}word_id'],
+      )!,
+      isCorrect: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_correct'],
+      )!,
+      mode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mode'],
+      )!,
+      learnedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}learned_at'],
+      )!,
+    );
+  }
+
+  @override
+  $LearningLogsTable createAlias(String alias) {
+    return $LearningLogsTable(attachedDatabase, alias);
+  }
+}
+
+class LearningLog extends DataClass implements Insertable<LearningLog> {
+  final int id;
+  final int wordId;
+  final bool isCorrect;
+  final String mode;
+  final DateTime learnedAt;
+  const LearningLog({
+    required this.id,
+    required this.wordId,
+    required this.isCorrect,
+    required this.mode,
+    required this.learnedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['word_id'] = Variable<int>(wordId);
+    map['is_correct'] = Variable<bool>(isCorrect);
+    map['mode'] = Variable<String>(mode);
+    map['learned_at'] = Variable<DateTime>(learnedAt);
+    return map;
+  }
+
+  LearningLogsCompanion toCompanion(bool nullToAbsent) {
+    return LearningLogsCompanion(
+      id: Value(id),
+      wordId: Value(wordId),
+      isCorrect: Value(isCorrect),
+      mode: Value(mode),
+      learnedAt: Value(learnedAt),
+    );
+  }
+
+  factory LearningLog.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LearningLog(
+      id: serializer.fromJson<int>(json['id']),
+      wordId: serializer.fromJson<int>(json['wordId']),
+      isCorrect: serializer.fromJson<bool>(json['isCorrect']),
+      mode: serializer.fromJson<String>(json['mode']),
+      learnedAt: serializer.fromJson<DateTime>(json['learnedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'wordId': serializer.toJson<int>(wordId),
+      'isCorrect': serializer.toJson<bool>(isCorrect),
+      'mode': serializer.toJson<String>(mode),
+      'learnedAt': serializer.toJson<DateTime>(learnedAt),
+    };
+  }
+
+  LearningLog copyWith({
+    int? id,
+    int? wordId,
+    bool? isCorrect,
+    String? mode,
+    DateTime? learnedAt,
+  }) => LearningLog(
+    id: id ?? this.id,
+    wordId: wordId ?? this.wordId,
+    isCorrect: isCorrect ?? this.isCorrect,
+    mode: mode ?? this.mode,
+    learnedAt: learnedAt ?? this.learnedAt,
+  );
+  LearningLog copyWithCompanion(LearningLogsCompanion data) {
+    return LearningLog(
+      id: data.id.present ? data.id.value : this.id,
+      wordId: data.wordId.present ? data.wordId.value : this.wordId,
+      isCorrect: data.isCorrect.present ? data.isCorrect.value : this.isCorrect,
+      mode: data.mode.present ? data.mode.value : this.mode,
+      learnedAt: data.learnedAt.present ? data.learnedAt.value : this.learnedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LearningLog(')
+          ..write('id: $id, ')
+          ..write('wordId: $wordId, ')
+          ..write('isCorrect: $isCorrect, ')
+          ..write('mode: $mode, ')
+          ..write('learnedAt: $learnedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, wordId, isCorrect, mode, learnedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LearningLog &&
+          other.id == this.id &&
+          other.wordId == this.wordId &&
+          other.isCorrect == this.isCorrect &&
+          other.mode == this.mode &&
+          other.learnedAt == this.learnedAt);
+}
+
+class LearningLogsCompanion extends UpdateCompanion<LearningLog> {
+  final Value<int> id;
+  final Value<int> wordId;
+  final Value<bool> isCorrect;
+  final Value<String> mode;
+  final Value<DateTime> learnedAt;
+  const LearningLogsCompanion({
+    this.id = const Value.absent(),
+    this.wordId = const Value.absent(),
+    this.isCorrect = const Value.absent(),
+    this.mode = const Value.absent(),
+    this.learnedAt = const Value.absent(),
+  });
+  LearningLogsCompanion.insert({
+    this.id = const Value.absent(),
+    required int wordId,
+    required bool isCorrect,
+    this.mode = const Value.absent(),
+    this.learnedAt = const Value.absent(),
+  }) : wordId = Value(wordId),
+       isCorrect = Value(isCorrect);
+  static Insertable<LearningLog> custom({
+    Expression<int>? id,
+    Expression<int>? wordId,
+    Expression<bool>? isCorrect,
+    Expression<String>? mode,
+    Expression<DateTime>? learnedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (wordId != null) 'word_id': wordId,
+      if (isCorrect != null) 'is_correct': isCorrect,
+      if (mode != null) 'mode': mode,
+      if (learnedAt != null) 'learned_at': learnedAt,
+    });
+  }
+
+  LearningLogsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? wordId,
+    Value<bool>? isCorrect,
+    Value<String>? mode,
+    Value<DateTime>? learnedAt,
+  }) {
+    return LearningLogsCompanion(
+      id: id ?? this.id,
+      wordId: wordId ?? this.wordId,
+      isCorrect: isCorrect ?? this.isCorrect,
+      mode: mode ?? this.mode,
+      learnedAt: learnedAt ?? this.learnedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (wordId.present) {
+      map['word_id'] = Variable<int>(wordId.value);
+    }
+    if (isCorrect.present) {
+      map['is_correct'] = Variable<bool>(isCorrect.value);
+    }
+    if (mode.present) {
+      map['mode'] = Variable<String>(mode.value);
+    }
+    if (learnedAt.present) {
+      map['learned_at'] = Variable<DateTime>(learnedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LearningLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('wordId: $wordId, ')
+          ..write('isCorrect: $isCorrect, ')
+          ..write('mode: $mode, ')
+          ..write('learnedAt: $learnedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3381,6 +3731,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $StampsTable stamps = $StampsTable(this);
   late final $ChapterProgressesTable chapterProgresses =
       $ChapterProgressesTable(this);
+  late final $LearningLogsTable learningLogs = $LearningLogsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3391,6 +3742,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     dailyRecords,
     stamps,
     chapterProgresses,
+    learningLogs,
   ];
 }
 
@@ -3450,6 +3802,29 @@ typedef $$WordsTableUpdateCompanionBuilder = WordsCompanion Function({
   Value<DateTime?> lastStudiedAt,
   Value<DateTime?> lastRestrictedDate,
 });
+
+final class $$WordsTableReferences
+    extends BaseReferences<_$AppDatabase, $WordsTable, Word> {
+  $$WordsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$LearningLogsTable, List<LearningLog>>
+  _learningLogsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.learningLogs,
+    aliasName: 'words__id__learning_logs__word_id',
+  );
+
+  $$LearningLogsTableProcessedTableManager get learningLogsRefs {
+    final manager = $$LearningLogsTableTableManager(
+      $_db,
+      $_db.learningLogs,
+    ).filter((f) => f.wordId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_learningLogsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
   $$WordsTableFilterComposer({
@@ -3588,6 +3963,31 @@ class $$WordsTableFilterComposer extends Composer<_$AppDatabase, $WordsTable> {
     column: $table.lastRestrictedDate,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> learningLogsRefs(
+    Expression<bool> Function($$LearningLogsTableFilterComposer f) f,
+  ) {
+    final $$LearningLogsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.learningLogs,
+      getReferencedColumn: (t) => t.wordId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LearningLogsTableFilterComposer(
+            $db: $db,
+            $table: $db.learningLogs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$WordsTableOrderingComposer
@@ -3844,6 +4244,31 @@ class $$WordsTableAnnotationComposer
     column: $table.lastRestrictedDate,
     builder: (column) => column,
   );
+
+  Expression<T> learningLogsRefs<T extends Object>(
+    Expression<T> Function($$LearningLogsTableAnnotationComposer a) f,
+  ) {
+    final $$LearningLogsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.learningLogs,
+      getReferencedColumn: (t) => t.wordId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LearningLogsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.learningLogs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$WordsTableTableManager
@@ -3857,9 +4282,9 @@ class $$WordsTableTableManager
           $$WordsTableAnnotationComposer,
           $$WordsTableCreateCompanionBuilder,
           $$WordsTableUpdateCompanionBuilder,
-          (Word, BaseReferences<_$AppDatabase, $WordsTable, Word>),
+          (Word, $$WordsTableReferences),
           Word,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool learningLogsRefs})
         > {
   $$WordsTableTableManager(_$AppDatabase db, $WordsTable table)
     : super(
@@ -3985,9 +4410,36 @@ class $$WordsTableTableManager
                 lastRestrictedDate: lastRestrictedDate,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) =>
+                    (e.readTable(table), $$WordsTableReferences(db, table, e)),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({learningLogsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (learningLogsRefs) db.learningLogs],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (learningLogsRefs)
+                    await $_getPrefetchedData<Word, $WordsTable, LearningLog>(
+                      currentTable: table,
+                      referencedTable: $$WordsTableReferences
+                          ._learningLogsRefsTable(db),
+                      managerFromTypedResult: (p0) => $$WordsTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).learningLogsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.wordId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -4002,9 +4454,9 @@ typedef $$WordsTableProcessedTableManager =
       $$WordsTableAnnotationComposer,
       $$WordsTableCreateCompanionBuilder,
       $$WordsTableUpdateCompanionBuilder,
-      (Word, BaseReferences<_$AppDatabase, $WordsTable, Word>),
+      (Word, $$WordsTableReferences),
       Word,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool learningLogsRefs})
     >;
 typedef $$LearningHistoryTableCreateCompanionBuilder =
     LearningHistoryCompanion Function({
@@ -5004,6 +5456,315 @@ typedef $$ChapterProgressesTableProcessedTableManager =
       ChapterProgressesData,
       PrefetchHooks Function()
     >;
+typedef $$LearningLogsTableCreateCompanionBuilder =
+    LearningLogsCompanion Function({
+      Value<int> id,
+      required int wordId,
+      required bool isCorrect,
+      Value<String> mode,
+      Value<DateTime> learnedAt,
+    });
+typedef $$LearningLogsTableUpdateCompanionBuilder =
+    LearningLogsCompanion Function({
+      Value<int> id,
+      Value<int> wordId,
+      Value<bool> isCorrect,
+      Value<String> mode,
+      Value<DateTime> learnedAt,
+    });
+
+final class $$LearningLogsTableReferences
+    extends BaseReferences<_$AppDatabase, $LearningLogsTable, LearningLog> {
+  $$LearningLogsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $WordsTable _wordIdTable(_$AppDatabase db) =>
+      db.words.createAlias('learning_logs__word_id__words__id');
+
+  $$WordsTableProcessedTableManager get wordId {
+    final $_column = $_itemColumn<int>('word_id')!;
+
+    final manager = $$WordsTableTableManager(
+      $_db,
+      $_db.words,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_wordIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$LearningLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $LearningLogsTable> {
+  $$LearningLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCorrect => $composableBuilder(
+    column: $table.isCorrect,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get learnedAt => $composableBuilder(
+    column: $table.learnedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$WordsTableFilterComposer get wordId {
+    final $$WordsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wordId,
+      referencedTable: $db.words,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WordsTableFilterComposer(
+            $db: $db,
+            $table: $db.words,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LearningLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $LearningLogsTable> {
+  $$LearningLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCorrect => $composableBuilder(
+    column: $table.isCorrect,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get learnedAt => $composableBuilder(
+    column: $table.learnedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$WordsTableOrderingComposer get wordId {
+    final $$WordsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wordId,
+      referencedTable: $db.words,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WordsTableOrderingComposer(
+            $db: $db,
+            $table: $db.words,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LearningLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LearningLogsTable> {
+  $$LearningLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCorrect =>
+      $composableBuilder(column: $table.isCorrect, builder: (column) => column);
+
+  GeneratedColumn<String> get mode =>
+      $composableBuilder(column: $table.mode, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get learnedAt =>
+      $composableBuilder(column: $table.learnedAt, builder: (column) => column);
+
+  $$WordsTableAnnotationComposer get wordId {
+    final $$WordsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wordId,
+      referencedTable: $db.words,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WordsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.words,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LearningLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LearningLogsTable,
+          LearningLog,
+          $$LearningLogsTableFilterComposer,
+          $$LearningLogsTableOrderingComposer,
+          $$LearningLogsTableAnnotationComposer,
+          $$LearningLogsTableCreateCompanionBuilder,
+          $$LearningLogsTableUpdateCompanionBuilder,
+          (LearningLog, $$LearningLogsTableReferences),
+          LearningLog,
+          PrefetchHooks Function({bool wordId})
+        > {
+  $$LearningLogsTableTableManager(_$AppDatabase db, $LearningLogsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LearningLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LearningLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LearningLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> wordId = const Value.absent(),
+                Value<bool> isCorrect = const Value.absent(),
+                Value<String> mode = const Value.absent(),
+                Value<DateTime> learnedAt = const Value.absent(),
+              }) => LearningLogsCompanion(
+                id: id,
+                wordId: wordId,
+                isCorrect: isCorrect,
+                mode: mode,
+                learnedAt: learnedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int wordId,
+                required bool isCorrect,
+                Value<String> mode = const Value.absent(),
+                Value<DateTime> learnedAt = const Value.absent(),
+              }) => LearningLogsCompanion.insert(
+                id: id,
+                wordId: wordId,
+                isCorrect: isCorrect,
+                mode: mode,
+                learnedAt: learnedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$LearningLogsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({wordId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (wordId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.wordId,
+                        referencedTable: $$LearningLogsTableReferences
+                            ._wordIdTable(db),
+                        referencedColumn: $$LearningLogsTableReferences
+                            ._wordIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$LearningLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LearningLogsTable,
+      LearningLog,
+      $$LearningLogsTableFilterComposer,
+      $$LearningLogsTableOrderingComposer,
+      $$LearningLogsTableAnnotationComposer,
+      $$LearningLogsTableCreateCompanionBuilder,
+      $$LearningLogsTableUpdateCompanionBuilder,
+      (LearningLog, $$LearningLogsTableReferences),
+      LearningLog,
+      PrefetchHooks Function({bool wordId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5018,4 +5779,6 @@ class $AppDatabaseManager {
       $$StampsTableTableManager(_db, _db.stamps);
   $$ChapterProgressesTableTableManager get chapterProgresses =>
       $$ChapterProgressesTableTableManager(_db, _db.chapterProgresses);
+  $$LearningLogsTableTableManager get learningLogs =>
+      $$LearningLogsTableTableManager(_db, _db.learningLogs);
 }

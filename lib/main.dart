@@ -3,10 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'db/app_database.dart';
+import 'providers/settings_provider.dart';
 import 'screens/mode_select_screen.dart';
 import 'screens/records_screen.dart';
 import 'screens/title_screen.dart';
 import 'screens/words_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,11 +28,13 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late final AppDatabase _database;
+  late final SettingsProvider _settingsProvider;
 
   @override
   void initState() {
     super.initState();
     _database = AppDatabase();
+    _settingsProvider = SettingsProvider.instance..loadSettings();
   }
 
   @override
@@ -41,20 +45,24 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '英単語ゲーム',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFFBF7EE),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF5F9E98),
-          primary: const Color(0xFF5F9E98),
-          secondary: const Color(0xFFECA882),
-          surface: const Color(0xFFFFFDF9),
-        ),
-      ),
-      home: TitleScreen(database: _database),
+    return ListenableBuilder(
+      listenable: _settingsProvider,
+      builder: (context, _) {
+        final themeMode = switch (_settingsProvider.themeMode) {
+          AppThemeMode.light => ThemeMode.light,
+          AppThemeMode.dark => ThemeMode.dark,
+          AppThemeMode.system => ThemeMode.system,
+        };
+
+        return MaterialApp(
+          title: '英単語ゲーム',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeMode,
+          home: TitleScreen(database: _database),
+        );
+      },
     );
   }
 }
@@ -143,8 +151,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
           ? null
           : NavigationBar(
               selectedIndex: _selectedIndex,
-              backgroundColor: const Color(0xFFFFFDF9),
-              indicatorColor: const Color(0xFF5F9E98).withAlpha(50),
+              backgroundColor: Theme.of(context).cardColor,
+              indicatorColor: Theme.of(context).colorScheme.primary.withAlpha(50),
               onDestinationSelected: (int index) {
                 if (index == _selectedIndex) {
                   // 画面表示中に同じタブを再押下した場合はスクロール位置・フィルターを初期状態にリセット (項目12)
