@@ -551,6 +551,7 @@ class WordsScreenState extends State<WordsScreen> {
           : SafeArea(
               child: CustomFastScrollbar(
                 controller: _scrollController,
+                topOffset: 202.0,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () => FocusScope.of(context).unfocus(),

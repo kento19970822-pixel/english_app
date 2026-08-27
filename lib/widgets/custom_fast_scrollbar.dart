@@ -16,6 +16,8 @@ class CustomFastScrollbar extends StatefulWidget {
   final Color thumbColor;
   final double topMarginRatio;
   final double bottomMarginRatio;
+  final double? topOffset;
+  final double? bottomOffset;
 
   const CustomFastScrollbar({
     super.key,
@@ -24,6 +26,8 @@ class CustomFastScrollbar extends StatefulWidget {
     this.thumbColor = const Color(0xFF5F9E98),
     this.topMarginRatio = 0.10,
     this.bottomMarginRatio = 0.10,
+    this.topOffset,
+    this.bottomOffset,
   });
 
   @override
@@ -81,8 +85,8 @@ class _CustomFastScrollbarState extends State<CustomFastScrollbar> {
 
   void _handleDragUpdate(double localY, double totalHeight) {
     if (!widget.controller.hasClients) return;
-    final topMargin = totalHeight * widget.topMarginRatio;
-    final bottomMargin = totalHeight * widget.bottomMarginRatio;
+    final topMargin = widget.topOffset ?? (totalHeight * widget.topMarginRatio);
+    final bottomMargin = widget.bottomOffset ?? (totalHeight * widget.bottomMarginRatio);
     final usableHeight = totalHeight - topMargin - bottomMargin;
     if (usableHeight <= 0) return;
 
@@ -135,8 +139,8 @@ class _CustomFastScrollbarState extends State<CustomFastScrollbar> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalHeight = constraints.maxHeight;
-        final topMargin = totalHeight * widget.topMarginRatio;
-        final bottomMargin = totalHeight * widget.bottomMarginRatio;
+        final topMargin = widget.topOffset ?? (totalHeight * widget.topMarginRatio);
+        final bottomMargin = widget.bottomOffset ?? (totalHeight * widget.bottomMarginRatio);
         final trackHeight = (totalHeight - topMargin - bottomMargin).clamp(100.0, double.infinity);
         const double thumbHeight = 44.0;
 

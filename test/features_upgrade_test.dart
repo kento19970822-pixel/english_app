@@ -33,6 +33,33 @@ void main() {
     expect(find.byType(CustomFastScrollbar), findsOneWidget);
   });
 
+  testWidgets('CustomFastScrollbar respects topOffset parameter', (WidgetTester tester) async {
+    final controller = ScrollController();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CustomFastScrollbar(
+            controller: controller,
+            topOffset: 202.0,
+            child: ListView.builder(
+              controller: controller,
+              itemCount: 100,
+              itemBuilder: (context, index) => ListTile(title: Text('Item $index')),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(CustomFastScrollbar), findsOneWidget);
+    final positionedFinder = find.descendant(
+      of: find.byType(CustomFastScrollbar),
+      matching: find.byType(Positioned),
+    );
+    expect(positionedFinder, findsWidgets);
+  });
+
   testWidgets('WordCardTile renders top buttons and 2nd row phonetic/category cleanly', (WidgetTester tester) async {
     final dummyWord = Word(
       id: 1,
