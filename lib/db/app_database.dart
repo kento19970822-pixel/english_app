@@ -23,7 +23,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -168,22 +168,31 @@ class AppDatabase extends _$AppDatabase {
 
   /// 全単語の取得
   Future<List<Word>> getAllWords() async {
-    return select(words).get();
+    return (select(words)..orderBy([(t) => OrderingTerm.asc(t.id)])).get();
   }
 
   /// 指定レベルの単語一覧を取得
   Future<List<Word>> getWordsByLevel(int level) async {
-    return (select(words)..where((t) => t.level.equals(level))).get();
+    return (select(words)
+          ..where((t) => t.level.equals(level))
+          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+        .get();
   }
 
   /// 複数レベルの単語一覧を取得
   Future<List<Word>> getWordsByLevels(List<int> levels) async {
-    return (select(words)..where((t) => t.level.isIn(levels))).get();
+    return (select(words)
+          ..where((t) => t.level.isIn(levels))
+          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+        .get();
   }
 
   /// 指定チャプターの単語一覧を取得
   Future<List<Word>> getWordsByChapter(int chapter) async {
-    return (select(words)..where((t) => t.chapter.equals(chapter))).get();
+    return (select(words)
+          ..where((t) => t.chapter.equals(chapter))
+          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+        .get();
   }
 
   /// 【1日1回処理】忘却曲線による定着度ポイント減算 ＆ 減算累計加算 ＆ 制限フラグ一括解除 (F-05)
@@ -320,22 +329,91 @@ class AppDatabase extends _$AppDatabase {
       });
     }
 
-    const cefrRank = {'A1': 0, 'A2': 1, 'B1': 2, 'B2': 3, 'C1': 4, 'C2': 5};
-    processedList.sort((a, b) {
-      final aCefr = a['cefr']?.toString().toUpperCase().trim() ?? 'A1';
-      final bCefr = b['cefr']?.toString().toUpperCase().trim() ?? 'A1';
-      final aRank = cefrRank[aCefr] ?? 99;
-      final bRank = cefrRank[bCefr] ?? 99;
-      if (aRank != bRank) return aRank.compareTo(bRank);
-      return (a['originalIndex'] as int).compareTo(b['originalIndex'] as int);
-    });
+    // --- 英語教育・認知心理学に基づく「スマート・インターリービング学習順」 ---
+    // 1. CEFRレベル最優先 (A1 -> A2 -> B1 -> B2 -> C1 -> C2)
+    // 2. アルファベット循環（A〜Z）による干渉効果防止・分散配置
+    // 3. 複数語義の単語は必ず語義番号昇順（1 -> 2 -> 3...）かつ連続せず分散出現
+    const cefrLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+    final Map<String, List<Map<String, dynamic>>> cefrGroups = {
+      for (final lvl in cefrLevels) lvl: [],
+    };
+
+    for (final item in processedList) {
+      final cefr = item['cefr']?.toString().toUpperCase().trim() ?? 'A1';
+      if (cefrGroups.containsKey(cefr)) {
+        cefrGroups[cefr]!.add(item);
+      } else {
+        cefrGroups['A1']!.add(item);
+      }
+    }
+
+    final List<Map<String, dynamic>> interleavedList = [];
+
+    for (final lvl in cefrLevels) {
+      final rowsInCefr = cefrGroups[lvl]!;
+      if (rowsInCefr.isEmpty) continue;
+
+      // 単語ごとに語義をグループ化し、senseIndex昇順に整列
+      final Map<String, List<Map<String, dynamic>>> wordToSenses = {};
+      for (final r in rowsInCefr) {
+        final wKey = r['wordGroup']?.toString() ?? '';
+        wordToSenses.putIfAbsent(wKey, () => []).add(r);
+      }
+      for (final wKey in wordToSenses.keys) {
+        wordToSenses[wKey]!.sort((a, b) {
+          final aSense = a['senseIndex'] as int? ?? 1;
+          final bSense = b['senseIndex'] as int? ?? 1;
+          if (aSense != bSense) return aSense.compareTo(bSense);
+          return (a['originalIndex'] as int).compareTo(b['originalIndex'] as int);
+        });
+      }
+
+      // 頭文字（A-Z）ごとに単語キーのキューを作成
+      final Map<String, List<String>> buckets = {};
+      final Set<String> seenWords = {};
+      for (final r in rowsInCefr) {
+        final wKey = r['wordGroup']?.toString() ?? '';
+        if (!seenWords.contains(wKey)) {
+          seenWords.add(wKey);
+          final firstChar = (wKey.isNotEmpty && RegExp(r'^[a-zA-Z]').hasMatch(wKey[0]))
+              ? wKey[0].toUpperCase()
+              : '#';
+          buckets.putIfAbsent(firstChar, () => []).add(wKey);
+        }
+      }
+
+      final sortedBucketKeys = buckets.keys.toList()..sort();
+      final Map<String, int> wordSensePointer = {for (final k in wordToSenses.keys) k: 0};
+
+      while (true) {
+        bool progress = false;
+        for (final char in sortedBucketKeys) {
+          final list = buckets[char]!;
+          if (list.isNotEmpty) {
+            final wKey = list.removeAt(0);
+            final senses = wordToSenses[wKey]!;
+            final ptr = wordSensePointer[wKey]!;
+            if (ptr < senses.length) {
+              interleavedList.add(senses[ptr]);
+              wordSensePointer[wKey] = ptr + 1;
+              progress = true;
+              // まだ次の語義が残っている場合はバケット末尾に戻して分散
+              if (ptr + 1 < senses.length) {
+                list.add(wKey);
+              }
+            }
+          }
+        }
+        if (!progress) break;
+      }
+    }
 
     int globalChapter = 1;
     String currentCefr = '';
     int cefrWordCount = 0;
 
     await batch((batch) {
-      for (final item in processedList) {
+      for (final item in interleavedList) {
         final cefrStr = item['cefr']?.toString().toUpperCase().trim() ?? 'A1';
 
         if (currentCefr.isEmpty) {
@@ -490,10 +568,16 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
-  /// 全単語データの削除
+  /// 全単語データの削除（外部キー制約に配慮して子テーブルから順に安全削除）
   Future<void> clearAllWords() async {
-    await delete(words).go();
-    await delete(chapterProgresses).go();
+    await transaction(() async {
+      await delete(userWordProgresses).go();
+      await delete(wordSenses).go();
+      await delete(learningLogs).go();
+      await delete(learningHistory).go();
+      await delete(words).go();
+      await delete(chapterProgresses).go();
+    });
   }
 
   /// お気に入りフラグの更新
@@ -1146,6 +1230,8 @@ class AppDatabase extends _$AppDatabase {
     await transaction(() async {
       await delete(learningHistory).go();
       await delete(dailyRecords).go();
+      await delete(learningLogs).go();
+      await delete(userWordProgresses).go();
       await update(words).write(
         const WordsCompanion(
           retentionPoint: Value(0),
@@ -1160,6 +1246,7 @@ class AppDatabase extends _$AppDatabase {
       await delete(stamps).go();
       await delete(chapterProgresses).go();
       await initChapterProgresses();
+      await populateSensesAndProgressFromWords();
     });
   }
 
