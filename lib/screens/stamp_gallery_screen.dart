@@ -35,8 +35,12 @@ class _StampGalleryScreenState extends State<StampGalleryScreen> {
     setState(() => _isLoading = true);
     try {
       await _stampService.ensureInitialized();
-      final all = await widget.database.getAllStamps();
-      final maxP = await widget.database.getMaxStampPhase();
+      final results = await Future.wait([
+        widget.database.getAllStamps(),
+        widget.database.getMaxStampPhase(),
+      ]);
+      final all = results[0] as List<Stamp>;
+      final maxP = results[1] as int;
 
       if (mounted) {
         setState(() {

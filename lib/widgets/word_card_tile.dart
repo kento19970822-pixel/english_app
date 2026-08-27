@@ -129,7 +129,7 @@ class _WordCardTileState extends State<WordCardTile> {
         ),
       ),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 3.0),
+        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 3.5),
         decoration: BoxDecoration(
           color: _cardColor,
           borderRadius: BorderRadius.circular(12),
@@ -173,14 +173,14 @@ class _WordCardTileState extends State<WordCardTile> {
                 ? widget.onDoubleTap
                 : (widget.showJapanese ? null : (widget.onDoubleTap ?? widget.onTap)),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 5.5, 12, 5.5),
+              padding: const EdgeInsets.fromLTRB(12, 7.0, 12, 7.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // 左端: 定着度インジケーター（縦バー・上下中央揃え）
                   Container(
                     width: 4.0,
-                    height: 38,
+                    height: 42,
                     decoration: BoxDecoration(
                       color: indicatorColor,
                       borderRadius: BorderRadius.circular(2.5),
@@ -388,7 +388,7 @@ class _WordCardTileState extends State<WordCardTile> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2.5),
+                      const SizedBox(height: 3.0),
 
                       // 2行目: 英単語 ＋ 和訳（上下バランスよく中央配置）
                       Row(
@@ -401,7 +401,7 @@ class _WordCardTileState extends State<WordCardTile> {
                               fontWeight: FontWeight.bold,
                               color: _textPrimary,
                               letterSpacing: 0.1,
-                              height: 1.15,
+                              height: 1.2,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -413,7 +413,7 @@ class _WordCardTileState extends State<WordCardTile> {
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w500,
                                       color: _textPrimary,
-                                      height: 1.15,
+                                      height: 1.2,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
