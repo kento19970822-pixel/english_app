@@ -21,12 +21,12 @@ void main() {
   });
 
   group('Batch 2 Enhancements Unit Tests', () {
-    test('1. calculateChapterMemorizedRate uses 70pt threshold (unlock condition)', () async {
+    test('1. calculateChapterUnlockRate uses 70pt threshold (unlock condition)', () async {
       for (int i = 1; i <= 10; i++) {
         await db.into(db.words).insert(
           WordsCompanion(
-            english: Value('word_'),
-            japanese: Value('単語_'),
+            english: Value('word_$i'),
+            japanese: Value('単語_$i'),
             partOfSpeech: const Value('noun'),
             cefr: const Value('A1'),
             level: const Value(1),
@@ -38,8 +38,13 @@ void main() {
         );
       }
 
-      final rate = await db.calculateChapterMemorizedRate(1);
-      expect(rate, 90.0);
+      // 70pt以上が9/10 = 90.0%（解放条件成立）
+      final unlockRate = await db.calculateChapterUnlockRate(1);
+      expect(unlockRate, 90.0);
+
+      // 80pt以上は0件なので memorizedRate は 0.0%
+      final memorizedRate = await db.calculateChapterMemorizedRate(1);
+      expect(memorizedRate, 0.0);
 
       final result = await db.checkAndUnlockNextChapter(1);
       expect(result['isCleared'], true);

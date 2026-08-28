@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:english_app/db/app_database.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
@@ -16,7 +16,7 @@ void main() {
 
   group('Phase 1 Performance & Robustness Tests', () {
     test('syncAllChapterProgresses computes memorizedRate in a single query and unlocks correctly', () async {
-      // 1. チャプター1と2の単語を投入 (10語中9語が70pt以上 -> 90%)
+      // 1. チャプター1の単語を投入 (10語中9語が80pt以上 -> 90%)
       for (int i = 1; i <= 10; i++) {
         await db.into(db.words).insert(
           WordsCompanion(
@@ -28,13 +28,13 @@ void main() {
             level: const Value(1),
             chapter: const Value(1),
             category: const Value('General'),
-            retentionPoint: Value(i <= 9 ? 70 : 60),
+            retentionPoint: Value(i <= 9 ? 80 : 60),
             isMemorized: Value(i <= 9),
           ),
         );
       }
 
-      // チャプター2の単語 (10語中5語が70pt以上 -> 50%)
+      // チャプター2の単語 (10語中5語が80pt以上 -> 50%)
       for (int i = 11; i <= 20; i++) {
         await db.into(db.words).insert(
           WordsCompanion(
@@ -46,7 +46,7 @@ void main() {
             level: const Value(1),
             chapter: const Value(2),
             category: const Value('General'),
-            retentionPoint: Value(i <= 15 ? 70 : 40),
+            retentionPoint: Value(i <= 15 ? 80 : 40),
             isMemorized: Value(i <= 15),
           ),
         );
@@ -116,7 +116,7 @@ void main() {
             level: const Value(1),
             chapter: const Value(5),
             category: const Value('General'),
-            retentionPoint: Value(i <= 9 ? 75 : 50),
+            retentionPoint: Value(i <= 9 ? 80 : 50),
             isMemorized: Value(i <= 9),
           ),
         );

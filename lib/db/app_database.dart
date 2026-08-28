@@ -1149,21 +1149,36 @@ class AppDatabase extends _$AppDatabase {
     return anyChapter.isNotEmpty ? anyChapter.first.chapter : 1;
   }
 
-  /// チャプター内の70pt以上単語達成率（0.0〜100.0%）を計算 (F-15: クリア判定基準)
+  /// チャプター内の現時点での実質80pt以上単語率（0.0〜100.0%）を計算
+  /// 【用途】キャラクターの成長・進化状態（PixelCharacterWidget.stateFromRate）および暗記進捗表示用
+  /// 忘却曲線による日跨ぎ減算で80pt未満になるとリアルタイムに低下し、キャラの元気がなくなる
   Future<double> calculateChapterMemorizedRate(int chapter) async {
     final wordsInChapter = await (select(words)
           ..where((t) => t.chapter.equals(chapter)))
         .get();
     if (wordsInChapter.isEmpty) return 0.0;
 
-    final targetCount = wordsInChapter.where((w) => w.isMemorized || w.retentionPoint >= 70).length;
+    final targetCount = wordsInChapter.where((w) => w.retentionPoint >= 80).length;
     return (targetCount / wordsInChapter.length) * 100.0;
   }
 
-  /// 単一チャプターの暗記率・クリア状態を単語データから完全同期
+  /// チャプター内の現時点での実質70pt以上単語率（0.0〜100.0%）を計算
+  /// 【用途】チャプター解放（次章アンロック）判定専用。これが90%以上で次章解放
+  Future<double> calculateChapterUnlockRate(int chapter) async {
+    final wordsInChapter = await (select(words)
+          ..where((t) => t.chapter.equals(chapter)))
+        .get();
+    if (wordsInChapter.isEmpty) return 0.0;
+
+    final targetCount = wordsInChapter.where((w) => w.retentionPoint >= 70).length;
+    return (targetCount / wordsInChapter.length) * 100.0;
+  }
+
+  /// 単一チャプターの暗記率（80pt基準）・クリア状態（70pt90%基準）を単語データから完全同期
   Future<void> syncChapterProgress(int chapter) async {
-    final rate = await calculateChapterMemorizedRate(chapter);
-    final isCleared = rate >= 90.0;
+    final memorizedRate = await calculateChapterMemorizedRate(chapter);
+    final unlockRate = await calculateChapterUnlockRate(chapter);
+    final isCleared = unlockRate >= 90.0;
 
     final currentProgress = await (select(chapterProgresses)
           ..where((t) => t.chapter.equals(chapter)))
@@ -1171,7 +1186,7 @@ class AppDatabase extends _$AppDatabase {
 
     await (update(chapterProgresses)..where((t) => t.chapter.equals(chapter))).write(
       ChapterProgressesCompanion(
-        memorizedRate: Value(rate),
+        memorizedRate: Value(memorizedRate),
         isCleared: Value(isCleared || (currentProgress?.isCleared ?? false)),
         clearedAt: isCleared ? Value(DateTime.now()) : const Value.absent(),
       ),
@@ -1185,35 +1200,40 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// 全チャプターの暗記率・クリア状態・解放状態を単語マスターから一括同期 (N+1解消・1発集計SQL)
+  /// 全チャプターの暗記率（80pt基準）・クリア状態（70pt90%基準）・解放状態を単語マスターから一括同期 (N+1解消・1発集計SQL)
   Future<void> syncAllChapterProgresses() async {
-    // 1回の集計SQLで全チャプターの総数と70pt以上暗記数を一括集計 (N+1解消)
+    // 1回の集計SQLで全チャプターの総数、実80pt以上数（キャラ成長用）、実70pt以上数（章解放用）を一括集計
     const query = '''
       SELECT chapter,
              COUNT(*) AS total_count,
-             SUM(CASE WHEN is_memorized = 1 OR retention_point >= 70 THEN 1 ELSE 0 END) AS memorized_count
+             SUM(CASE WHEN retention_point >= 80 THEN 1 ELSE 0 END) AS memorized_count_80,
+             SUM(CASE WHEN retention_point >= 70 THEN 1 ELSE 0 END) AS unlock_count_70
       FROM words
       GROUP BY chapter
       ORDER BY chapter ASC;
     ''';
     final rows = await customSelect(query).get();
-    final Map<int, double> rateMap = {};
+    final Map<int, double> memorizedRateMap = {};
+    final Map<int, double> unlockRateMap = {};
     for (final row in rows) {
       final ch = row.read<int>('chapter');
       final total = row.read<int>('total_count');
-      final memorized = row.read<int>('memorized_count');
-      rateMap[ch] = total > 0 ? (memorized / total) * 100.0 : 0.0;
+      final memorized80 = row.read<int>('memorized_count_80');
+      final unlock70 = row.read<int>('unlock_count_70');
+      memorizedRateMap[ch] = total > 0 ? (memorized80 / total) * 100.0 : 0.0;
+      unlockRateMap[ch] = total > 0 ? (unlock70 / total) * 100.0 : 0.0;
     }
 
     final allCp = await (select(chapterProgresses)..orderBy([(t) => OrderingTerm.asc(t.chapter)])).get();
 
     await transaction(() async {
       for (final cp in allCp) {
-        final rate = rateMap[cp.chapter] ?? 0.0;
-        final isCleared = rate >= 90.0;
+        final memorizedRate = memorizedRateMap[cp.chapter] ?? 0.0;
+        final unlockRate = unlockRateMap[cp.chapter] ?? 0.0;
+        final isCleared = unlockRate >= 90.0;
         await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter))).write(
           ChapterProgressesCompanion(
-            memorizedRate: Value(rate),
+            memorizedRate: Value(memorizedRate),
             isCleared: Value(isCleared || cp.isCleared),
           ),
         );
@@ -1228,8 +1248,9 @@ class AppDatabase extends _$AppDatabase {
 
   /// 【学習モードクリア時】70pt以上の単語が90%以上の場合にクリア判定・次チャプター解放 (F-15)
   Future<Map<String, dynamic>> checkAndUnlockNextChapter(int currentChapter) async {
-    final rate = await calculateChapterMemorizedRate(currentChapter);
-    final isCleared = rate >= 90.0; // 70pt以上が90%以上（100単語中90単語以上）
+    final memorizedRate = await calculateChapterMemorizedRate(currentChapter);
+    final unlockRate = await calculateChapterUnlockRate(currentChapter);
+    final isCleared = unlockRate >= 90.0; // 70pt以上が90%以上で次章解放
 
     int? nextUnlockedChapter;
     bool isNewUnlock = false;
@@ -1242,7 +1263,7 @@ class AppDatabase extends _$AppDatabase {
 
       await (update(chapterProgresses)..where((t) => t.chapter.equals(currentChapter))).write(
         ChapterProgressesCompanion(
-          memorizedRate: Value(rate),
+          memorizedRate: Value(memorizedRate),
           isCleared: Value(isCleared || (currentProgress?.isCleared ?? false)),
           clearedAt: isCleared ? Value(DateTime.now()) : const Value.absent(),
         ),
@@ -1252,7 +1273,7 @@ class AppDatabase extends _$AppDatabase {
         final nextChapterNum = currentChapter + 1;
         final nextProgress = await (select(chapterProgresses)
               ..where((t) => t.chapter.equals(nextChapterNum)))
-            .getSingleOrNull();
+          .getSingleOrNull();
 
         if (nextProgress != null) {
           if (!nextProgress.isUnlocked) {
@@ -1270,7 +1291,7 @@ class AppDatabase extends _$AppDatabase {
 
     return {
       'isCleared': isCleared,
-      'memorizedRate': rate,
+      'memorizedRate': memorizedRate,
       'nextChapterUnlocked': nextUnlockedChapter,
       'isNewUnlock': isNewUnlock,
     };

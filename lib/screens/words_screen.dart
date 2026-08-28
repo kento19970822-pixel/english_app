@@ -98,6 +98,44 @@ class WordsScreenState extends State<WordsScreen> {
     }
   }
 
+  /// 前のセクション（チャプター・文字・カテゴリ）の先頭へスムーズにスクロール移動
+  void _scrollToPreviousSection() {
+    if (!_scrollController.hasClients || _sections.isEmpty) return;
+
+    final currentOffset = _scrollController.offset;
+    final appBarHeight = _activeFilterCount > 0 ? 155.0 : 128.0;
+
+    // 各セクションの開始オフセットを算出
+    final List<double> sectionOffsets = [0.0];
+    double accumulatedOffset = appBarHeight;
+
+    for (int i = 0; i < _sections.length - 1; i++) {
+      final section = _sections[i];
+      final headerHeight = 44.0;
+      final bannerHeight = _sortMode == 'chap' ? 76.0 : 0.0;
+      final sectionHeight = headerHeight + bannerHeight + (section.words.length * 120.0);
+      accumulatedOffset += sectionHeight;
+      sectionOffsets.add(accumulatedOffset);
+    }
+
+    // 現在オフセットより前にあるセクションを探す
+    double targetOffset = 0.0;
+    for (int i = sectionOffsets.length - 1; i >= 0; i--) {
+      if (sectionOffsets[i] < currentOffset - 20.0) {
+        targetOffset = sectionOffsets[i];
+        break;
+      }
+    }
+
+    _scrollController.animateTo(
+      targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+    );
+
+    HapticFeedback.lightImpact();
+  }
+
   /// 次のセクション（チャプター・文字・カテゴリ）の先頭へスムーズにスクロール移動 (片手操作)
   void _scrollToNextSection() {
     if (!_scrollController.hasClients || _sections.isEmpty) return;
@@ -149,13 +187,7 @@ class WordsScreenState extends State<WordsScreen> {
     }
 
     // 3. 単語リストを最上部へスムーズにスクロール
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
-    }
+    _scrollToTop();
 
     // 4. フィルター状態のリセットと再描画
     setState(() {
@@ -566,20 +598,19 @@ class WordsScreenState extends State<WordsScreen> {
         children: [
           if (_showScrollToTop) ...[
             BouncyScaleTap(
-              onTap: _scrollToTop,
+              onTap: _scrollToPreviousSection,
               pressedScale: 0.90,
               child: Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: _cardColor,
+                  color: _primaryAccent,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _borderColor),
                   boxShadow: const [
-                    BoxShadow(color: Color(0x15000000), blurRadius: 4, offset: Offset(0, 2)),
+                    BoxShadow(color: Color(0x25000000), blurRadius: 6, offset: Offset(0, 2)),
                   ],
                 ),
-                child: Icon(Icons.keyboard_arrow_up_rounded, size: 22, color: _textPrimary),
+                child: const Icon(Icons.keyboard_double_arrow_up_rounded, size: 22, color: Colors.white),
               ),
             ),
             const SizedBox(height: 8),
