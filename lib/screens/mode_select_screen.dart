@@ -331,7 +331,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                   Expanded(
                                     child: _buildModeCard(
                                       title: '学習モード',
-                                      subtitle: '章ごと集中学習\n暗記で次章解放',
+                                      subtitle: '章別集中\n次章解放',
                                       icon: Icons.school_rounded,
                                       modeKey: 'learning',
                                       accentColor: _primaryAccent,
@@ -341,7 +341,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                   Expanded(
                                     child: _buildModeCard(
                                       title: '弱点克服',
-                                      subtitle: '誤答・低定着の\n苦手単語を特訓',
+                                      subtitle: '苦手特訓\n反復学習',
                                       icon: Icons.healing_rounded,
                                       modeKey: 'weakness',
                                       accentColor: _weaknessAccent,
@@ -351,7 +351,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                   Expanded(
                                     child: _buildModeCard(
                                       title: 'チャレンジ',
-                                      subtitle: '1分間/100問\n全単語ランダム',
+                                      subtitle: '1分/100問\nランダム',
                                       icon: Icons.bolt_rounded,
                                       modeKey: 'challenge',
                                       accentColor: _secondaryAccent,
@@ -363,13 +363,35 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                             const SizedBox(height: 10),
 
                             // 2. 難易度（レベル）選択
-                            const Text(
-                              '難易度レベル',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: _textPrimary,
-                              ),
+                            Row(
+                              children: [
+                                const Text(
+                                  '難易度レベル',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: _textPrimary,
+                                  ),
+                                ),
+                                if (selectedMode != 'learning') ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: (selectedMode == 'weakness' ? _weaknessAccent : _secondaryAccent).withAlpha(25),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '複数選択可',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: selectedMode == 'weakness' ? _weaknessAccent : _secondaryAccent,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                             const SizedBox(height: 6),
                             Row(
@@ -408,18 +430,26 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                   ),
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                                   decoration: BoxDecoration(
-                                    color: _primaryAccent.withAlpha(25),
-                                    borderRadius: BorderRadius.circular(6),
+                                    color: _primaryAccent.withAlpha(20),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: _primaryAccent.withAlpha(50), width: 0.8),
                                   ),
-                                  child: const Text(
-                                    '解放条件: 70pt以上の単語が90%以上',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                      color: _primaryAccent,
-                                    ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.lock_open_rounded, size: 11, color: _primaryAccent),
+                                      SizedBox(width: 3),
+                                      Text(
+                                        '70pt以上 90%で次章',
+                                        style: TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: _primaryAccent,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -466,13 +496,13 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                               decoration: BoxDecoration(
                                                 color: isSelected
                                                     ? _primaryAccent.withAlpha(25)
-                                                    : (isUnlocked ? _cardColor : Colors.grey.shade200),
+                                                    : (isUnlocked ? _cardColor : Colors.grey.shade100),
                                                 borderRadius: BorderRadius.circular(12),
                                                 border: Border.all(
                                                   color: isSelected
                                                       ? _primaryAccent
                                                       : (isUnlocked ? _borderColor : Colors.transparent),
-                                                  width: isSelected ? 2 : 1,
+                                                  width: isSelected ? 1.8 : 1.0,
                                                 ),
                                               ),
                                               child: Row(
@@ -485,7 +515,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                                         : Icons.lock_outline_rounded,
                                                     color: isUnlocked
                                                         ? (isSelected ? _primaryAccent : _textSecondary)
-                                                        : Colors.grey,
+                                                        : Colors.grey.shade400,
                                                     size: 18,
                                                   ),
                                                   const SizedBox(width: 8),
@@ -505,27 +535,55 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                                     style: TextStyle(
                                                       fontSize: 13,
                                                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                                      color: isUnlocked ? _textPrimary : Colors.grey,
+                                                      color: isUnlocked ? _textPrimary : Colors.grey.shade500,
                                                     ),
                                                   ),
                                                   const Spacer(),
                                                   if (isUnlocked) ...[
-                                                    Text(
-                                                      '${cp.memorizedRate.toStringAsFixed(0)}% (${(cp.memorizedRate).round()}/100)',
-                                                      style: TextStyle(
-                                                        fontSize: 11,
-                                                        color: isCleared ? _primaryAccent : _textSecondary,
-                                                        fontWeight: isCleared ? FontWeight.bold : FontWeight.normal,
-                                                      ),
-                                                    ),
                                                     if (isCleared) ...[
-                                                      const SizedBox(width: 4),
-                                                      const Icon(Icons.check_circle_rounded, color: _primaryAccent, size: 14),
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                        decoration: BoxDecoration(
+                                                          color: _primaryAccent.withAlpha(20),
+                                                          borderRadius: BorderRadius.circular(6),
+                                                        ),
+                                                        child: Row(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            const Icon(Icons.stars_rounded, color: _primaryAccent, size: 13),
+                                                            const SizedBox(width: 3),
+                                                            Text(
+                                                              '達成 ${cp.memorizedRate.toStringAsFixed(0)}%',
+                                                              style: const TextStyle(
+                                                                fontSize: 11,
+                                                                fontWeight: FontWeight.bold,
+                                                                color: _primaryAccent,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ] else ...[
+                                                      Text(
+                                                        '${cp.memorizedRate.toStringAsFixed(0)}% (${(cp.memorizedRate).round()}/100)',
+                                                        style: const TextStyle(
+                                                          fontSize: 11,
+                                                          color: _textSecondary,
+                                                          fontWeight: FontWeight.w500,
+                                                        ),
+                                                      ),
                                                     ],
                                                   ] else
-                                                    const Text(
-                                                      '未解放',
-                                                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                                                    Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Icon(Icons.lock_rounded, size: 12, color: Colors.grey.shade400),
+                                                        const SizedBox(width: 3),
+                                                        Text(
+                                                          '未解放',
+                                                          style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                                                        ),
+                                                      ],
                                                     ),
                                                 ],
                                               ),
@@ -813,37 +871,50 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
       },
       borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withAlpha(35) : _cardColor,
+          color: isSelected ? activeColor.withAlpha(25) : _cardColor,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected ? activeColor : _borderColor,
-            width: isSelected ? 2 : 1,
+            width: isSelected ? 1.8 : 1.0,
           ),
         ),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? activeColor : _textPrimary,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? activeColor : _textPrimary,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    color: isSelected ? activeColor : _textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            if (isMulti)
+              Positioned(
+                top: 0,
+                right: 2,
+                child: Icon(
+                  isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+                  size: 13,
+                  color: isSelected ? activeColor : Colors.grey.shade400,
                 ),
               ),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: isSelected ? activeColor : _textSecondary,
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
