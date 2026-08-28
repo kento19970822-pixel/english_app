@@ -43,6 +43,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
   bool _isLoadingChapters = false;
   int _chapterLoadRequestId = 0;
   bool _isNavigating = false;
+  bool _hasInitializedSelection = false;
 
   // テーマカラー
   static const Color _bgColor = Color(0xFFF9F6F0);
@@ -91,7 +92,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+    _loadChaptersForLevel(selectedLevel, preserveSelection: _hasInitializedSelection);
   }
 
   /// 選択中のレベルに対応するチャプター進行状況を取得し、最新解放チャプターを初期選択＆最上部スクロール
@@ -106,10 +107,15 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
           ? cachedUnlocked.last.chapter
           : (cachedFiltered.isNotEmpty ? cachedFiltered.first.chapter : 1);
 
+      final shouldAutoSelect = !_hasInitializedSelection ||
+          !preserveSelection ||
+          !cachedFiltered.any((cp) => cp.chapter == selectedChapter);
+
       setState(() {
         _currentLevelChapters = cachedFiltered;
-        if (!preserveSelection || !cachedFiltered.any((cp) => cp.chapter == selectedChapter)) {
+        if (shouldAutoSelect) {
           selectedChapter = cachedLatest;
+          _hasInitializedSelection = true;
         }
       });
       _scrollToSelectedChapter(animated: false);
@@ -136,13 +142,18 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
         ? unlockedList.last.chapter
         : (filtered.isNotEmpty ? filtered.first.chapter : 1);
 
+    final shouldAutoSelect = !_hasInitializedSelection ||
+        !preserveSelection ||
+        !filtered.any((cp) => cp.chapter == selectedChapter);
+
     setState(() {
       _favoriteStamp = favStamp;
       _dueCount = dueCount;
       _allChapterProgresses = allProgresses;
       _currentLevelChapters = filtered;
-      if (!preserveSelection || !filtered.any((cp) => cp.chapter == selectedChapter)) {
+      if (shouldAutoSelect) {
         selectedChapter = latestUnlocked;
+        _hasInitializedSelection = true;
       }
       _isLoadingChapters = false;
     });
@@ -150,7 +161,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
     _scrollToSelectedChapter(animated: true);
   }
 
-  /// 選択中のチャプターがチャプター一覧枠の一番上に表示されるように自動スクロール
+  /// 選択中のチャプターがチャプター一覧枠の一番上に綺麗に収まるよう自動スクロール
   void _scrollToSelectedChapter({bool animated = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_chapterScrollController.hasClients) return;
@@ -168,9 +179,10 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
         return;
       }
 
-      // チャプターアイテムの高さ(約48px) + 間隔(6px) = 54px
-      const itemHeight = 54.0;
-      final targetOffset = targetIndex * itemHeight;
+      // タイル実寸(44.0px) + セパレーター(6.0px) = 50.0px
+      // ListView の paddingTop(4.0px) により上部枠線との間に美しいマージンが確保されます
+      const itemSlotHeight = 50.0;
+      final targetOffset = targetIndex * itemSlotHeight;
       final maxOffset = _chapterScrollController.position.maxScrollExtent;
       final clampedOffset = targetOffset.clamp(0.0, maxOffset);
 
@@ -500,6 +512,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                     : ListView.separated(
                         controller: _chapterScrollController,
                         physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(top: 4, bottom: 8),
                         itemCount: _currentLevelChapters.length,
                         separatorBuilder: (_, _) => const SizedBox(height: 6),
                         itemBuilder: (context, index) {
@@ -965,7 +978,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
             }
           } else {
             selectedLevel = level;
-            _loadChaptersForLevel(level);
+            _loadChaptersForLevel(level, preserveSelection: false);
           }
         });
       },
