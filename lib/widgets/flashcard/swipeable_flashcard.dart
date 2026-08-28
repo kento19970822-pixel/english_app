@@ -10,7 +10,7 @@ class SwipeableFlashcard extends StatefulWidget {
   final bool isModeSelector; // 0枚目のモード選択カードかどうか
   final bool isEnToJa; // true: 英語が表, false: 日本語が表
   final Function(bool isRight) onSwiped;
-  final Function(double progress, bool isRight)? onDragProgress;
+  final ValueChanged<double>? onDragProgress;
   final VoidCallback onSpeak;
   final bool isFront; // スタックの最前面かどうか
 
@@ -35,6 +35,8 @@ class SwipeableFlashcardState extends State<SwipeableFlashcard>
   Offset _dragOffset = Offset.zero;
   late AnimationController _swipeAnimController;
   late Animation<Offset> _swipeAnimation;
+  bool _isAnimating = false;
+  bool _hasTriggeredHaptic = false;
 
   // 3Dフリップ用
   bool _showBack = false;
@@ -46,7 +48,7 @@ class SwipeableFlashcardState extends State<SwipeableFlashcard>
     super.initState();
     _swipeAnimController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 300),
     );
     _flipAnimController = AnimationController(
       vsync: this,
@@ -66,7 +68,7 @@ class SwipeableFlashcardState extends State<SwipeableFlashcard>
 
   /// 外部（キーボードやボタン）からもフリップ可能
   void toggleFlip() {
-    if (widget.isModeSelector) return;
+    if (widget.isModeSelector || _isAnimating) return;
     HapticFeedback.selectionClick();
     if (_showBack) {
       _flipAnimController.reverse();
@@ -83,48 +85,57 @@ class SwipeableFlashcardState extends State<SwipeableFlashcard>
 
   /// 外部（キーボードやボタン）から右スワイプ
   void swipeRight() {
-    if (!widget.isFront) return;
-    final screenWidth = MediaQuery.of(context).size.width;
-    _flyOut(Offset(screenWidth * 1.5, 0), true);
+    if (!widget.isFront || _isAnimating) return;
+    _flyOut(const Offset(650, 0), true);
   }
 
   /// 外部（キーボードやボタン）から左スワイプ
   void swipeLeft() {
-    if (!widget.isFront) return;
-    final screenWidth = MediaQuery.of(context).size.width;
-    _flyOut(Offset(-screenWidth * 1.5, 0), false);
+    if (!widget.isFront || _isAnimating) return;
+    _flyOut(const Offset(-650, 0), false);
+  }
+
+  void _onPanStart(DragStartDetails details) {
+    if (!widget.isFront || _isAnimating) return;
+    _hasTriggeredHaptic = false;
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
-    if (!widget.isFront) return;
+    if (!widget.isFront || _isAnimating) return;
     setState(() {
       _dragOffset += details.delta;
     });
+
+    final threshold = 90.0;
+    if (_dragOffset.dx.abs() > threshold && !_hasTriggeredHaptic) {
+      _hasTriggeredHaptic = true;
+      HapticFeedback.selectionClick(); // しきい値を超えた瞬間に心地よい手応え
+    } else if (_dragOffset.dx.abs() < threshold && _hasTriggeredHaptic) {
+      _hasTriggeredHaptic = false;
+    }
+
     _notifyProgress();
   }
 
   void _notifyProgress() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final threshold = screenWidth * 0.22;
+    const threshold = 100.0;
     final progress = (_dragOffset.dx.abs() / threshold).clamp(0.0, 1.0);
-    final isRight = _dragOffset.dx >= 0;
-    widget.onDragProgress?.call(progress, isRight);
+    widget.onDragProgress?.call(progress);
   }
 
   void _onPanEnd(DragEndDetails details) {
-    if (!widget.isFront) return;
+    if (!widget.isFront || _isAnimating) return;
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final threshold = screenWidth * 0.22;
+    const threshold = 85.0;
     final vx = details.velocity.pixelsPerSecond.dx; // フリック速度
 
-    // 移動量またはフリック速度（650px/s以上）で判定
-    if (vx > 650 || _dragOffset.dx > threshold) {
+    // 移動量またはフリック速度（500px/s以上）で判定
+    if (vx > 500 || _dragOffset.dx > threshold) {
       // 右スワイプ確定
-      _flyOut(Offset(screenWidth * 1.5, _dragOffset.dy), true);
-    } else if (vx < -650 || _dragOffset.dx < -threshold) {
+      _flyOut(Offset(600, _dragOffset.dy * 0.5), true);
+    } else if (vx < -500 || _dragOffset.dx < -threshold) {
       // 左スワイプ確定
-      _flyOut(Offset(-screenWidth * 1.5, _dragOffset.dy), false);
+      _flyOut(Offset(-600, _dragOffset.dy * 0.5), false);
     } else {
       // 元の位置へ戻る (バウンスバック)
       _swipeAnimation = Tween<Offset>(
@@ -143,30 +154,35 @@ class SwipeableFlashcardState extends State<SwipeableFlashcard>
   }
 
   void _flyOut(Offset target, bool isRight) {
-    HapticFeedback.mediumImpact();
+    if (_isAnimating) return;
+    _isAnimating = true;
+    HapticFeedback.mediumImpact(); // 飛んでいく瞬間に心地よいインパクト
+
     _swipeAnimation = Tween<Offset>(
       begin: _dragOffset,
       end: target,
     ).animate(
-      CurvedAnimation(parent: _swipeAnimController, curve: Curves.easeInCubic),
+      CurvedAnimation(parent: _swipeAnimController, curve: Curves.easeOutCubic),
     )..addListener(() {
         setState(() {
           _dragOffset = _swipeAnimation.value;
         });
         _notifyProgress();
       });
+
     _swipeAnimController.forward(from: 0.0).then((_) {
-      widget.onSwiped(isRight);
+      if (mounted) {
+        widget.onSwiped(isRight);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final rotationAngle = (_dragOffset.dx / screenWidth) * 0.20;
+    final rotationAngle = (_dragOffset.dx / 400.0) * 0.18;
 
     // スワイプスタンプの透明度
-    final swipeProgress = (_dragOffset.dx.abs() / (screenWidth * 0.22)).clamp(0.0, 1.0);
+    final swipeProgress = (_dragOffset.dx.abs() / 90.0).clamp(0.0, 1.0);
     final isSwipingRight = _dragOffset.dx > 0;
 
     return Center(
@@ -182,6 +198,8 @@ class SwipeableFlashcardState extends State<SwipeableFlashcard>
             child: Transform.rotate(
               angle: rotationAngle,
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanStart: _onPanStart,
                 onPanUpdate: _onPanUpdate,
                 onPanEnd: _onPanEnd,
                 onTap: toggleFlip,

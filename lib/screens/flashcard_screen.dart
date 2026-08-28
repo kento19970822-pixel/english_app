@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../db/app_database.dart';
@@ -26,7 +26,8 @@ class FlashcardScreen extends StatefulWidget {
 
 class _FlashcardScreenState extends State<FlashcardScreen> {
   final FocusNode _focusNode = FocusNode();
-  final GlobalKey<SwipeableFlashcardState> _frontCardKey = GlobalKey<SwipeableFlashcardState>();
+  GlobalKey<SwipeableFlashcardState> _frontCardKey = GlobalKey<SwipeableFlashcardState>();
+  final ValueNotifier<double> _dragProgressNotifier = ValueNotifier<double>(0.0);
 
   late List<Word> _remainingWords;
   final List<PreviousCardResult> _historyStack = [];
@@ -40,7 +41,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   int _reviewCount = 0;
   int _streakCount = 0; // 連続暗記コンボ数
   bool _isSessionFinished = false;
-  double _currentDragProgress = 0.0; // ドラッグ進行度 (0.0 〜 1.0)
 
   @override
   void initState() {
@@ -52,6 +52,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   @override
   void dispose() {
     _focusNode.dispose();
+    _dragProgressNotifier.dispose();
     TtsService.instance.stop();
     super.dispose();
   }
@@ -65,13 +66,15 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   }
 
   void _handleSwiped(bool isRight) {
+    _dragProgressNotifier.value = 0.0;
+
     if (_isSelectingMode) {
       // 0枚目: モード選択スワイプ (右: 英➔和, 左: 和➔英)
       HapticFeedback.mediumImpact();
       setState(() {
         _isEnToJa = isRight;
         _isSelectingMode = false;
-        _currentDragProgress = 0.0;
+        _frontCardKey = GlobalKey<SwipeableFlashcardState>();
       });
       _playCurrentWordTts();
       return;
@@ -96,11 +99,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       // 右スワイプ: 暗記済 (80pt化)
       _memorizedCount++;
       _streakCount++;
-      // 節目コンボ時の気持ちいいハプティクス
       if (_streakCount == 5 || _streakCount == 10 || _streakCount == 20) {
         HapticFeedback.heavyImpact();
       }
-      // 楽観的UI更新: DB書き込みはバックグラウンド非同期実行
       unawaited(widget.database.markAsMemorizedManual(currentWord.id));
     } else {
       // 左スワイプ: 要復習 (0pt化)
@@ -109,19 +110,17 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       if (!_failedWords.any((w) => w.id == currentWord.id)) {
         _failedWords.add(currentWord);
       }
-      // 楽観的UI更新: DB書き込みはバックグラウンド非同期実行
       unawaited(widget.database.resetRetentionManual(currentWord.id));
     }
 
     if (_remainingWords.isEmpty) {
       setState(() {
         _isSessionFinished = true;
-        _currentDragProgress = 0.0;
       });
       _showCompletionDialog();
     } else {
       setState(() {
-        _currentDragProgress = 0.0;
+        _frontCardKey = GlobalKey<SwipeableFlashcardState>();
       });
       _playCurrentWordTts();
     }
@@ -150,10 +149,11 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       _failedWords.removeWhere((w) => w.id == lastItem.word.id);
     }
 
+    _dragProgressNotifier.value = 0.0;
     setState(() {
       _isSessionFinished = false;
       _remainingWords.insert(0, lastItem.word);
-      _currentDragProgress = 0.0;
+      _frontCardKey = GlobalKey<SwipeableFlashcardState>();
     });
 
     _playCurrentWordTts();
@@ -261,6 +261,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       _streakCount = 0;
                       _isSelectingMode = false;
                       _isSessionFinished = false;
+                      _frontCardKey = GlobalKey<SwipeableFlashcardState>();
                     });
                     _playCurrentWordTts();
                   },
@@ -291,6 +292,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                           _streakCount = 0;
                           _isSelectingMode = true;
                           _isSessionFinished = false;
+                          _frontCardKey = GlobalKey<SwipeableFlashcardState>();
                         });
                       },
                       style: OutlinedButton.styleFrom(
@@ -333,11 +335,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     final progressText = _isSelectingMode ? 'モード選択' : '$currentIndex / $_totalCount 語';
     final progressFraction = _totalCount > 0 ? (currentIndex / _totalCount).clamp(0.0, 1.0) : 0.0;
     final lastResult = _historyStack.isNotEmpty ? _historyStack.last : null;
-
-    // 動的3Dスタック値の計算 (最前面ドラッグ時に背後カードが手前にせり上がる)
-    final backScale = 0.94 + (0.06 * _currentDragProgress);
-    final backOpacity = (0.65 + (0.35 * _currentDragProgress)).clamp(0.0, 1.0);
-    final backOffsetY = 10.0 * (1.0 - _currentDragProgress);
 
     return KeyboardListener(
       focusNode: _focusNode,
@@ -408,10 +405,10 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
               const Spacer(),
 
-              // ③ 【視線集中エリア】カードスタックエリア (黄金比センター配置 ＆ 動的3Dスタック)
+              // ③ 【視線集中エリア】カードスタックエリア (局所リビルドでフリーズ完全防止)
               if (_isSelectingMode)
                 SwipeableFlashcard(
-                  key: const ValueKey('mode_selector_card'),
+                  key: _frontCardKey,
                   isModeSelector: true,
                   isEnToJa: true,
                   isFront: true,
@@ -422,24 +419,33 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                 Stack(
                   alignment: Alignment.center,
                   children: [
-                    // 背後のカード（次問: 最前面ドラッグに追従して手前にせり上がる）
+                    // 背後のカード（局所リビルドでドラッグ追従）
                     if (_remainingWords.length > 1)
-                      Transform.translate(
-                        offset: Offset(0, backOffsetY),
-                        child: Transform.scale(
-                          scale: backScale,
-                          child: Opacity(
-                            opacity: backOpacity,
-                            child: SwipeableFlashcard(
-                              key: ValueKey('back_${_remainingWords[1].id}'),
-                              word: _remainingWords[1],
-                              isEnToJa: _isEnToJa,
-                              isFront: false,
-                              onSwiped: (_) {},
-                              onSpeak: () {},
+                      ValueListenableBuilder<double>(
+                        valueListenable: _dragProgressNotifier,
+                        builder: (context, progress, child) {
+                          final backScale = 0.94 + (0.06 * progress);
+                          final backOpacity = (0.65 + (0.35 * progress)).clamp(0.0, 1.0);
+                          final backOffsetY = 10.0 * (1.0 - progress);
+
+                          return Transform.translate(
+                            offset: Offset(0, backOffsetY),
+                            child: Transform.scale(
+                              scale: backScale,
+                              child: Opacity(
+                                opacity: backOpacity,
+                                child: SwipeableFlashcard(
+                                  key: ValueKey('back_${_remainingWords[1].id}'),
+                                  word: _remainingWords[1],
+                                  isEnToJa: _isEnToJa,
+                                  isFront: false,
+                                  onSwiped: (_) {},
+                                  onSpeak: () {},
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
 
                     // 最前面のカード
@@ -449,10 +455,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       isEnToJa: _isEnToJa,
                       isFront: true,
                       onSwiped: _handleSwiped,
-                      onDragProgress: (progress, isRight) {
-                        setState(() {
-                          _currentDragProgress = progress;
-                        });
+                      onDragProgress: (progress) {
+                        _dragProgressNotifier.value = progress;
                       },
                       onSpeak: () => TtsService.instance.speak(_remainingWords[0].english),
                     ),
@@ -501,7 +505,13 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       children: [
                         // 左スワイプボタン
                         BouncyScaleTap(
-                          onTap: () => _handleSwiped(false),
+                          onTap: () {
+                            if (_frontCardKey.currentState != null) {
+                              _frontCardKey.currentState!.swipeLeft();
+                            } else {
+                              _handleSwiped(false);
+                            }
+                          },
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                             decoration: BoxDecoration(
@@ -526,7 +536,13 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                         const SizedBox(width: 12),
                         // 右スワイプボタン
                         BouncyScaleTap(
-                          onTap: () => _handleSwiped(true),
+                          onTap: () {
+                            if (_frontCardKey.currentState != null) {
+                              _frontCardKey.currentState!.swipeRight();
+                            } else {
+                              _handleSwiped(true);
+                            }
+                          },
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                             decoration: BoxDecoration(
