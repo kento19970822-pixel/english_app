@@ -1,6 +1,7 @@
 // コード管理番号: VER-20260827-06
 import 'package:flutter/material.dart';
 import '../../models/word_section.dart';
+import '../common/bouncy_scale_tap.dart';
 
 /// 単語一覧 Sticky ヘッダー Delegate
 class WordSectionStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
@@ -11,6 +12,7 @@ class WordSectionStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Color primaryColor;
   final Color textColor;
   final Color textSecondaryColor;
+  final VoidCallback? onStartFlashcard;
 
   WordSectionStickyHeaderDelegate({
     required this.section,
@@ -20,6 +22,7 @@ class WordSectionStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
     this.primaryColor = const Color(0xFF2E8B57),
     this.textColor = const Color(0xFF2C3E50),
     this.textSecondaryColor = const Color(0xFF5D6D7E),
+    this.onStartFlashcard,
   });
 
   @override
@@ -109,6 +112,35 @@ class WordSectionStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
               ),
             ],
           ),
+          if (onStartFlashcard != null) ...[
+            const SizedBox(width: 10),
+            BouncyScaleTap(
+              onTap: onStartFlashcard!,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: primaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: primaryColor.withAlpha(75)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.style_rounded, size: 14, color: primaryColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      '特訓',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

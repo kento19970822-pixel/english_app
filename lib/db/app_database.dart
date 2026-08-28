@@ -805,6 +805,30 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
+  /// Undo用: 単語の定着度・フラグ状態を以前の状態に完全復元
+  Future<void> restoreWordState({
+    required int id,
+    required int retentionPoint,
+    required bool isMemorized,
+    required bool isRestricted,
+    required int pointDecreasedTotal,
+  }) async {
+    final word = await (select(words)..where((t) => t.id.equals(id))).getSingleOrNull();
+    if (word == null) return;
+
+    await (update(words)..where((t) => t.id.equals(id))).write(
+      WordsCompanion(
+        retentionPoint: Value(retentionPoint),
+        isMemorized: Value(isMemorized),
+        isRestricted: Value(isRestricted),
+        pointDecreasedTotal: Value(pointDecreasedTotal),
+      ),
+    );
+
+    notifyWordsChanged();
+    await syncChapterProgress(word.chapter);
+  }
+
   /// 暗記フラグ再同期: 80pt未満に落ちた単語のisMemorizedを解除 ＆ チャプター進捗同期 (F-09)
   Future<int> syncMemorizedFlags() async {
     final all = await select(words).get();

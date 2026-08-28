@@ -17,6 +17,7 @@ import '../widgets/words/word_search_bar.dart';
 import '../widgets/words/word_section_sticky_header.dart';
 import '../widgets/words/word_chapter_banner.dart';
 import '../widgets/common/bouncy_scale_tap.dart';
+import 'flashcard_screen.dart';
 
 
 
@@ -96,6 +97,27 @@ class WordsScreenState extends State<WordsScreen> {
         curve: Curves.easeOutCubic,
       );
     }
+  }
+
+  /// 暗記特化スワイプフラッシュカードモードを開始
+  void _startFlashcard(List<Word> targetWords, String title) {
+    if (targetWords.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('学習対象の単語がありません')),
+      );
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FlashcardScreen(
+          database: widget.database,
+          words: targetWords,
+          title: title,
+        ),
+      ),
+    );
   }
 
   /// 前のセクション（チャプター・文字・カテゴリ）の先頭へスムーズにスクロール移動
@@ -768,6 +790,12 @@ class WordsScreenState extends State<WordsScreen> {
                                 primaryColor: _primaryAccent,
                                 textColor: _textPrimary,
                                 textSecondaryColor: _textSecondary,
+                                onStartFlashcard: () => _startFlashcard(
+                                  section.words,
+                                  _sortMode == 'chap'
+                                      ? 'Chapter ${section.title} 特訓'
+                                      : '${section.title} 特訓',
+                                ),
                               ),
                             ),
                             if (_sortMode == 'chap')
@@ -1026,16 +1054,48 @@ class WordsScreenState extends State<WordsScreen> {
 
   Widget _buildActiveFilterSummaryBar() {
     if (!_hasActiveFilters) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          '表示中: $_totalFilteredCount 件',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            color: _textSecondary,
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '表示中: $_totalFilteredCount 件',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: _textSecondary,
+            ),
           ),
-        ),
+          if (_totalFilteredCount > 0)
+            BouncyScaleTap(
+              onTap: () => _startFlashcard(
+                _sections.expand((s) => s.words).toList(),
+                '全単語 スワイプ特訓 ($_totalFilteredCount語)',
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _primaryAccent.withAlpha(30),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _primaryAccent.withAlpha(75)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.style_rounded, size: 12, color: _primaryAccent),
+                    const SizedBox(width: 4),
+                    Text(
+                      'スワイプ特訓',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        color: _primaryAccent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       );
     }
 
@@ -1051,6 +1111,37 @@ class WordsScreenState extends State<WordsScreen> {
               color: _textSecondary,
             ),
           ),
+          if (_totalFilteredCount > 0) ...[
+            BouncyScaleTap(
+              onTap: () => _startFlashcard(
+                _sections.expand((s) => s.words).toList(),
+                '絞り込み特訓 ($_totalFilteredCount語)',
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                margin: const EdgeInsets.only(right: 6),
+                decoration: BoxDecoration(
+                  color: _primaryAccent,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.style_rounded, size: 11, color: Colors.white),
+                    SizedBox(width: 3),
+                    Text(
+                      '特訓',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
           if (_filterUnlearned) ...[
             _buildActiveTag('未暗記', () { _filterUnlearned = false; _onFilterChanged(resetScroll: true); }),
             const SizedBox(width: 4),
