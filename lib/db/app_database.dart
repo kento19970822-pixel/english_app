@@ -1198,9 +1198,8 @@ class AppDatabase extends _$AppDatabase {
     return (targetCount / wordsInChapter.length) * 100.0;
   }
 
-  /// 単一チャプターの暗記率（80pt基準）・クリア状態（70pt90%基準）を単語データから完全同期
+  /// 単一チャプターの解放進捗率（70pt基準）・クリア状態（70pt90%基準）を単語データから完全同期
   Future<void> syncChapterProgress(int chapter) async {
-    final memorizedRate = await calculateChapterMemorizedRate(chapter);
     final unlockRate = await calculateChapterUnlockRate(chapter);
     final isCleared = unlockRate >= 90.0;
 
@@ -1210,7 +1209,7 @@ class AppDatabase extends _$AppDatabase {
 
     await (update(chapterProgresses)..where((t) => t.chapter.equals(chapter))).write(
       ChapterProgressesCompanion(
-        memorizedRate: Value(memorizedRate),
+        memorizedRate: Value(unlockRate), // ゲーム選択画面チャプターリスト用: 70pt以上単語割合
         isCleared: Value(isCleared || (currentProgress?.isCleared ?? false)),
         clearedAt: isCleared ? Value(DateTime.now()) : const Value.absent(),
       ),
@@ -1224,27 +1223,23 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// 全チャプターの暗記率（80pt基準）・クリア状態（70pt90%基準）・解放状態を単語マスターから一括同期 (N+1解消・1発集計SQL)
+  /// 全チャプターの解放進捗率（70pt基準）・クリア状態（70pt90%基準）・解放状態を単語マスターから一括同期 (N+1解消・1発集計SQL)
   Future<void> syncAllChapterProgresses() async {
-    // 1回の集計SQLで全チャプターの総数、実80pt以上数（キャラ成長用）、実70pt以上数（章解放用）を一括集計
+    // 1回の集計SQLで全チャプターの総数、実70pt以上数（ゲーム選択画面・章解放用）を一括集計
     const query = '''
       SELECT chapter,
              COUNT(*) AS total_count,
-             SUM(CASE WHEN retention_point >= 80 THEN 1 ELSE 0 END) AS memorized_count_80,
              SUM(CASE WHEN retention_point >= 70 THEN 1 ELSE 0 END) AS unlock_count_70
       FROM words
       GROUP BY chapter
       ORDER BY chapter ASC;
     ''';
     final rows = await customSelect(query).get();
-    final Map<int, double> memorizedRateMap = {};
     final Map<int, double> unlockRateMap = {};
     for (final row in rows) {
       final ch = row.read<int>('chapter');
       final total = row.read<int>('total_count');
-      final memorized80 = row.read<int>('memorized_count_80');
       final unlock70 = row.read<int>('unlock_count_70');
-      memorizedRateMap[ch] = total > 0 ? (memorized80 / total) * 100.0 : 0.0;
       unlockRateMap[ch] = total > 0 ? (unlock70 / total) * 100.0 : 0.0;
     }
 
@@ -1252,12 +1247,11 @@ class AppDatabase extends _$AppDatabase {
 
     await transaction(() async {
       for (final cp in allCp) {
-        final memorizedRate = memorizedRateMap[cp.chapter] ?? 0.0;
         final unlockRate = unlockRateMap[cp.chapter] ?? 0.0;
         final isCleared = unlockRate >= 90.0;
         await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter))).write(
           ChapterProgressesCompanion(
-            memorizedRate: Value(memorizedRate),
+            memorizedRate: Value(unlockRate), // ゲーム選択画面用: 70pt以上単語割合
             isCleared: Value(isCleared || cp.isCleared),
           ),
         );
@@ -1272,7 +1266,6 @@ class AppDatabase extends _$AppDatabase {
 
   /// 【学習モードクリア時】70pt以上の単語が90%以上の場合にクリア判定・次チャプター解放 (F-15)
   Future<Map<String, dynamic>> checkAndUnlockNextChapter(int currentChapter) async {
-    final memorizedRate = await calculateChapterMemorizedRate(currentChapter);
     final unlockRate = await calculateChapterUnlockRate(currentChapter);
     final isCleared = unlockRate >= 90.0; // 70pt以上が90%以上で次章解放
 
@@ -1287,7 +1280,7 @@ class AppDatabase extends _$AppDatabase {
 
       await (update(chapterProgresses)..where((t) => t.chapter.equals(currentChapter))).write(
         ChapterProgressesCompanion(
-          memorizedRate: Value(memorizedRate),
+          memorizedRate: Value(unlockRate), // ゲーム選択画面用: 70pt以上単語割合
           isCleared: Value(isCleared || (currentProgress?.isCleared ?? false)),
           clearedAt: isCleared ? Value(DateTime.now()) : const Value.absent(),
         ),
@@ -1315,7 +1308,7 @@ class AppDatabase extends _$AppDatabase {
 
     return {
       'isCleared': isCleared,
-      'memorizedRate': memorizedRate,
+      'memorizedRate': unlockRate,
       'nextChapterUnlocked': nextUnlockedChapter,
       'isNewUnlock': isNewUnlock,
     };
