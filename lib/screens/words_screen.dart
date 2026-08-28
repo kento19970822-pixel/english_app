@@ -101,23 +101,26 @@ class WordsScreenState extends State<WordsScreen> {
     if (!_scrollController.hasClients || _sections.isEmpty) return;
 
     final currentOffset = _scrollController.offset;
-    double accumulatedOffset = 0.0;
+    final appBarHeight = _activeFilterCount > 0 ? 155.0 : 128.0;
+
+    double accumulatedOffset = appBarHeight;
     double? nextSectionOffset;
 
     for (int i = 0; i < _sections.length; i++) {
-      final section = _sections[i];
-      final headerHeight = 44.0;
-      final bannerHeight = _sortMode == 'chap' ? 82.0 : 0.0;
-      final sectionHeight = headerHeight + bannerHeight + (section.words.length * 120.0);
-
-      // 現在位置より20px以上先にあるセクションを探す
-      if (accumulatedOffset > currentOffset + 25.0) {
+      // i > 0 の各セクションの開始位置が現在位置より先にあるか判定
+      if (i > 0 && accumulatedOffset > currentOffset + 10.0) {
         nextSectionOffset = accumulatedOffset;
         break;
       }
+
+      final section = _sections[i];
+      final headerHeight = 44.0;
+      final bannerHeight = _sortMode == 'chap' ? 76.0 : 0.0;
+      final sectionHeight = headerHeight + bannerHeight + (section.words.length * 120.0);
       accumulatedOffset += sectionHeight;
     }
 
+    // 次のセクションが見つかった場合そこへ、末尾に達している場合は先頭（offset: 0）へ
     final targetOffset = nextSectionOffset ?? 0.0;
 
     _scrollController.animateTo(
@@ -572,7 +575,7 @@ class WordsScreenState extends State<WordsScreen> {
             const SizedBox(height: 8),
           ],
           if (_sections.length > 1)
-            FloatingActionButton.extended(
+            FloatingActionButton.small(
               heroTag: 'words_jump_next_section',
               onPressed: _scrollToNextSection,
               backgroundColor: _primaryAccent,
@@ -580,13 +583,9 @@ class WordsScreenState extends State<WordsScreen> {
               elevation: 3,
               tooltip: _sortMode == 'chap' ? '次のチャプターへジャンプ' : '次のセクションへジャンプ',
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
               ),
-              icon: const Icon(Icons.keyboard_double_arrow_down_rounded, size: 20),
-              label: Text(
-                _sortMode == 'chap' ? '次章へ' : '次へ',
-                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
-              ),
+              child: const Icon(Icons.keyboard_double_arrow_down_rounded, size: 22),
             ),
         ],
       ),
