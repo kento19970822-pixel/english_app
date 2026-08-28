@@ -452,11 +452,11 @@ class WordsScreenState extends State<WordsScreen> {
       }
     }
 
-    // 全単語マスターからチャプターごとの真の全体進捗（総数・70pt以上暗記数）を集計（フィルター非依存）
+    // 全単語マスターからチャプターごとの真の全体進捗（総数・80pt以上暗記数）を集計（フィルター非依存）
     final Map<int, ({int total, int memorized})> globalStats = {};
     for (final w in _allWords) {
       final current = globalStats[w.chapter];
-      final isMem = w.isMemorized || w.retentionPoint >= 70;
+      final isMem = w.retentionPoint >= 80;
       if (current == null) {
         globalStats[w.chapter] = (total: 1, memorized: isMem ? 1 : 0);
       } else {

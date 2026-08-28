@@ -34,7 +34,7 @@ class WordChapterBanner extends StatelessWidget {
     // フィルターの影響を受けないグローバルなチャプター単語進捗を使用（未指定時はsection.wordsからフォールバック）
     final totalCount = totalChapterWords ?? section.words.length;
     final memorizedCount = memorizedChapterWords ??
-        section.words.where((w) => w.isMemorized || w.retentionPoint >= 70).length;
+        section.words.where((w) => w.retentionPoint >= 80).length;
     final percent = totalCount > 0 ? (memorizedCount / totalCount * 100).toInt() : 0;
     final isMastered = percent >= 80;
 
