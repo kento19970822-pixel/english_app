@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../db/app_database.dart';
@@ -69,6 +69,10 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
       _flipAnimController.reverse();
     } else {
       _flipAnimController.forward();
+      // 和➔英モードの時、タップして回答（裏面の英語）を見たタイミングで英語音声を自動再生
+      if (!widget.isEnToJa) {
+        widget.onSpeak();
+      }
     }
     setState(() {
       _showBack = !_showBack;
@@ -251,30 +255,20 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
                         ),
                       ),
                     ),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE5DEC9),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            word.cefr,
-                            style: const TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.lightTextSecondary,
-                            ),
-                          ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE5DEC9),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        word.cefr,
+                        style: const TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.lightTextSecondary,
                         ),
-                        const SizedBox(width: 6),
-                        Icon(
-                          isBack ? Icons.flip_to_front_rounded : Icons.flip_to_back_rounded,
-                          size: 15,
-                          color: const Color(0xFFB0A998),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
@@ -462,33 +456,35 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFF3E0),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: const Color(0xFFED8936).withAlpha(100)),
                       ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.arrow_back_rounded, size: 14, color: Color(0xFFED8936)),
-                          SizedBox(width: 4),
-                          Text('和 ➔ 英', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFED8936))),
-                        ],
+                      child: const Text(
+                        '和 ➔ 英',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFED8936),
+                        ),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE8F5E9),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: const Color(0xFF2E8B57).withAlpha(100)),
                       ),
-                      child: const Row(
-                        children: [
-                          Text('英 ➔ 和', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF2E8B57))),
-                          SizedBox(width: 4),
-                          Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF2E8B57)),
-                        ],
+                      child: const Text(
+                        '英 ➔ 和',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2E8B57),
+                        ),
                       ),
                     ),
                   ],

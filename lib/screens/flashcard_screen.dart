@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../db/app_database.dart';
 import '../services/tts_service.dart';
@@ -385,8 +385,10 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.arrow_back_rounded, size: 15, color: Color(0xFFED8936)),
-                              const SizedBox(width: 4),
+                              if (!_isSelectingMode) ...[
+                                const Icon(Icons.arrow_back_rounded, size: 15, color: Color(0xFFED8936)),
+                                const SizedBox(width: 4),
+                              ],
                               Text(
                                 _isSelectingMode ? '和 ➔ 英' : '要復習',
                                 style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFFED8936)),
@@ -412,8 +414,10 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                                 _isSelectingMode ? '英 ➔ 和' : '暗記完了',
                                 style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF2E8B57)),
                               ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.arrow_forward_rounded, size: 15, color: Color(0xFF2E8B57)),
+                              if (!_isSelectingMode) ...[
+                                const SizedBox(width: 4),
+                                const Icon(Icons.arrow_forward_rounded, size: 15, color: Color(0xFF2E8B57)),
+                              ],
                             ],
                           ),
                         ),
