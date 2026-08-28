@@ -32,6 +32,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
   int selectedLevel = 1; // 1: 初級, 2: 中級, 3: 上級 (UI上の3区分 - 学習モード用)
   final Set<int> _selectedLevels = {1, 2, 3}; // 弱点克服・チャレンジ用複数レベル選択（デフォルト全選択）
   int selectedChapter = 1;
+  int _chapterLoadRequestId = 0;
 
   List<ChapterProgressesData> _allChapterProgresses = [];
   List<ChapterProgressesData> _currentLevelChapters = [];
@@ -90,8 +91,10 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
     _loadChaptersForLevel(selectedLevel, preserveSelection: true);
   }
 
-  /// 選択中のレベルに対応するチャプター進行状況を取得し、最新解放チャプターを初期選択
+  /// 選択中のレベルに対応するチャプター進行状況を取得し、最新解放チャプターを初期選択（非同期競合防止）
   Future<void> _loadChaptersForLevel(int level, {bool preserveSelection = false}) async {
+    final requestId = ++_chapterLoadRequestId;
+
     // メモリ上の進捗データがある場合は即座に切り替え（ローディングスピナーのチラつきを100%防止）
     if (_allChapterProgresses.isNotEmpty) {
       final cachedFiltered = _allChapterProgresses.where((cp) => cp.level == level).toList();
@@ -110,9 +113,18 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
       setState(() => _isLoadingChapters = true);
     }
 
-    final favStamp = await widget.database.getFavoriteStamp();
-    final allProgresses = await widget.database.getAllChapterProgresses();
-    final dueCount = await SrsService.instance.getDueWordsCount(widget.database);
+    final results = await Future.wait([
+      widget.database.getFavoriteStamp(),
+      widget.database.getAllChapterProgresses(),
+      SrsService.instance.getDueWordsCount(widget.database),
+    ]);
+
+    // リクエスト完了時に最新のリクエストでない場合は破棄（競合・古い結果での上書きを防止）
+    if (!mounted || requestId != _chapterLoadRequestId) return;
+
+    final favStamp = results[0] as Stamp?;
+    final allProgresses = results[1] as List<ChapterProgressesData>;
+    final dueCount = results[2] as int;
     
     // レベルマッピング (初級: lvl 1 / 中級: lvl 2 / 上級: lvl 3)
     final filtered = allProgresses.where((cp) => cp.level == level).toList();
@@ -123,18 +135,16 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
         ? unlockedList.last.chapter
         : (filtered.isNotEmpty ? filtered.first.chapter : 1);
 
-    if (mounted) {
-      setState(() {
-        _favoriteStamp = favStamp;
-        _dueCount = dueCount;
-        _allChapterProgresses = allProgresses;
-        _currentLevelChapters = filtered;
-        if (!preserveSelection || !filtered.any((cp) => cp.chapter == selectedChapter)) {
-          selectedChapter = latestUnlocked;
-        }
-        _isLoadingChapters = false;
-      });
-    }
+    setState(() {
+      _favoriteStamp = favStamp;
+      _dueCount = dueCount;
+      _allChapterProgresses = allProgresses;
+      _currentLevelChapters = filtered;
+      if (!preserveSelection || !filtered.any((cp) => cp.chapter == selectedChapter)) {
+        selectedChapter = latestUnlocked;
+      }
+      _isLoadingChapters = false;
+    });
   }
 
   /// 外部（タブ切り替えや単語帳更新時）から最新チャプター進行状況を再ロード

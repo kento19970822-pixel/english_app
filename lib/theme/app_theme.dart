@@ -1,5 +1,5 @@
-// コード管理番号: VER-20260827-01
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// アプリ全体の統合テーマ管理（ライト ＆ パステルダーク）
 /// WCAG 2.1 AA 準拠のコントラスト比（4.5:1以上）を全テキストで担保
@@ -54,6 +54,11 @@ class AppTheme {
         secondary: lightSecondary,
         error: lightWarningRed,
       ),
+      appBarTheme: const AppBarTheme(
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       cardTheme: const CardThemeData(
         color: lightCard,
         elevation: 1,
@@ -73,6 +78,11 @@ class AppTheme {
         primary: darkPrimary,
         secondary: darkSecondary,
         error: darkWarningRed,
+      ),
+      appBarTheme: const AppBarTheme(
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       cardTheme: const CardThemeData(
         color: darkCard,

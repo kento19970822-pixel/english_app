@@ -11,6 +11,8 @@ class WordChapterBanner extends StatelessWidget {
   final Color textColor;
   final Color textSecondaryColor;
   final Color primaryColor;
+  final int? totalChapterWords;
+  final int? memorizedChapterWords;
 
   const WordChapterBanner({
     super.key,
@@ -20,6 +22,8 @@ class WordChapterBanner extends StatelessWidget {
     this.textColor = const Color(0xFF2C3E50),
     this.textSecondaryColor = const Color(0xFF5D6D7E),
     this.primaryColor = const Color(0xFF2E8B57),
+    this.totalChapterWords,
+    this.memorizedChapterWords,
   });
 
   @override
@@ -27,8 +31,10 @@ class WordChapterBanner extends StatelessWidget {
     final chapterNum = int.tryParse(section.title.replaceAll(RegExp(r'[^0-9]'), '')) ??
         int.tryParse(section.key.replaceAll(RegExp(r'[^0-9]'), '')) ??
         1;
-    final totalCount = section.words.length;
-    final memorizedCount = section.words.where((w) => w.isMemorized || w.retentionPoint >= 80).length;
+    // フィルターの影響を受けないグローバルなチャプター単語進捗を使用（未指定時はsection.wordsからフォールバック）
+    final totalCount = totalChapterWords ?? section.words.length;
+    final memorizedCount = memorizedChapterWords ??
+        section.words.where((w) => w.isMemorized || w.retentionPoint >= 70).length;
     final percent = totalCount > 0 ? (memorizedCount / totalCount * 100).toInt() : 0;
     final isMastered = percent >= 80;
 

@@ -31,6 +31,7 @@ class WordsScreen extends StatefulWidget {
 class WordsScreenState extends State<WordsScreen> {
   List<Word> _allWords = [];
   List<WordSection> _sections = [];
+  Map<int, ({int total, int memorized})> _chapterGlobalStats = {};
   int _totalFilteredCount = 0;
 
   // ソート・フィルター状態
@@ -93,6 +94,39 @@ class WordsScreenState extends State<WordsScreen> {
         curve: Curves.easeOutCubic,
       );
     }
+  }
+
+  /// 次のセクション（チャプター・文字・カテゴリ）の先頭へスムーズにスクロール移動 (片手操作)
+  void _scrollToNextSection() {
+    if (!_scrollController.hasClients || _sections.isEmpty) return;
+
+    final currentOffset = _scrollController.offset;
+    double accumulatedOffset = 0.0;
+    double? nextSectionOffset;
+
+    for (int i = 0; i < _sections.length; i++) {
+      final section = _sections[i];
+      final headerHeight = 44.0;
+      final bannerHeight = _sortMode == 'chap' ? 82.0 : 0.0;
+      final sectionHeight = headerHeight + bannerHeight + (section.words.length * 120.0);
+
+      // 現在位置より20px以上先にあるセクションを探す
+      if (accumulatedOffset > currentOffset + 25.0) {
+        nextSectionOffset = accumulatedOffset;
+        break;
+      }
+      accumulatedOffset += sectionHeight;
+    }
+
+    final targetOffset = nextSectionOffset ?? 0.0;
+
+    _scrollController.animateTo(
+      targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+    );
+
+    HapticFeedback.lightImpact();
   }
 
   /// タブ再押下時などの画面表示初期化 (要件2: スムーズな一連の初期化アニメーション)
@@ -355,6 +389,21 @@ class WordsScreenState extends State<WordsScreen> {
       }
     }
 
+    // 全単語マスターからチャプターごとの真の全体進捗（総数・70pt以上暗記数）を集計（フィルター非依存）
+    final Map<int, ({int total, int memorized})> globalStats = {};
+    for (final w in _allWords) {
+      final current = globalStats[w.chapter];
+      final isMem = w.isMemorized || w.retentionPoint >= 70;
+      if (current == null) {
+        globalStats[w.chapter] = (total: 1, memorized: isMem ? 1 : 0);
+      } else {
+        globalStats[w.chapter] = (
+          total: current.total + 1,
+          memorized: current.memorized + (isMem ? 1 : 0),
+        );
+      }
+    }
+    _chapterGlobalStats = globalStats;
     _sections = sections;
   }
 
@@ -502,16 +551,45 @@ class WordsScreenState extends State<WordsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bgColor,
-      floatingActionButton: _showScrollToTop
-          ? FloatingActionButton.small(
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (_showScrollToTop) ...[
+            FloatingActionButton.small(
+              heroTag: 'words_scroll_to_top',
               onPressed: _scrollToTop,
+              backgroundColor: _cardColor,
+              foregroundColor: _textPrimary,
+              elevation: 2,
+              tooltip: '最上部へスクロール',
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: _borderColor),
+              ),
+              child: const Icon(Icons.keyboard_arrow_up_rounded, size: 22),
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (_sections.length > 1)
+            FloatingActionButton.extended(
+              heroTag: 'words_jump_next_section',
+              onPressed: _scrollToNextSection,
               backgroundColor: _primaryAccent,
               foregroundColor: Colors.white,
               elevation: 3,
-              tooltip: '最上部へスクロール',
-              child: const Icon(Icons.keyboard_arrow_up_rounded, size: 24),
-            )
-          : null,
+              tooltip: _sortMode == 'chap' ? '次のチャプターへジャンプ' : '次のセクションへジャンプ',
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              icon: const Icon(Icons.keyboard_double_arrow_down_rounded, size: 20),
+              label: Text(
+                _sortMode == 'chap' ? '次章へ' : '次へ',
+                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
+              ),
+            ),
+        ],
+      ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: _primaryAccent))
           : SafeArea(
@@ -650,7 +728,19 @@ class WordsScreenState extends State<WordsScreen> {
                             ),
                             if (_sortMode == 'chap')
                               SliverToBoxAdapter(
-                                child: WordChapterBanner(section: section),
+                                child: Builder(
+                                  builder: (context) {
+                                    final chapNum = int.tryParse(section.title.replaceAll(RegExp(r'[^0-9]'), '')) ??
+                                        int.tryParse(section.key.replaceAll(RegExp(r'[^0-9]'), '')) ??
+                                        1;
+                                    final stats = _chapterGlobalStats[chapNum];
+                                    return WordChapterBanner(
+                                      section: section,
+                                      totalChapterWords: stats?.total,
+                                      memorizedChapterWords: stats?.memorized,
+                                    );
+                                  },
+                                ),
                               ),
                             SliverFixedExtentList(
                               itemExtent: 120.0,

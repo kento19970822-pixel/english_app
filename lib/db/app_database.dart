@@ -1053,7 +1053,7 @@ class AppDatabase extends _$AppDatabase {
         .get();
     if (wordsInChapter.isEmpty) return 0.0;
 
-    final targetCount = wordsInChapter.where((w) => w.isMemorized || w.retentionPoint >= 80).length;
+    final targetCount = wordsInChapter.where((w) => w.isMemorized || w.retentionPoint >= 70).length;
     return (targetCount / wordsInChapter.length) * 100.0;
   }
 
