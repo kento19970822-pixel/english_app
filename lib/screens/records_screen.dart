@@ -42,7 +42,11 @@ class RecordsScreenState extends State<RecordsScreen> {
     }
   }
 
+  bool _isNavigating = false;
+
   void openSubView(String viewKey) {
+    if (_isNavigating) return;
+
     Widget? targetScreen;
     if (viewKey == 'calendar') {
       targetScreen = CalendarScreen(database: widget.database);
@@ -53,13 +57,21 @@ class RecordsScreenState extends State<RecordsScreen> {
     }
 
     if (targetScreen != null) {
+      _isNavigating = true;
       widget.onSubViewChanged?.call(viewKey);
       Navigator.push(
         context,
         CupertinoPageRoute(builder: (context) => targetScreen!),
       ).then((_) {
-        widget.onSubViewChanged?.call(null);
-        _loadSummary();
+        if (mounted) {
+          setState(() => _isNavigating = false);
+          widget.onSubViewChanged?.call(null);
+          _loadSummary();
+        }
+      }).catchError((_) {
+        if (mounted) {
+          setState(() => _isNavigating = false);
+        }
       });
     }
   }

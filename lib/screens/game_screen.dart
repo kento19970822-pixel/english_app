@@ -128,6 +128,7 @@ class _GameScreenState extends State<GameScreen>
   bool isPaused = false;
   bool isLoading = true;
   bool _isTimeUpShowing = false;
+  bool _isActionProcessing = false;
 
   late int selectedLevel;
   late int selectedChapter;
@@ -2035,6 +2036,8 @@ class _GameScreenState extends State<GameScreen>
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                         ),
                         onPressed: () {
+                          if (_isActionProcessing) return;
+                          _isActionProcessing = true;
                           widget.onGameStateChanged?.call(false);
                           if (Navigator.canPop(context)) {
                             Navigator.pop(context);
@@ -2075,6 +2078,8 @@ class _GameScreenState extends State<GameScreen>
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                         ),
                         onPressed: () {
+                          if (_isActionProcessing) return;
+                          _isActionProcessing = true;
                           setState(() {
                             if (currentMode == 'revenge') {
                               currentMode = widget.mode;
@@ -2083,6 +2088,7 @@ class _GameScreenState extends State<GameScreen>
                             isGameStarted = true;
                             remainingTime = totalGameDuration;
                             _unlockResult = null;
+                            _isActionProcessing = false;
                           });
                           _startCountdownSequence();
                         },
@@ -2116,6 +2122,8 @@ class _GameScreenState extends State<GameScreen>
                             padding: const EdgeInsets.symmetric(horizontal: 4),
                           ),
                           onPressed: () {
+                            if (_isActionProcessing) return;
+                            _isActionProcessing = true;
                             final targetCh = nextChapter ?? (selectedChapter + 1);
                             setState(() {
                               selectedChapter = targetCh;
@@ -2124,6 +2132,7 @@ class _GameScreenState extends State<GameScreen>
                               isGameStarted = true;
                               remainingTime = totalGameDuration;
                               _unlockResult = null;
+                              _isActionProcessing = false;
                             });
                             _startCountdownSequence();
                           },

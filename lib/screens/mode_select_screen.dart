@@ -33,6 +33,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
   final Set<int> _selectedLevels = {1, 2, 3}; // 弱点克服・チャレンジ用複数レベル選択（デフォルト全選択）
   int selectedChapter = 1;
   int _chapterLoadRequestId = 0;
+  bool _isNavigating = false;
 
   List<ChapterProgressesData> _allChapterProgresses = [];
   List<ChapterProgressesData> _currentLevelChapters = [];
@@ -162,44 +163,67 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
   }
 
   Future<void> _startGame() async {
-    if (selectedMode == 'learning') {
-      // 選択チャプターが解放されているか検証
-      final selectedProgress = _currentLevelChapters.where(
-        (cp) => cp.chapter == selectedChapter,
-      ).firstOrNull;
+    if (_isNavigating) return;
+    _isNavigating = true;
 
-      if (selectedProgress == null || !selectedProgress.isUnlocked) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('このチャプターはまだ解放されていません。前のチャプターをクリアしてください。')),
-        );
-        return;
+    try {
+      if (selectedMode == 'learning') {
+        // 選択チャプターが解放されているか検証
+        final selectedProgress = _currentLevelChapters.where(
+          (cp) => cp.chapter == selectedChapter,
+        ).firstOrNull;
+
+        if (selectedProgress == null || !selectedProgress.isUnlocked) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('このチャプターはまだ解放されていません。前のチャプターをクリアしてください。')),
+            );
+          }
+          return;
+        }
+      }
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => GameScreen(
+            database: widget.database,
+            onGameStateChanged: widget.onGameStateChanged,
+            mode: selectedMode,
+            initialLevel: selectedLevel,
+            selectedLevels: selectedMode == 'learning' ? [selectedLevel] : _selectedLevels.toList(),
+            initialChapter: selectedChapter,
+            autoStart: true,
+          ),
+        ),
+      );
+
+      // ゲーム終了後にチャプター解放状況を更新
+      _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+    } finally {
+      if (mounted) {
+        setState(() => _isNavigating = false);
       }
     }
-
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GameScreen(
-          database: widget.database,
-          onGameStateChanged: widget.onGameStateChanged,
-          mode: selectedMode,
-          initialLevel: selectedLevel,
-          selectedLevels: selectedMode == 'learning' ? [selectedLevel] : _selectedLevels.toList(),
-          initialChapter: selectedChapter,
-          autoStart: true,
-        ),
-      ),
-    );
-
-    // ゲーム終了後にチャプター解放状況を更新
-    _loadChaptersForLevel(selectedLevel, preserveSelection: true);
   }
 
   void _openSubScreen(Widget screen) {
+    if (_isNavigating) return;
+    _isNavigating = true;
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => screen),
-    ).then((_) => _loadChaptersForLevel(selectedLevel, preserveSelection: true));
+    ).then((_) {
+      if (mounted) {
+        setState(() => _isNavigating = false);
+        _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+      }
+    }).catchError((_) {
+      if (mounted) {
+        setState(() => _isNavigating = false);
+      }
+    });
   }
 
   @override

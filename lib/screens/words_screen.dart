@@ -33,6 +33,7 @@ class WordsScreenState extends State<WordsScreen> {
   List<WordSection> _sections = [];
   Map<int, ({int total, int memorized})> _chapterGlobalStats = {};
   int _totalFilteredCount = 0;
+  int _lastLoadedWordsVersion = 0;
 
   // ソート・フィルター状態
   String _sortMode = 'chap'; // 'az', 'chap', 'category'
@@ -242,7 +243,7 @@ class WordsScreenState extends State<WordsScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isLoading) {
+    if (!_isLoading && _lastLoadedWordsVersion != widget.database.wordsDataVersion) {
       _refreshWordsSilent();
     }
   }
@@ -258,11 +259,13 @@ class WordsScreenState extends State<WordsScreen> {
   Future<void> _loadWords() async {
     setState(() => _isLoading = true);
     try {
+      final currentVersion = widget.database.wordsDataVersion;
       final words = await widget.database.getAllWords();
       if (words.isEmpty) {
         await _rebuildDatabase(showSnackBar: false);
         return;
       }
+      _lastLoadedWordsVersion = currentVersion;
       _allWords = words;
       _applyFilterAndGrouping();
     } catch (e) {
@@ -279,9 +282,11 @@ class WordsScreenState extends State<WordsScreen> {
   }
 
   Future<void> _refreshWordsSilent() async {
+    final currentVersion = widget.database.wordsDataVersion;
     final words = await widget.database.getAllWords();
     if (mounted) {
       setState(() {
+        _lastLoadedWordsVersion = currentVersion;
         _allWords = words;
         _applyFilterAndGrouping();
       });

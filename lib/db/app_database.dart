@@ -22,6 +22,13 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(impl.connect());
   AppDatabase.forTesting(super.e);
 
+  int _wordsDataVersion = 1;
+  int get wordsDataVersion => _wordsDataVersion;
+
+  void notifyWordsChanged() {
+    _wordsDataVersion++;
+  }
+
   @override
   int get schemaVersion => 14;
 
@@ -581,10 +588,11 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// お気に入りフラグの更新
-  Future<void> toggleFavorite(int id, bool isFavorite) {
-    return (update(words)..where((t) => t.id.equals(id))).write(
+  Future<void> toggleFavorite(int id, bool isFavorite) async {
+    await (update(words)..where((t) => t.id.equals(id))).write(
       WordsCompanion(isFavorite: Value(isFavorite)),
     );
+    notifyWordsChanged();
   }
 
   /// クイズ回答結果に基づく定着度・フラグ・正誤カウント更新 (F-05/F-10)
@@ -633,6 +641,8 @@ class AppDatabase extends _$AppDatabase {
       ),
     );
 
+    notifyWordsChanged();
+
     // 新しく暗記済み（80pt以上）になった場合は日別暗記数をインクリメント (F-10)
     if (!wasMemorized && isNowMemorized) {
       await incrementDailyMemorizedCount();
@@ -656,6 +666,8 @@ class AppDatabase extends _$AppDatabase {
       ),
     );
 
+    notifyWordsChanged();
+
     if (!wasMemorized) {
       await incrementDailyMemorizedCount();
     }
@@ -667,25 +679,28 @@ class AppDatabase extends _$AppDatabase {
 
   /// 暗記フラグ一括リセット: 全単語の暗記フラグ・定着度・制限フラグを初期状態にリセット (F-09/F-15)
   Future<void> resetAllWordsMemorized() async {
-    await update(words).write(
-      const WordsCompanion(
-        retentionPoint: Value(0),
-        isMemorized: Value(false),
-        isRestricted: Value(false),
-      ),
-    );
-
-    // 全チャプター進捗の暗記達成率を0%に更新（Ch.1のみ解放、他は未解放に再設定）
-    final allCp = await getAllChapterProgresses();
-    for (final cp in allCp) {
-      await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter))).write(
-        ChapterProgressesCompanion(
-          memorizedRate: const Value(0.0),
-          isUnlocked: Value(cp.chapter == 1),
-          isCleared: const Value(false),
+    await transaction(() async {
+      await update(words).write(
+        const WordsCompanion(
+          retentionPoint: Value(0),
+          isMemorized: Value(false),
+          isRestricted: Value(false),
         ),
       );
-    }
+
+      // 全チャプター進捗の暗記達成率を0%に更新（Ch.1のみ解放、他は未解放に再設定）
+      final allCp = await getAllChapterProgresses();
+      for (final cp in allCp) {
+        await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter))).write(
+          ChapterProgressesCompanion(
+            memorizedRate: const Value(0.0),
+            isUnlocked: Value(cp.chapter == 1),
+            isCleared: const Value(false),
+          ),
+        );
+      }
+    });
+    notifyWordsChanged();
   }
 
   /// 左スワイプ: 0ptリセット ＋ 制限フラグ付与 (F-08)
@@ -701,6 +716,7 @@ class AppDatabase extends _$AppDatabase {
         lastRestrictedDate: Value(now),
       ),
     );
+    notifyWordsChanged();
     if (word != null) {
       await syncChapterProgress(word.chapter);
     }
@@ -712,20 +728,24 @@ class AppDatabase extends _$AppDatabase {
     int count = 0;
     final Set<int> affectedChapters = {};
 
-    for (final word in all) {
-      if (word.isMemorized && word.retentionPoint < 80) {
-        await (update(words)..where((t) => t.id.equals(word.id))).write(
-          const WordsCompanion(isMemorized: Value(false)),
-        );
-        affectedChapters.add(word.chapter);
-        count++;
+    await transaction(() async {
+      for (final word in all) {
+        if (word.isMemorized && word.retentionPoint < 80) {
+          await (update(words)..where((t) => t.id.equals(word.id))).write(
+            const WordsCompanion(isMemorized: Value(false)),
+          );
+          affectedChapters.add(word.chapter);
+          count++;
+        }
       }
-    }
 
-    // 影響を受けたチャプターの進行状況（暗記率）を再計算
-    for (final ch in affectedChapters) {
-      await syncChapterProgress(ch);
-    }
+      // 影響を受けたチャプターの進行状況（暗記率）を再計算
+      for (final ch in affectedChapters) {
+        await syncChapterProgress(ch);
+      }
+    });
+
+    if (count > 0) notifyWordsChanged();
     return count;
   }
 
@@ -1082,24 +1102,45 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// 全チャプターの暗記率・クリア状態・解放状態を単語マスターから一括同期
+  /// 全チャプターの暗記率・クリア状態・解放状態を単語マスターから一括同期 (N+1解消・1発集計SQL)
   Future<void> syncAllChapterProgresses() async {
-    final allCp = await (select(chapterProgresses)..orderBy([(t) => OrderingTerm.asc(t.chapter)])).get();
-    for (final cp in allCp) {
-      final rate = await calculateChapterMemorizedRate(cp.chapter);
-      final isCleared = rate >= 90.0;
-      await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter))).write(
-        ChapterProgressesCompanion(
-          memorizedRate: Value(rate),
-          isCleared: Value(isCleared || cp.isCleared),
-        ),
-      );
-      if (isCleared || cp.isCleared) {
-        await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter + 1))).write(
-          const ChapterProgressesCompanion(isUnlocked: Value(true)),
-        );
-      }
+    // 1回の集計SQLで全チャプターの総数と70pt以上暗記数を一括集計 (N+1解消)
+    const query = '''
+      SELECT chapter,
+             COUNT(*) AS total_count,
+             SUM(CASE WHEN is_memorized = 1 OR retention_point >= 70 THEN 1 ELSE 0 END) AS memorized_count
+      FROM words
+      GROUP BY chapter
+      ORDER BY chapter ASC;
+    ''';
+    final rows = await customSelect(query).get();
+    final Map<int, double> rateMap = {};
+    for (final row in rows) {
+      final ch = row.read<int>('chapter');
+      final total = row.read<int>('total_count');
+      final memorized = row.read<int>('memorized_count');
+      rateMap[ch] = total > 0 ? (memorized / total) * 100.0 : 0.0;
     }
+
+    final allCp = await (select(chapterProgresses)..orderBy([(t) => OrderingTerm.asc(t.chapter)])).get();
+
+    await transaction(() async {
+      for (final cp in allCp) {
+        final rate = rateMap[cp.chapter] ?? 0.0;
+        final isCleared = rate >= 90.0;
+        await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter))).write(
+          ChapterProgressesCompanion(
+            memorizedRate: Value(rate),
+            isCleared: Value(isCleared || cp.isCleared),
+          ),
+        );
+        if (isCleared || cp.isCleared) {
+          await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter + 1))).write(
+            const ChapterProgressesCompanion(isUnlocked: Value(true)),
+          );
+        }
+      }
+    });
   }
 
   /// 【学習モードクリア時】70pt以上の単語が90%以上の場合にクリア判定・次チャプター解放 (F-15)
@@ -1107,40 +1148,42 @@ class AppDatabase extends _$AppDatabase {
     final rate = await calculateChapterMemorizedRate(currentChapter);
     final isCleared = rate >= 90.0; // 70pt以上が90%以上（100単語中90単語以上）
 
-    // 現在のチャプター進捗を更新
-    final currentProgress = await (select(chapterProgresses)
-          ..where((t) => t.chapter.equals(currentChapter)))
-        .getSingleOrNull();
-
-    await (update(chapterProgresses)..where((t) => t.chapter.equals(currentChapter))).write(
-      ChapterProgressesCompanion(
-        memorizedRate: Value(rate),
-        isCleared: Value(isCleared || (currentProgress?.isCleared ?? false)),
-        clearedAt: isCleared ? Value(DateTime.now()) : const Value.absent(),
-      ),
-    );
-
     int? nextUnlockedChapter;
     bool isNewUnlock = false;
 
-    if (isCleared) {
-      final nextChapterNum = currentChapter + 1;
-      final nextProgress = await (select(chapterProgresses)
-            ..where((t) => t.chapter.equals(nextChapterNum)))
+    await transaction(() async {
+      // 現在のチャプター進捗を更新
+      final currentProgress = await (select(chapterProgresses)
+            ..where((t) => t.chapter.equals(currentChapter)))
           .getSingleOrNull();
 
-      if (nextProgress != null) {
-        if (!nextProgress.isUnlocked) {
-          isNewUnlock = true;
-          await (update(chapterProgresses)..where((t) => t.chapter.equals(nextChapterNum))).write(
-            const ChapterProgressesCompanion(
-              isUnlocked: Value(true),
-            ),
-          );
+      await (update(chapterProgresses)..where((t) => t.chapter.equals(currentChapter))).write(
+        ChapterProgressesCompanion(
+          memorizedRate: Value(rate),
+          isCleared: Value(isCleared || (currentProgress?.isCleared ?? false)),
+          clearedAt: isCleared ? Value(DateTime.now()) : const Value.absent(),
+        ),
+      );
+
+      if (isCleared) {
+        final nextChapterNum = currentChapter + 1;
+        final nextProgress = await (select(chapterProgresses)
+              ..where((t) => t.chapter.equals(nextChapterNum)))
+            .getSingleOrNull();
+
+        if (nextProgress != null) {
+          if (!nextProgress.isUnlocked) {
+            isNewUnlock = true;
+            await (update(chapterProgresses)..where((t) => t.chapter.equals(nextChapterNum))).write(
+              const ChapterProgressesCompanion(
+                isUnlocked: Value(true),
+              ),
+            );
+          }
+          nextUnlockedChapter = nextChapterNum;
         }
-        nextUnlockedChapter = nextChapterNum;
       }
-    }
+    });
 
     return {
       'isCleared': isCleared,
