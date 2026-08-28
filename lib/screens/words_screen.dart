@@ -725,7 +725,7 @@ class WordsScreenState extends State<WordsScreen> {
                               ),
                               const SizedBox(height: 6),
 
-                              // ソート切替（Chap / A-Z / Cat.） ＆ 和訳常時トグルボタン
+                              // ソート切替（Chap / A-Z / Cat.） ＆ 和訳常時トグルボタン ＆ スワイプ特訓ボタン
                               Row(
                                 children: [
                                   Expanded(
@@ -753,6 +753,42 @@ class WordsScreenState extends State<WordsScreen> {
                                     onTap: () {
                                       setState(() => _showJapanese = !_showJapanese);
                                     },
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // スワイプ特訓ボタン（和訳ONと高さを完全に30pxで一致）
+                                  BouncyScaleTap(
+                                    onTap: () {
+                                      final words = _sections.expand((s) => s.words).toList();
+                                      final title = _hasActiveFilters
+                                          ? '絞り込み特訓 ($_totalFilteredCount語)'
+                                          : '全単語特訓 ($_totalFilteredCount語)';
+                                      _startFlashcard(words, title);
+                                    },
+                                    child: Container(
+                                      height: 30,
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: _primaryAccent.withAlpha(30),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: _primaryAccent.withAlpha(80)),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.style_rounded, size: 14, color: _primaryAccent),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'スワイプ特訓',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: _primaryAccent,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1054,48 +1090,16 @@ class WordsScreenState extends State<WordsScreen> {
 
   Widget _buildActiveFilterSummaryBar() {
     if (!_hasActiveFilters) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '表示中: $_totalFilteredCount 件',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: _textSecondary,
-            ),
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          '表示中: $_totalFilteredCount 件',
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.bold,
+            color: _textSecondary,
           ),
-          if (_totalFilteredCount > 0)
-            BouncyScaleTap(
-              onTap: () => _startFlashcard(
-                _sections.expand((s) => s.words).toList(),
-                '全単語 スワイプ特訓 ($_totalFilteredCount語)',
-              ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _primaryAccent.withAlpha(30),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _primaryAccent.withAlpha(75)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.style_rounded, size: 12, color: _primaryAccent),
-                    const SizedBox(width: 4),
-                    Text(
-                      'スワイプ特訓',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        color: _primaryAccent,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
+        ),
       );
     }
 
@@ -1106,42 +1110,11 @@ class WordsScreenState extends State<WordsScreen> {
           Text(
             '$_totalFilteredCount件 ',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 11.5,
               fontWeight: FontWeight.bold,
               color: _textSecondary,
             ),
           ),
-          if (_totalFilteredCount > 0) ...[
-            BouncyScaleTap(
-              onTap: () => _startFlashcard(
-                _sections.expand((s) => s.words).toList(),
-                '絞り込み特訓 ($_totalFilteredCount語)',
-              ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                margin: const EdgeInsets.only(right: 6),
-                decoration: BoxDecoration(
-                  color: _primaryAccent,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.style_rounded, size: 11, color: Colors.white),
-                    SizedBox(width: 3),
-                    Text(
-                      '特訓',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
           if (_filterUnlearned) ...[
             _buildActiveTag('未暗記', () { _filterUnlearned = false; _onFilterChanged(resetScroll: true); }),
             const SizedBox(width: 4),
