@@ -16,6 +16,7 @@ import '../theme/app_theme.dart';
 import '../widgets/words/word_search_bar.dart';
 import '../widgets/words/word_section_sticky_header.dart';
 import '../widgets/words/word_chapter_banner.dart';
+import '../widgets/common/bouncy_scale_tap.dart';
 
 
 
@@ -564,33 +565,41 @@ class WordsScreenState extends State<WordsScreen> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (_showScrollToTop) ...[
-            FloatingActionButton.small(
-              heroTag: 'words_scroll_to_top',
-              onPressed: _scrollToTop,
-              backgroundColor: _cardColor,
-              foregroundColor: _textPrimary,
-              elevation: 2,
-              tooltip: '最上部へスクロール',
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: _borderColor),
+            BouncyScaleTap(
+              onTap: _scrollToTop,
+              pressedScale: 0.90,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _borderColor),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x15000000), blurRadius: 4, offset: Offset(0, 2)),
+                  ],
+                ),
+                child: Icon(Icons.keyboard_arrow_up_rounded, size: 22, color: _textPrimary),
               ),
-              child: const Icon(Icons.keyboard_arrow_up_rounded, size: 22),
             ),
             const SizedBox(height: 8),
           ],
           if (_sections.length > 1)
-            FloatingActionButton.small(
-              heroTag: 'words_jump_next_section',
-              onPressed: _scrollToNextSection,
-              backgroundColor: _primaryAccent,
-              foregroundColor: Colors.white,
-              elevation: 3,
-              tooltip: _sortMode == 'chap' ? '次のチャプターへジャンプ' : '次のセクションへジャンプ',
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            BouncyScaleTap(
+              onTap: _scrollToNextSection,
+              pressedScale: 0.90,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _primaryAccent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x25000000), blurRadius: 6, offset: Offset(0, 2)),
+                  ],
+                ),
+                child: const Icon(Icons.keyboard_double_arrow_down_rounded, size: 22, color: Colors.white),
               ),
-              child: const Icon(Icons.keyboard_double_arrow_down_rounded, size: 22),
             ),
         ],
       ),

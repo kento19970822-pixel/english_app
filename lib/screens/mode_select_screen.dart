@@ -10,6 +10,7 @@ import 'game_screen.dart';
 import 'stamp_gallery_screen.dart';
 import '../services/srs_service.dart';
 import '../widgets/srs_review_dialog.dart';
+import '../widgets/common/bouncy_scale_tap.dart';
 
 class ModeSelectScreen extends StatefulWidget {
   final AppDatabase database;
@@ -482,7 +483,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                           final isUnlocked = cp.isUnlocked;
                                           final isCleared = cp.isCleared;
 
-                                          return InkWell(
+                                          return BouncyScaleTap(
                                             onTap: isUnlocked
                                                 ? () {
                                                     setState(() {
@@ -490,7 +491,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                                     });
                                                   }
                                                 : null,
-                                            borderRadius: BorderRadius.circular(12),
+                                            pressedScale: 0.98,
                                             child: Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                               decoration: BoxDecoration(
@@ -685,9 +686,9 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: InkWell(
+                    child: BouncyScaleTap(
                       onTap: () => _openSubScreen(CharacterGalleryScreen(database: widget.database)),
-                      borderRadius: BorderRadius.circular(8),
+                      pressedScale: 0.98,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 2.0),
                         child: Column(
@@ -751,29 +752,36 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      backgroundColor: selectedMode == 'learning'
-                          ? _primaryAccent
-                          : (selectedMode == 'weakness' ? _weaknessAccent : _secondaryAccent),
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
+                  child: BouncyScaleTap(
+                    onTap: _startGame,
+                    pressedScale: 0.97,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: selectedMode == 'learning'
+                            ? _primaryAccent
+                            : (selectedMode == 'weakness' ? _weaknessAccent : _secondaryAccent),
                         borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x1A000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ),
-                    onPressed: _startGame,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        selectedMode == 'learning'
-                            ? 'Chapter $selectedChapter を学習開始'
-                            : (selectedMode == 'weakness' ? '弱点克服特訓を開始' : 'チャレンジを開始'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
+                      alignment: Alignment.center,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          selectedMode == 'learning'
+                              ? 'Chapter $selectedChapter を学習開始'
+                              : (selectedMode == 'weakness' ? '弱点克服特訓を開始' : 'チャレンジを開始'),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -796,49 +804,46 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
   }) {
     return Tooltip(
       message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: _cardColor,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: _borderColor),
-                ),
-                child: Icon(icon, size: 20, color: iconColor ?? _primaryAccent),
+      child: BouncyScaleTap(
+        onTap: onTap,
+        pressedScale: 0.90,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: _cardColor,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: _borderColor),
               ),
-              if (badgeCount > 0)
-                Positioned(
-                  top: -4,
-                  right: -4,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFED8936),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.white, width: 1.2),
-                    ),
-                    constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
-                    child: Center(
-                      child: Text(
-                        '$badgeCount',
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+              child: Icon(icon, size: 20, color: iconColor ?? _primaryAccent),
+            ),
+            if (badgeCount > 0)
+              Positioned(
+                top: -4,
+                right: -4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFED8936),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white, width: 1.2),
+                  ),
+                  constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                  child: Center(
+                    child: Text(
+                      '$badgeCount',
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -851,7 +856,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
         ? _weaknessAccent
         : (selectedMode == 'challenge' ? _secondaryAccent : _primaryAccent);
 
-    return InkWell(
+    return BouncyScaleTap(
       onTap: () {
         setState(() {
           if (isMulti) {
@@ -869,7 +874,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
           }
         });
       },
-      borderRadius: BorderRadius.circular(10),
+      pressedScale: 0.96,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
         decoration: BoxDecoration(
@@ -929,7 +934,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
   }) {
     final isSelected = selectedMode == modeKey;
 
-    return GestureDetector(
+    return BouncyScaleTap(
       onTap: () {
         if (modeKey == 'srs') {
           SrsReviewDialog.show(
@@ -946,6 +951,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
           }
         });
       },
+      pressedScale: 0.95,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),

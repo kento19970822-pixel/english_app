@@ -147,11 +147,47 @@ class _WordCardTileState extends State<WordCardTile> {
             ),
           ],
         ),
-        child: Material(
-          color: Colors.transparent,
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            children: [
+              // 右端スワイプ示唆（暗記化エメラルド）
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Container(
+                    width: 3,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2E8B57).withAlpha(45),
+                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(2)),
+                    ),
+                  ),
+                ),
+              ),
+              // 左端スワイプ示唆（リセットオレンジ）
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Container(
+                    width: 3,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFED8936).withAlpha(45),
+                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(2)),
+                    ),
+                  ),
+                ),
+              ),
+              Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
             splashColor: widget.isKeyboardActive ? Colors.transparent : null,
             highlightColor: widget.isKeyboardActive ? Colors.transparent : null,
             hoverColor: widget.isKeyboardActive ? Colors.transparent : null,
@@ -446,7 +482,10 @@ class _WordCardTileState extends State<WordCardTile> {
           ),
         ),
       ),
-      ),
-    );
+    ],
+  ),
+),
+),
+);
   }
 }
