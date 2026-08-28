@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../db/app_database.dart';
@@ -10,6 +10,7 @@ class SwipeableFlashcard extends StatefulWidget {
   final bool isModeSelector; // 0枚目のモード選択カードかどうか
   final bool isEnToJa; // true: 英語が表, false: 日本語が表
   final Function(bool isRight) onSwiped;
+  final Function(double progress, bool isRight)? onDragProgress;
   final VoidCallback onSpeak;
   final bool isFront; // スタックの最前面かどうか
 
@@ -19,15 +20,16 @@ class SwipeableFlashcard extends StatefulWidget {
     this.isModeSelector = false,
     required this.isEnToJa,
     required this.onSwiped,
+    this.onDragProgress,
     required this.onSpeak,
     this.isFront = true,
   });
 
   @override
-  State<SwipeableFlashcard> createState() => _SwipeableFlashcardState();
+  State<SwipeableFlashcard> createState() => SwipeableFlashcardState();
 }
 
-class _SwipeableFlashcardState extends State<SwipeableFlashcard>
+class SwipeableFlashcardState extends State<SwipeableFlashcard>
     with TickerProviderStateMixin {
   // スワイプ用
   Offset _dragOffset = Offset.zero;
@@ -44,11 +46,11 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
     super.initState();
     _swipeAnimController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 240),
+      duration: const Duration(milliseconds: 220),
     );
     _flipAnimController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 320),
+      duration: const Duration(milliseconds: 300),
     );
     _flipAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _flipAnimController, curve: Curves.easeInOutCubic),
@@ -62,14 +64,14 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
     super.dispose();
   }
 
-  void _toggleFlip() {
-    if (widget.isModeSelector) return; // モード選択カードはフリップ不要
+  /// 外部（キーボードやボタン）からもフリップ可能
+  void toggleFlip() {
+    if (widget.isModeSelector) return;
     HapticFeedback.selectionClick();
     if (_showBack) {
       _flipAnimController.reverse();
     } else {
       _flipAnimController.forward();
-      // 和➔英モードの時、タップして回答（裏面の英語）を見たタイミングで英語音声を自動再生
       if (!widget.isEnToJa) {
         widget.onSpeak();
       }
@@ -79,27 +81,52 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
     });
   }
 
+  /// 外部（キーボードやボタン）から右スワイプ
+  void swipeRight() {
+    if (!widget.isFront) return;
+    final screenWidth = MediaQuery.of(context).size.width;
+    _flyOut(Offset(screenWidth * 1.5, 0), true);
+  }
+
+  /// 外部（キーボードやボタン）から左スワイプ
+  void swipeLeft() {
+    if (!widget.isFront) return;
+    final screenWidth = MediaQuery.of(context).size.width;
+    _flyOut(Offset(-screenWidth * 1.5, 0), false);
+  }
+
   void _onPanUpdate(DragUpdateDetails details) {
     if (!widget.isFront) return;
     setState(() {
       _dragOffset += details.delta;
     });
+    _notifyProgress();
+  }
+
+  void _notifyProgress() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final threshold = screenWidth * 0.22;
+    final progress = (_dragOffset.dx.abs() / threshold).clamp(0.0, 1.0);
+    final isRight = _dragOffset.dx >= 0;
+    widget.onDragProgress?.call(progress, isRight);
   }
 
   void _onPanEnd(DragEndDetails details) {
     if (!widget.isFront) return;
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final threshold = screenWidth * 0.25;
+    final threshold = screenWidth * 0.22;
+    final vx = details.velocity.pixelsPerSecond.dx; // フリック速度
 
-    if (_dragOffset.dx > threshold) {
+    // 移動量またはフリック速度（650px/s以上）で判定
+    if (vx > 650 || _dragOffset.dx > threshold) {
       // 右スワイプ確定
       _flyOut(Offset(screenWidth * 1.5, _dragOffset.dy), true);
-    } else if (_dragOffset.dx < -threshold) {
+    } else if (vx < -650 || _dragOffset.dx < -threshold) {
       // 左スワイプ確定
       _flyOut(Offset(-screenWidth * 1.5, _dragOffset.dy), false);
     } else {
-      // 元の位置へ戻る
+      // 元の位置へ戻る (バウンスバック)
       _swipeAnimation = Tween<Offset>(
         begin: _dragOffset,
         end: Offset.zero,
@@ -109,6 +136,7 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
           setState(() {
             _dragOffset = _swipeAnimation.value;
           });
+          _notifyProgress();
         });
       _swipeAnimController.forward(from: 0.0);
     }
@@ -125,6 +153,7 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
         setState(() {
           _dragOffset = _swipeAnimation.value;
         });
+        _notifyProgress();
       });
     _swipeAnimController.forward(from: 0.0).then((_) {
       widget.onSwiped(isRight);
@@ -134,10 +163,10 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final rotationAngle = (_dragOffset.dx / screenWidth) * 0.22;
+    final rotationAngle = (_dragOffset.dx / screenWidth) * 0.20;
 
     // スワイプスタンプの透明度
-    final swipeProgress = (_dragOffset.dx.abs() / (screenWidth * 0.25)).clamp(0.0, 1.0);
+    final swipeProgress = (_dragOffset.dx.abs() / (screenWidth * 0.22)).clamp(0.0, 1.0);
     final isSwipingRight = _dragOffset.dx > 0;
 
     return Center(
@@ -155,7 +184,7 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
               child: GestureDetector(
                 onPanUpdate: _onPanUpdate,
                 onPanEnd: _onPanEnd,
-                onTap: _toggleFlip,
+                onTap: toggleFlip,
                 child: AnimatedBuilder(
                   animation: _flipAnimation,
                   builder: (context, child) {
@@ -236,7 +265,7 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // 上部バー（品詞タグ & CEFR & 反転インジケータ）
+                // 上部バー（品詞タグ & CEFR）
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -518,7 +547,7 @@ class _SwipeableFlashcardState extends State<SwipeableFlashcard>
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      isSwipingRight ? '英 ➔ 和 で開始 👉' : '👈 和 ➔ 英 で開始',
+                      isSwipingRight ? '英 ➔ 和 で開始' : '和 ➔ 英 で開始',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,

@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:english_app/db/app_database.dart';
 import 'package:english_app/screens/flashcard_screen.dart';
@@ -62,7 +63,7 @@ void main() {
       expect(word.isRestricted, isFalse);
     });
 
-    testWidgets('FlashcardScreen renders 0th mode selector card and starts game on swipe', (tester) async {
+    testWidgets('FlashcardScreen renders 0th mode selector card, starts game on swipe, and supports keyboard', (tester) async {
       const dummyWord = Word(
         id: 1,
         english: 'apple',
@@ -104,6 +105,20 @@ void main() {
       // 第1問目のカード（英語: apple）が表示されていること
       expect(find.text('apple'), findsOneWidget);
       expect(find.text('出題モードを選択'), findsNothing);
+
+      // Spaceキーでカード反転（フリップ）
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+
+      // 裏面（日本語: りんご）が表示されていること
+      expect(find.text('りんご'), findsOneWidget);
+
+      // 右矢印キーで暗記完了スワイプ
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+
+      // 完了ダイアログが表示されること
+      expect(find.text('スワイプ学習完了！'), findsOneWidget);
     });
   });
 }
