@@ -151,23 +151,7 @@ class _WordCardTileState extends State<WordCardTile> {
           borderRadius: BorderRadius.circular(12),
           child: Stack(
             children: [
-              // 右端スワイプ示唆（暗記化エメラルド）
-              Positioned(
-                right: 0,
-                top: 0,
-                bottom: 0,
-                child: Center(
-                  child: Container(
-                    width: 3,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2E8B57).withAlpha(45),
-                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(2)),
-                    ),
-                  ),
-                ),
-              ),
-              // 左端スワイプ示唆（リセットオレンジ）
+              // 左端スワイプ示唆（右スワイプで暗記化: エメラルド）
               Positioned(
                 left: 0,
                 top: 0,
@@ -177,8 +161,24 @@ class _WordCardTileState extends State<WordCardTile> {
                     width: 3,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFED8936).withAlpha(45),
+                      color: const Color(0xFF2E8B57).withAlpha(45),
                       borderRadius: const BorderRadius.horizontal(right: Radius.circular(2)),
+                    ),
+                  ),
+                ),
+              ),
+              // 右端スワイプ示唆（左スワイプでリセット: オレンジ）
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Container(
+                    width: 3,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFED8936).withAlpha(45),
+                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(2)),
                     ),
                   ),
                 ),

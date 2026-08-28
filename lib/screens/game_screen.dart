@@ -145,8 +145,8 @@ class _GameScreenState extends State<GameScreen>
   List<WordModel> _currentWeaknessTargetWords = [];
   Set<int> favoriteWordIds = {};
 
-  // F-05: 1ゲーム1変動原則（セッション中に既にDB反映・ポイント評価を行った単語IDを記録）
-  final Set<int> _processedWordIds = {};
+  // F-05: 1ゲーム1変動原則（セッション中の回答結果を一時保持し、正常終了時のみ一括コミット）
+  final Map<int, PendingQuizResult> _pendingQuizResults = {};
   int _correctCount = 0;
   int _totalAnsweredCount = 0;
 
@@ -411,7 +411,7 @@ class _GameScreenState extends State<GameScreen>
       isLeftStarted = false;
       questionQueue = List.from(targetWords);
       mistakenWords.clear();
-      _processedWordIds.clear(); // F-05: 1ゲーム1変動フラグを初期化
+      _pendingQuizResults.clear(); // F-05: 1ゲーム1変動バッファを初期化
 
       leftWord = null;
       rightWord = null;
@@ -681,9 +681,8 @@ class _GameScreenState extends State<GameScreen>
     _recordMistake(targetWord);
     _sessionWordAttempts.putIfAbsent(targetWord.id, () => []).add(false);
 
-    if (!_processedWordIds.contains(targetWord.id)) {
-      _processedWordIds.add(targetWord.id);
-      widget.database.updateWordQuizResult(
+    if (!_pendingQuizResults.containsKey(targetWord.id)) {
+      _pendingQuizResults[targetWord.id] = PendingQuizResult(
         id: targetWord.id,
         dropProgress: 1.0,
         isCorrect: false,
@@ -776,10 +775,9 @@ class _GameScreenState extends State<GameScreen>
       controller.stop();
       _playSE(result['soundType'] as String);
 
-      // F-05: 1ゲーム1変動原則に基づき、初回回答時のみDBの定着度を更新
-      if (!_processedWordIds.contains(targetWord.id)) {
-        _processedWordIds.add(targetWord.id);
-        widget.database.updateWordQuizResult(
+      // F-05: 1ゲーム1変動原則に基づき、初回回答時のみバッファに結果を保持
+      if (!_pendingQuizResults.containsKey(targetWord.id)) {
+        _pendingQuizResults[targetWord.id] = PendingQuizResult(
           id: targetWord.id,
           dropProgress: progress,
           isCorrect: true,
@@ -842,10 +840,9 @@ class _GameScreenState extends State<GameScreen>
       _playSE(result['soundType'] as String);
       _recordMistake(targetWord);
 
-      // F-05: 1ゲーム1変動原則に基づき、初回回答時のみDBの定着度・制限フラグ等を更新
-      if (!_processedWordIds.contains(targetWord.id)) {
-        _processedWordIds.add(targetWord.id);
-        widget.database.updateWordQuizResult(
+      // F-05: 1ゲーム1変動原則に基づき、初回回答時のみバッファに結果を保持
+      if (!_pendingQuizResults.containsKey(targetWord.id)) {
+        _pendingQuizResults[targetWord.id] = PendingQuizResult(
           id: targetWord.id,
           dropProgress: progress,
           isCorrect: false,
@@ -925,10 +922,9 @@ class _GameScreenState extends State<GameScreen>
     _recordMistake(targetWord);
     _sessionWordAttempts.putIfAbsent(targetWord.id, () => []).add(false);
 
-    // F-05: タイムオーバー時も初回であれば誤答扱いとしてDB更新（制限フラグ付与等）
-    if (!_processedWordIds.contains(targetWord.id)) {
-      _processedWordIds.add(targetWord.id);
-      widget.database.updateWordQuizResult(
+    // F-05: タイムオーバー時も初回であれば誤答扱いとしてバッファに保持
+    if (!_pendingQuizResults.containsKey(targetWord.id)) {
+      _pendingQuizResults[targetWord.id] = PendingQuizResult(
         id: targetWord.id,
         dropProgress: 1.0,
         isCorrect: false,
@@ -1100,6 +1096,7 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _cancelGame() {
+    _pendingQuizResults.clear();
     _resetAndStopAll();
     widget.onGameStateChanged?.call(false);
     if (Navigator.canPop(context)) {
@@ -1127,11 +1124,14 @@ class _GameScreenState extends State<GameScreen>
     // 1.2秒間のタイムアップ待機（回答タップ連打によるリザルト画面ボタン誤タップを100%防止）
     await Future.delayed(const Duration(milliseconds: 1200));
 
-    // 2. DB処理（学習履歴保存、チャプター解放、スタンプ判定）
+    // 2. DB処理（正常終了時のみセッション回答を一括コミット、学習履歴保存、チャプター解放、スタンプ判定）
     try {
+      if (_pendingQuizResults.isNotEmpty) {
+        await widget.database.batchUpdateQuizResults(_pendingQuizResults.values.toList());
+      }
       await widget.database.addGameHistory(score, selectedLevel);
     } catch (e) {
-      debugPrint("addGameHistory error: $e");
+      debugPrint("Game completion data error: $e");
     }
 
     Map<String, dynamic>? unlockResult;

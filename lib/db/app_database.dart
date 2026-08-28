@@ -17,6 +17,19 @@ import 'connection/connection.dart' as impl;
 
 part 'app_database.g.dart';
 
+/// クイズセッション中の一時回答結果保持クラス (正常終了時のみ一括コミット)
+class PendingQuizResult {
+  final int id;
+  final double dropProgress;
+  final bool isCorrect;
+
+  const PendingQuizResult({
+    required this.id,
+    required this.dropProgress,
+    required this.isCorrect,
+  });
+}
+
 @DriftDatabase(tables: [Words, LearningHistory, DailyRecords, Stamps, ChapterProgresses, LearningLogs, WordSenses, UserWordProgresses])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(impl.connect());
@@ -647,6 +660,76 @@ class AppDatabase extends _$AppDatabase {
     if (!wasMemorized && isNowMemorized) {
       await incrementDailyMemorizedCount();
     }
+  }
+
+  /// クイズセッション正常終了時の一括更新 (F-05/F-10/F-15)
+  /// ゲームがタイムアップ等で正常に終了した時のみ、単一トランザクションでまとめてDBにコミットする
+  Future<void> batchUpdateQuizResults(List<PendingQuizResult> results) async {
+    if (results.isEmpty) return;
+
+    await transaction(() async {
+      int newlyMemorizedCount = 0;
+      final now = DateTime.now();
+
+      final ids = results.map((r) => r.id).toList();
+      final currentWords = await (select(words)..where((t) => t.id.isIn(ids))).get();
+      final wordMap = {for (var w in currentWords) w.id: w};
+
+      for (final res in results) {
+        final word = wordMap[res.id];
+        if (word == null) continue;
+
+        final eval = RetentionService.calculateScoreAndRetention(
+          dropProgress: res.dropProgress,
+          isCorrect: res.isCorrect,
+        );
+
+        final processed = RetentionService.processQuizResult(
+          currentPoint: word.retentionPoint,
+          delta: eval['retentionDelta'] as int,
+          isRestricted: word.isRestricted,
+          setDailyLimit: eval['setDailyLimit'] as bool,
+        );
+
+        final wasMemorized = word.isMemorized;
+        final isNowMemorized = processed['isMemorized'] as bool;
+
+        await (update(words)..where((t) => t.id.equals(res.id))).write(
+          WordsCompanion(
+            retentionPoint: Value(processed['retentionPoint'] as int),
+            pointDecreasedTotal: res.isCorrect
+                ? const Value(0)
+                : Value(word.pointDecreasedTotal),
+            isMemorized: Value(isNowMemorized),
+            isRestricted: Value(processed['isRestricted'] as bool),
+            correctCount: Value(
+              res.isCorrect ? word.correctCount + 1 : word.correctCount,
+            ),
+            wrongCount: Value(!res.isCorrect ? word.wrongCount + 1 : word.wrongCount),
+            lastStudiedAt: Value(now),
+            lastRestrictedDate: (eval['setDailyLimit'] as bool)
+                ? Value(now)
+                : Value(word.lastRestrictedDate),
+          ),
+        );
+
+        if (!wasMemorized && isNowMemorized) {
+          newlyMemorizedCount++;
+        }
+      }
+
+      if (newlyMemorizedCount > 0) {
+        final today = _getTodayStr();
+        final record = await getOrCreateTodayRecord();
+        await (update(dailyRecords)..where((t) => t.dateStr.equals(today))).write(
+          DailyRecordsCompanion(
+            memorizedCount: Value(record.memorizedCount + newlyMemorizedCount),
+          ),
+        );
+      }
+    });
+
+    notifyWordsChanged();
   }
 
   /// 手動チェック / 右スワイプ: 暗記済み(80pt)化 ＆ 制限解除 ＆ 減算リセット (F-08/F-10/F-14)
