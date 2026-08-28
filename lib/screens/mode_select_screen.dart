@@ -390,7 +390,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Text(
-                                    '解放条件: 80pt以上の単語が90%以上',
+                                    '解放条件: 70pt以上の単語が90%以上',
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
