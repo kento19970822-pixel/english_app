@@ -109,7 +109,8 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
 
       final shouldAutoSelect = !_hasInitializedSelection ||
           !preserveSelection ||
-          !cachedFiltered.any((cp) => cp.chapter == selectedChapter);
+          !cachedFiltered.any((cp) => cp.chapter == selectedChapter) ||
+          (cachedLatest > selectedChapter);
 
       setState(() {
         _currentLevelChapters = cachedFiltered;
@@ -144,7 +145,8 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
 
     final shouldAutoSelect = !_hasInitializedSelection ||
         !preserveSelection ||
-        !filtered.any((cp) => cp.chapter == selectedChapter);
+        !filtered.any((cp) => cp.chapter == selectedChapter) ||
+        (latestUnlocked > selectedChapter);
 
     setState(() {
       _favoriteStamp = favStamp;
@@ -200,7 +202,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
 
   /// 外部（タブ切り替えや単語帳更新時）から最新チャプター進行状況を再ロード
   void reloadChapters() {
-    _loadChaptersForLevel(selectedLevel, preserveSelection: true);
+    _loadChaptersForLevel(selectedLevel, preserveSelection: false);
   }
 
   CharacterGrowthState _getBuddyGrowthState() {
@@ -898,6 +900,9 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
         setState(() {
           selectedMode = modeKey;
         });
+        if (modeKey == 'learning') {
+          _scrollToSelectedChapter(animated: false);
+        }
       },
       pressedScale: 0.96,
       child: Container(
