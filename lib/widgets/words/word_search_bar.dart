@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 /// 単語帳上部 検索・フィルター・データ管理バー
-class WordSearchBar extends StatelessWidget {
+class WordSearchBar extends StatefulWidget {
   final TextEditingController searchController;
   final FocusNode searchFocusNode;
-  final ValueChanged<String> onChanged;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
   final VoidCallback onClear;
   final bool soundEnabled;
   final VoidCallback? onToggleSound;
@@ -24,7 +25,8 @@ class WordSearchBar extends StatelessWidget {
     super.key,
     required this.searchController,
     required this.searchFocusNode,
-    required this.onChanged,
+    this.onChanged,
+    this.onSubmitted,
     required this.onClear,
     this.soundEnabled = true,
     this.onToggleSound,
@@ -42,37 +44,65 @@ class WordSearchBar extends StatelessWidget {
   });
 
   @override
+  State<WordSearchBar> createState() => _WordSearchBarState();
+}
+
+class _WordSearchBarState extends State<WordSearchBar> {
+  @override
+  void initState() {
+    super.initState();
+    widget.searchController.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.searchController.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      color: bgColor,
+      color: widget.bgColor,
       padding: const EdgeInsets.fromLTRB(14.0, 7.0, 10.0, 5.0),
       child: Row(
         children: [
-          // 検索フィールド（幅広拡大）
+          // 検索フィールド
           Expanded(
             child: Container(
               height: 38,
               decoration: BoxDecoration(
-                color: surfaceColor,
+                color: widget.surfaceColor,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: borderColor),
+                border: Border.all(color: widget.borderColor),
               ),
               child: TextField(
-                controller: searchController,
-                focusNode: searchFocusNode,
+                controller: widget.searchController,
+                focusNode: widget.searchFocusNode,
                 textInputAction: TextInputAction.search,
                 textAlignVertical: TextAlignVertical.center,
-                style: TextStyle(fontSize: 13.5, color: textColor),
+                style: TextStyle(fontSize: 13.5, color: widget.textColor),
                 decoration: InputDecoration(
                   isDense: true,
-                  hintText: '英単語または和訳で検索...',
-                  hintStyle: TextStyle(color: textSecondaryColor, fontSize: 13.0),
-                  prefixIcon: Icon(Icons.search_rounded, size: 19, color: textSecondaryColor),
+                  hintText: '英単語または和訳で検索 (Enterで実行)...',
+                  hintStyle: TextStyle(color: widget.textSecondaryColor, fontSize: 12.5),
+                  prefixIcon: IconButton(
+                    icon: Icon(Icons.search_rounded, size: 19, color: widget.textSecondaryColor),
+                    onPressed: () {
+                      widget.onSubmitted?.call(widget.searchController.text.trim());
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 34, minHeight: 38),
+                  ),
                   prefixIconConstraints: const BoxConstraints(minWidth: 34, minHeight: 38),
-                  suffixIcon: searchController.text.isNotEmpty
+                  suffixIcon: widget.searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: Icon(Icons.clear_rounded, size: 17, color: textSecondaryColor),
-                          onPressed: onClear,
+                          icon: Icon(Icons.clear_rounded, size: 17, color: widget.textSecondaryColor),
+                          onPressed: widget.onClear,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                         )
@@ -80,7 +110,10 @@ class WordSearchBar extends StatelessWidget {
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
                 ),
-                onChanged: onChanged,
+                onChanged: widget.onChanged,
+                onSubmitted: (val) {
+                  widget.onSubmitted?.call(val.trim());
+                },
               ),
             ),
           ),
@@ -92,118 +125,97 @@ class WordSearchBar extends StatelessWidget {
             children: [
               IconButton(
                 icon: Icon(
-                  activeFilterCount > 0 ? Icons.filter_alt_rounded : Icons.tune_rounded,
-                  color: activeFilterCount > 0 ? primaryColor : textSecondaryColor,
+                  widget.activeFilterCount > 0 ? Icons.filter_alt_rounded : Icons.tune_rounded,
+                  color: widget.activeFilterCount > 0 ? widget.primaryColor : widget.textSecondaryColor,
                   size: 21,
                 ),
                 tooltip: '絞り込みフィルター',
-                onPressed: onOpenFilter,
+                onPressed: widget.onOpenFilter,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 36),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
               ),
-              if (activeFilterCount > 0)
+              if (widget.activeFilterCount > 0)
                 Positioned(
-                  right: 1,
                   top: 2,
+                  right: 2,
                   child: Container(
                     padding: const EdgeInsets.all(3.5),
                     decoration: BoxDecoration(
-                      color: primaryColor,
+                      color: widget.primaryColor,
                       shape: BoxShape.circle,
                     ),
-                    constraints: const BoxConstraints(minWidth: 15, minHeight: 15),
                     child: Text(
-                      '$activeFilterCount',
+                      '${widget.activeFilterCount}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 9.0,
+                        fontSize: 9,
                         fontWeight: FontWeight.bold,
+                        height: 1.0,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),
             ],
           ),
 
-          // データ管理ポップアップメニュー（スリム・右寄せ）
+          // データ管理ポップアップメニュー (3点ドット)
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert_rounded, color: textSecondaryColor, size: 21),
+            icon: Icon(Icons.more_vert_rounded, size: 20, color: widget.textSecondaryColor),
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 36),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 36),
+            tooltip: 'データ管理・設定',
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             onSelected: (value) async {
               if (value == 'sync_flags') {
-                await onSyncFlags();
-              } else if (value == 'reset_words') {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('単語DBの再構築'),
-                    content: const Text('assets/words.csv から全単語データを再取り込みします。\n学習進捗（定着度など）は維持されます。実行しますか？'),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('キャンセル')),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-                        child: const Text('再構築する', style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
-                  ),
+                await widget.onSyncFlags();
+              } else if (value == 'rebuild_db') {
+                await _showConfirmDialog(
+                  context,
+                  title: '単語データベース再構築',
+                  message: '全単語データをアセットから再インポートします。暗記ポイントやステータスは可能な限り保持されます。実行しますか？',
+                  onConfirm: widget.onResetWordsDb,
                 );
-                if (confirm == true) {
-                  await onResetWordsDb();
-                }
               } else if (value == 'reset_learning') {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('学習データのリセット', style: TextStyle(color: Colors.red)),
-                    content: const Text('すべての単語の定着度、覚えたフラグ、日別記録、スタンプ獲得状況が初期化されます。\nこの操作は取り消せません。本当によろしいですか？'),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('キャンセル')),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                        child: const Text('初期化する', style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
-                  ),
+                await _showConfirmDialog(
+                  context,
+                  title: '学習データ初期化',
+                  message: 'すべての単語の暗記ポイント、学習ログ、ステータスを初期状態にリセットします。この操作は取り消せません。実行しますか？',
+                  isDestructive: true,
+                  onConfirm: widget.onResetLearningData,
                 );
-                if (confirm == true) {
-                  await onResetLearningData();
-                }
               }
             },
-            itemBuilder: (ctx) => [
-              const PopupMenuItem(
+            itemBuilder: (context) => [
+              PopupMenuItem(
                 value: 'sync_flags',
                 child: Row(
                   children: [
-                    Icon(Icons.published_with_changes_rounded, size: 18, color: Color(0xFF2E8B57)),
-                    SizedBox(width: 8),
-                    Text('暗記フラグ再同期 (80pt未満解除)', style: TextStyle(fontSize: 13)),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'reset_words',
-                child: Row(
-                  children: [
-                    Icon(Icons.sync_rounded, size: 18, color: Color(0xFFD97736)),
-                    SizedBox(width: 8),
-                    Text('最新データでDBを再構築', style: TextStyle(fontSize: 13)),
+                    Icon(Icons.sync_rounded, size: 18, color: widget.primaryColor),
+                    const SizedBox(width: 8),
+                    const Text('80pt以上の単語を暗記済みに同期', style: TextStyle(fontSize: 13)),
                   ],
                 ),
               ),
               const PopupMenuDivider(),
               const PopupMenuItem(
+                value: 'rebuild_db',
+                child: Row(
+                  children: [
+                    Icon(Icons.refresh_rounded, size: 18, color: Colors.blueGrey),
+                    SizedBox(width: 8),
+                    Text('単語DBをアセットから再構築', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
                 value: 'reset_learning',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_forever_rounded, size: 18, color: Colors.red),
+                    Icon(Icons.delete_forever_rounded, size: 18, color: Colors.redAccent),
                     SizedBox(width: 8),
-                    Text('学習進捗を初期化', style: TextStyle(fontSize: 13, color: Colors.red)),
+                    Text('学習進捗を完全リセット', style: TextStyle(fontSize: 13, color: Colors.redAccent)),
                   ],
                 ),
               ),
@@ -212,5 +224,41 @@ class WordSearchBar extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showConfirmDialog(
+    BuildContext context, {
+    required String title,
+    required String message,
+    bool isDestructive = false,
+    required Future<void> Function() onConfirm,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        content: Text(message, style: const TextStyle(fontSize: 13.5, height: 1.4)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('キャンセル', style: TextStyle(color: widget.textSecondaryColor)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDestructive ? Colors.redAccent : widget.primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('実行する', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await onConfirm();
+    }
   }
 }

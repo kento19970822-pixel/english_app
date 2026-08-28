@@ -693,7 +693,7 @@ class WordsScreenState extends State<WordsScreen> {
                               WordSearchBar(
                                 searchController: _searchController,
                                 searchFocusNode: _searchFocusNode,
-                                onChanged: (val) {
+                                onSubmitted: (val) {
                                   setState(() => _searchQuery = val.trim());
                                   _onFilterChanged(resetScroll: true);
                                 },

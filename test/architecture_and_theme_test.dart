@@ -120,7 +120,7 @@ void main() {
             body: WordSearchBar(
               searchController: controller,
               searchFocusNode: focusNode,
-              onChanged: (_) {},
+              onSubmitted: (_) {},
               onClear: () {},
               soundEnabled: true,
               onToggleSound: () {},

@@ -93,7 +93,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
     _loadChaptersForLevel(selectedLevel, preserveSelection: true);
   }
 
-  /// 選択中のレベルに対応するチャプター進行状況を取得し、最新解放チャプターを初期選択（非同期競合防止）
+  /// 選択中のレベルに対応するチャプター進行状況を取得し、最新解放チャプターを初期選択＆最上部スクロール
   Future<void> _loadChaptersForLevel(int level, {bool preserveSelection = false}) async {
     final requestId = ++_chapterLoadRequestId;
 
@@ -111,6 +111,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
           selectedChapter = cachedLatest;
         }
       });
+      _scrollToSelectedChapter(animated: false);
     } else {
       setState(() => _isLoadingChapters = true);
     }
@@ -146,6 +147,45 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
         selectedChapter = latestUnlocked;
       }
       _isLoadingChapters = false;
+    });
+
+    _scrollToSelectedChapter(animated: true);
+  }
+
+  /// 選択中のチャプターがチャプター一覧の一番上に表示されるように自動スクロール
+  void _scrollToSelectedChapter({bool animated = true}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      final targetIndex = _currentLevelChapters.indexWhere((cp) => cp.chapter == selectedChapter);
+      if (targetIndex <= 0) {
+        if (animated) {
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+          );
+        } else {
+          _scrollController.jumpTo(0);
+        }
+        return;
+      }
+
+      // チャプターアイテムの高さ(約48px) + 間隔(6px) = 54px
+      // 選択したチャプターがチャプター一覧の最上部に来るスクロール位置を計算
+      const itemHeight = 54.0;
+      final targetOffset = targetIndex * itemHeight;
+      final maxOffset = _scrollController.position.maxScrollExtent;
+      final clampedOffset = targetOffset.clamp(0.0, maxOffset);
+
+      if (animated) {
+        _scrollController.animateTo(
+          clampedOffset,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        _scrollController.jumpTo(clampedOffset);
+      }
     });
   }
 
