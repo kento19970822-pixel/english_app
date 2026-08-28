@@ -62,7 +62,7 @@ void main() {
       expect(word.isRestricted, isFalse);
     });
 
-    testWidgets('FlashcardScreen renders card and toggles en/ja mode', (tester) async {
+    testWidgets('FlashcardScreen renders 0th mode selector card and starts game on swipe', (tester) async {
       const dummyWord = Word(
         id: 1,
         english: 'apple',
@@ -93,16 +93,17 @@ void main() {
         ),
       );
 
-      // 画面初期状態 (英➔和モード: 英語が表示されている)
-      expect(find.text('apple'), findsOneWidget);
-      expect(find.text('Ch.1 特訓 (1語)'), findsOneWidget);
+      // 0枚目: モード選択カードが表示されていること
+      expect(find.text('出題モードを選択'), findsOneWidget);
+      expect(find.text('スワイプしてスタート！'), findsOneWidget);
 
-      // モード切り替えボタンをタップ (和➔英モード)
-      await tester.tap(find.text('英 ➔ 和'));
+      // 0枚目のカードを右へスワイプ（英➔和モードで開始）
+      await tester.drag(find.text('スワイプしてスタート！'), const Offset(300, 0));
       await tester.pumpAndSettle();
 
-      expect(find.text('和 ➔ 英'), findsOneWidget);
-      expect(find.text('りんご'), findsOneWidget);
+      // 第1問目のカード（英語: apple）が表示されていること
+      expect(find.text('apple'), findsOneWidget);
+      expect(find.text('出題モードを選択'), findsNothing);
     });
   });
 }

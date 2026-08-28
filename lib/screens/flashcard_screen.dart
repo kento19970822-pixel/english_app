@@ -26,6 +26,7 @@ class FlashcardScreen extends StatefulWidget {
 class _FlashcardScreenState extends State<FlashcardScreen> {
   late List<Word> _remainingWords;
   final List<PreviousCardResult> _historyStack = [];
+  bool _isSelectingMode = true; // 0枚目（モード選択カード）表示中フラグ
   bool _isEnToJa = true; // true: 英➔和, false: 和➔英
 
   int _totalCount = 0;
@@ -38,27 +39,27 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     super.initState();
     _remainingWords = List.from(widget.words);
     _totalCount = widget.words.length;
-
-    // 画面表示直後に第1問目の英語音声を自動再生
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _playCurrentWordTts();
-    });
   }
 
   void _playCurrentWordTts() {
-    if (_remainingWords.isNotEmpty) {
+    // 和➔英モードの時は日本語を見て英語を思い出すため、出題時の自動音声は再生しない（ネタバレ防止）
+    if (!_isSelectingMode && _isEnToJa && _remainingWords.isNotEmpty) {
       TtsService.instance.speak(_remainingWords.first.english);
     }
   }
 
-  void _toggleMode() {
-    HapticFeedback.selectionClick();
-    setState(() {
-      _isEnToJa = !_isEnToJa;
-    });
-  }
-
   Future<void> _handleSwiped(bool isRight) async {
+    if (_isSelectingMode) {
+      // 0枚目: モード選択スワイプ (右: 英➔和, 左: 和➔英)
+      HapticFeedback.mediumImpact();
+      setState(() {
+        _isEnToJa = isRight;
+        _isSelectingMode = false;
+      });
+      _playCurrentWordTts();
+      return;
+    }
+
     if (_remainingWords.isEmpty) return;
 
     final currentWord = _remainingWords.removeAt(0);
@@ -91,13 +92,12 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       _showCompletionDialog();
     } else {
       setState(() {});
-      // 次の単語の音声を自動再生
       _playCurrentWordTts();
     }
   }
 
   Future<void> _handleUndo() async {
-    if (_historyStack.isEmpty) return;
+    if (_isSelectingMode || _historyStack.isEmpty) return;
     HapticFeedback.mediumImpact();
 
     final lastItem = _historyStack.removeLast();
@@ -202,9 +202,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                       _historyStack.clear();
                       _memorizedCount = 0;
                       _reviewCount = 0;
+                      _isSelectingMode = true;
                       _isSessionFinished = false;
                     });
-                    _playCurrentWordTts();
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF5F9E98),
@@ -241,7 +241,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   @override
   Widget build(BuildContext context) {
     final currentIndex = _totalCount - _remainingWords.length;
-    final progressText = '$currentIndex / $_totalCount 語';
+    final progressText = _isSelectingMode ? 'モード選択' : '$currentIndex / $_totalCount 語';
     final lastResult = _historyStack.isNotEmpty ? _historyStack.last : null;
 
     return Scaffold(
@@ -249,24 +249,22 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.lightBg,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded, color: AppTheme.lightTextPrimary, size: 24),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false, // 左上の戻るボタンは削除（下部の片手操作ボタンへ集約）
         title: Column(
           children: [
             Text(
               widget.title,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.lightTextPrimary,
               ),
             ),
+            const SizedBox(height: 2),
             Text(
               progressText,
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 11.5,
                 color: AppTheme.lightTextSecondary,
                 fontWeight: FontWeight.w600,
               ),
@@ -274,64 +272,43 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
           ],
         ),
         centerTitle: true,
-        actions: [
-          // 英➔和 / 和➔英 切替ボタン
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            child: BouncyScaleTap(
-              onTap: _toggleMode,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF5F9E98).withAlpha(30),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF5F9E98).withAlpha(75)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.swap_horiz_rounded, size: 16, color: Color(0xFF5F9E98)),
-                    const SizedBox(width: 4),
-                    Text(
-                      _isEnToJa ? '英 ➔ 和' : '和 ➔ 英',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF5F9E98),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // 直前カード答え合わせ HUD
-            AnswersHud(
-              lastResult: lastResult,
-              onUndo: _handleUndo,
-              canUndo: _historyStack.isNotEmpty,
-            ),
+            // 直前カード答え合わせ HUD（1問目以降に表示）
+            if (!_isSelectingMode)
+              AnswersHud(
+                lastResult: lastResult,
+              )
+            else
+              const SizedBox(height: 48),
 
             const Spacer(),
 
             // カードスタックエリア
-            if (_remainingWords.isNotEmpty)
+            if (_isSelectingMode)
+              // 0枚目: モード選択カード
+              SwipeableFlashcard(
+                key: const ValueKey('mode_selector_card'),
+                isModeSelector: true,
+                isEnToJa: true,
+                isFront: true,
+                onSwiped: _handleSwiped,
+                onSpeak: () {},
+              )
+            else if (_remainingWords.isNotEmpty)
               Stack(
                 alignment: Alignment.center,
                 children: [
                   // 背後のカード（次問）
                   if (_remainingWords.length > 1)
                     Transform.translate(
-                      offset: const Offset(0, 14),
+                      offset: const Offset(0, 10),
                       child: Transform.scale(
                         scale: 0.94,
                         child: Opacity(
-                          opacity: 0.7,
+                          opacity: 0.65,
                           child: SwipeableFlashcard(
                             key: ValueKey('back_${_remainingWords[1].id}'),
                             word: _remainingWords[1],
@@ -364,48 +341,107 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
             const Spacer(),
 
-            // 下部ナビゲーションヒントバー
+            // 下部集中コントロールバー (片手操作に最適化)
             Padding(
-              padding: const EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // 左スワイプボタン（タップでも操作可能）
+                  // 1. 左下: 終了（✕）ボタン
                   BouncyScaleTap(
-                    onTap: () => _handleSwiped(false),
+                    onTap: () => Navigator.pop(context),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF3E0),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFED8936).withAlpha(100)),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.arrow_back_rounded, size: 16, color: Color(0xFFED8936)),
-                          SizedBox(width: 6),
-                          Text('要復習', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFED8936))),
+                        color: AppTheme.lightCard,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppTheme.lightBorder),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0A000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
                         ],
                       ),
+                      child: const Icon(Icons.close_rounded, size: 20, color: AppTheme.lightTextPrimary),
                     ),
                   ),
-                  const SizedBox(width: 24),
-                  // 右スワイプボタン（タップでも操作可能）
-                  BouncyScaleTap(
-                    onTap: () => _handleSwiped(true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE8F5E9),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFF2E8B57).withAlpha(100)),
+
+                  // 2. 中央アクションボタン群
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 左スワイプボタン
+                      BouncyScaleTap(
+                        onTap: () => _handleSwiped(false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFED8936).withAlpha(100)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.arrow_back_rounded, size: 15, color: Color(0xFFED8936)),
+                              const SizedBox(width: 4),
+                              Text(
+                                _isSelectingMode ? '和 ➔ 英' : '要復習',
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFFED8936)),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      child: const Row(
-                        children: [
-                          Text('暗記完了', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF2E8B57))),
-                          SizedBox(width: 6),
-                          Icon(Icons.arrow_forward_rounded, size: 16, color: Color(0xFF2E8B57)),
-                        ],
+                      const SizedBox(width: 12),
+                      // 右スワイプボタン
+                      BouncyScaleTap(
+                        onTap: () => _handleSwiped(true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F5E9),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFF2E8B57).withAlpha(100)),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                _isSelectingMode ? '英 ➔ 和' : '暗記完了',
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Color(0xFF2E8B57)),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.arrow_forward_rounded, size: 15, color: Color(0xFF2E8B57)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // 3. 右下: 戻す (Undo) ボタン
+                  BouncyScaleTap(
+                    onTap: (_historyStack.isNotEmpty && !_isSelectingMode) ? _handleUndo : () {},
+                    child: Opacity(
+                      opacity: (_historyStack.isNotEmpty && !_isSelectingMode) ? 1.0 : 0.35,
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppTheme.lightCard,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppTheme.lightBorder),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x0A000000),
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.undo_rounded, size: 20, color: AppTheme.lightTextPrimary),
                       ),
                     ),
                   ),
