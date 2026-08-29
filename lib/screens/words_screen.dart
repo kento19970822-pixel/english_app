@@ -181,7 +181,7 @@ class WordsScreenState extends State<WordsScreen> {
 
   /// 次のセクションへジャンプ (ズレ 0px)
   void _scrollToNextSection() {
-    if (!_scrollController.hasClients || _sections.isEmpty) return;
+    if (!_scrollController.hasClients || _sections.length <= 1) return;
 
     final currentOffset = _scrollController.offset;
     final offsets = _calculateSectionOffsets();
@@ -189,11 +189,14 @@ class WordsScreenState extends State<WordsScreen> {
 
     double targetOffset;
     if (currentIndex < 0) {
-      targetOffset = offsets.first; // Section 0 の吸着位置へ
+      // 画面最上部（Section 0 表示中）から押された場合は、直ちに Section 1（次のセクション）へジャンプ
+      targetOffset = offsets.length > 1 ? offsets[1] : offsets[0];
     } else if (currentIndex < offsets.length - 1) {
+      // Section N -> Section N + 1 への順次ジャンプ
       targetOffset = offsets[currentIndex + 1];
     } else {
-      targetOffset = 0.0; // 末尾の場合は先頭へループ
+      // 末尾セクション到達時は画面最上部へループ
+      targetOffset = 0.0;
     }
 
     final maxExtent = _scrollController.position.maxScrollExtent;

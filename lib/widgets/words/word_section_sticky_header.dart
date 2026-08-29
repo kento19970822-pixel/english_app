@@ -41,7 +41,7 @@ class WordSectionStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
     } else if (sortMode == 'az') {
       title = section.title;
       icon = Icons.sort_by_alpha_rounded;
-    } else if (sortMode == 'cat') {
+    } else if (sortMode == 'category' || sortMode == 'cat') {
       title = section.title;
       icon = Icons.category_rounded;
     }
