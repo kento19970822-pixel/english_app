@@ -347,7 +347,7 @@ class _WordFilterBottomSheetState extends State<WordFilterBottomSheet> {
                               ? _selectedChapter
                               : 'ALL',
                           isExpanded: true,
-                          menuMaxHeight: 220.0,
+                          menuMaxHeight: 384.0, // 8行分の高さ（48px * 8 = 384px）で画面中央やや下に快適表示
                           borderRadius: BorderRadius.circular(12),
                           dropdownColor: Colors.white,
                           style: const TextStyle(fontSize: 14, color: _textPrimary, fontWeight: FontWeight.bold),
