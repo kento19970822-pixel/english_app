@@ -215,10 +215,8 @@ class _WordFilterBottomSheetState extends State<WordFilterBottomSheet> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-
-            // ヘッダー（小画面でもオーバーフローしないレスポンシブRow）
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
               child: Row(
                 children: [
                   const Expanded(
@@ -241,23 +239,26 @@ class _WordFilterBottomSheetState extends State<WordFilterBottomSheet> {
                     ),
                     icon: const Icon(Icons.restart_alt_rounded, size: 16, color: _textSecondary),
                     label: const Text(
-                      'すべてリセット',
+                      'リセット',
                       style: TextStyle(fontSize: 12.5, color: _textSecondary),
                     ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 22, color: _textSecondary),
+                    tooltip: '閉じる',
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
             ),
             const Divider(height: 1, color: _borderColor),
 
-            // フィルター設定スクロールエリア
             Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. ステータス絞り込み（未暗記・お気に入り）
                     const Text(
                       '学習ステータス',
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textPrimary),
@@ -273,7 +274,7 @@ class _WordFilterBottomSheetState extends State<WordFilterBottomSheet> {
                             onTap: () => setState(() => _filterUnlearned = !_filterUnlearned),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: _buildFilterChip(
                             label: 'お気に入り',
@@ -286,9 +287,8 @@ class _WordFilterBottomSheetState extends State<WordFilterBottomSheet> {
                     ),
                     const SizedBox(height: 20),
 
-                    // 2. CEFR 難易度レベル
                     const Text(
-                      'CEFR 難易度レベル',
+                      'CEFRレベル指定',
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textPrimary),
                     ),
                     const SizedBox(height: 8),
@@ -312,10 +312,26 @@ class _WordFilterBottomSheetState extends State<WordFilterBottomSheet> {
                     ),
                     const SizedBox(height: 20),
 
-                    // 3. チャプター指定
-                    const Text(
-                      'チャプター指定',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textPrimary),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'チャプター指定',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textPrimary),
+                        ),
+                        if (_selectedChapter != 'ALL')
+                          InkWell(
+                            onTap: () => setState(() => _selectedChapter = 'ALL'),
+                            borderRadius: BorderRadius.circular(4),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              child: Text(
+                                '全章に戻す',
+                                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: _primaryAccent),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Container(
@@ -331,6 +347,9 @@ class _WordFilterBottomSheetState extends State<WordFilterBottomSheet> {
                               ? _selectedChapter
                               : 'ALL',
                           isExpanded: true,
+                          menuMaxHeight: 220.0,
+                          borderRadius: BorderRadius.circular(12),
+                          dropdownColor: Colors.white,
                           style: const TextStyle(fontSize: 14, color: _textPrimary, fontWeight: FontWeight.bold),
                           items: [
                             const DropdownMenuItem(value: 'ALL', child: Text('すべてのチャプター')),
@@ -349,7 +368,6 @@ class _WordFilterBottomSheetState extends State<WordFilterBottomSheet> {
                     ),
                     const SizedBox(height: 20),
 
-                    // 4. 頭文字 (A-Z) 指定
                     const Text(
                       '頭文字 (A-Z) 指定',
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textPrimary),

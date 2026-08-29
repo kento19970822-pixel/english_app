@@ -666,23 +666,24 @@ class _PixelCharacterPainter48 extends CustomPainter {
   }
 
   Color _getStampMainColor(Stamp stamp) {
+    // PixelStampWidget の _StampPalette 配色テーブルと 100% 同期
     switch (stamp.colorPaletteId % 16) {
-      case 0: return const Color(0xFF5F9E98); // エメラルド
-      case 1: return const Color(0xFFE58A9E); // サクラピンク
-      case 2: return const Color(0xFFECA882); // アンバーオレンジ
-      case 3: return const Color(0xFF5B92E5); // オーシャンスカイ
-      case 4: return const Color(0xFF9C27B0); // アメジスト
-      case 5: return const Color(0xFFE91E63); // ルビーレッド
-      case 6: return const Color(0xFF4CAF50); // フォレストグリーン
-      case 7: return const Color(0xFFFFB300); // サニーレモン
-      case 8: return const Color(0xFF00BCD4); // ターコイズ
-      case 9: return const Color(0xFF3F51B5); // ラピスラズリ
-      case 10: return const Color(0xFF795548); // チョコブラウン
-      case 11: return const Color(0xFF607D8B); // スレートグレー
-      case 12: return const Color(0xFFFF5722); // フレイムバーミリオン
-      case 13: return const Color(0xFF8BC34A); // ライムグリーン
-      case 14: return const Color(0xFF673AB7); // ロイヤルパープル
-      case 15: return const Color(0xFFFF9800); // ディープオレンジ
+      case 0: return const Color(0xFF5F9E98); // エメラルド・ミント (緑)
+      case 1: return const Color(0xFFE58A9E); // サクラ・ピンク (桃)
+      case 2: return const Color(0xFFECA882); // アンバー・オレンジ (橙)
+      case 3: return const Color(0xFF5B92E5); // オーシャン・スカイ (青)
+      case 4: return const Color(0xFF9A82D4); // ラベンダー・ドリーム (紫)
+      case 5: return const Color(0xFF6AA866); // フォレスト・ハーブ (緑)
+      case 6: return const Color(0xFF9C7A5E); // カフェ・モカ (茶)
+      case 7: return const Color(0xFFD8A82A); // サニー・レモン (黄)
+      case 8: return const Color(0xFF8A4BAA); // ベリー・バイオレット (紫)
+      case 9: return const Color(0xFF3252A8); // ロイヤル・サファイア (青)
+      case 10: return const Color(0xFFB83248); // クリムゾン・ルビー (赤)
+      case 11: return const Color(0xFFC49226); // ゴールデン・ヴィンテージ (金)
+      case 12: return const Color(0xFF6A38B8); // ホログラフィック・プリズム (紫)
+      case 13: return const Color(0xFFD4AF37); // マジェスティック・ゴールド (金)
+      case 14: return const Color(0xFF7A8B99); // スターライト・プラチナ (銀)
+      case 15: return const Color(0xFF2A2E3D); // コズミック・ブラック (黒)
       default: return const Color(0xFF5F9E98);
     }
   }
