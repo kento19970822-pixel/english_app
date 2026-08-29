@@ -98,12 +98,12 @@ void main() {
     });
 
     test('stateFromRate maps 0% and locked state to locked silhouette', () {
-      // 未解放 または 暗記率0%は必ず locked（完全黒シルエット）
+      // 未解放チャプターは必ず locked（完全黒シルエット）
       expect(PixelCharacterWidget.stateFromRate(0.0, false), CharacterGrowthState.locked);
       expect(PixelCharacterWidget.stateFromRate(85.0, false), CharacterGrowthState.locked);
-      expect(PixelCharacterWidget.stateFromRate(0.0, true), CharacterGrowthState.locked);
 
-      // 1〜49%（学習開始後）は必ず lowHealth（元気がない）
+      // 解放済みチャプターは、忘却曲線減算や0%でも locked に戻らず lowHealth（元気がない基本形）を維持 (F-13)
+      expect(PixelCharacterWidget.stateFromRate(0.0, true), CharacterGrowthState.lowHealth);
       expect(PixelCharacterWidget.stateFromRate(1.0, true), CharacterGrowthState.lowHealth);
       expect(PixelCharacterWidget.stateFromRate(35.0, true), CharacterGrowthState.lowHealth);
       expect(PixelCharacterWidget.stateFromRate(49.9, true), CharacterGrowthState.lowHealth);

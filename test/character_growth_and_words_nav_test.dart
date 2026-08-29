@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:english_app/db/app_database.dart';
 import 'package:english_app/widgets/pixel_character_widget.dart';
 import 'package:drift/native.dart';
@@ -60,10 +60,10 @@ void main() {
       final unlockRate = await db.calculateChapterUnlockRate(1);
       expect(unlockRate, equals(100.0));
 
-      // キャラクター成長状態: 80pt以上の単語が0%のため、絶対に進化(evolved)せず locked
+      // キャラクター成長状態: 80pt以上の単語が0%のため、絶対に進化(evolved)せず 解放済みの基本形(lowHealth)
       final characterState = PixelCharacterWidget.stateFromRate(memorizedRate, true);
       expect(characterState, isNot(equals(CharacterGrowthState.evolved)));
-      expect(characterState, equals(CharacterGrowthState.locked));
+      expect(characterState, equals(CharacterGrowthState.lowHealth));
 
       // 次章解放判定: 70pt以上が100%（>=90%）なのでクリア・次章解放される
       final unlockResult = await db.checkAndUnlockNextChapter(1);

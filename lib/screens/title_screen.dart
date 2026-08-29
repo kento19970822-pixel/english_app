@@ -130,9 +130,11 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
                     children: [
                       const Spacer(flex: 1),
 
-                      // 1. タイトルロゴ（プロシージャル・ドット風フレーム）
+                      // 1. タイトルロゴ（プロシージャル・ドット風フレーム & 完全中央揃え）
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        width: double.infinity,
+                        constraints: const BoxConstraints(maxWidth: 380),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
                           color: _cardColor,
                           borderRadius: BorderRadius.circular(20),
@@ -146,40 +148,58 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
                           ],
                         ),
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.auto_awesome_rounded, color: _secondaryAccent, size: 22),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'ENGLISH QUEST',
-                                  style: TextStyle(
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 2.0,
-                                    color: _primaryAccent,
-                                    shadows: [
-                                      Shadow(
-                                        color: _primaryAccent.withAlpha(50),
-                                        offset: const Offset(1, 2),
-                                        blurRadius: 2,
-                                      ),
-                                    ],
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.auto_awesome_rounded, color: _secondaryAccent, size: 22),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'ENGLISH QUEST',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.5,
+                                      color: _primaryAccent,
+                                      shadows: [
+                                        Shadow(
+                                          color: _primaryAccent.withAlpha(50),
+                                          offset: const Offset(1, 2),
+                                          blurRadius: 2,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(Icons.auto_awesome_rounded, color: _secondaryAccent, size: 22),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Icon(Icons.auto_awesome_rounded, color: _secondaryAccent, size: 22),
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             Text(
-                              '落下パズル × 忘却曲線 英単語ゲーム',
+                              '脳に刻む、爽快スピード暗記。',
+                              textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 12.5,
                                 fontWeight: FontWeight.bold,
                                 color: _textSecondary,
                                 letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Smart Recall Fall Game',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: _primaryAccent.withAlpha(180),
+                                letterSpacing: 0.8,
                               ),
                             ),
                           ],

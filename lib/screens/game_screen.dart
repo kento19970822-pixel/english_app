@@ -111,6 +111,9 @@ class GameScreen extends StatefulWidget {
     this.autoStart = true,
   });
 
+  @visibleForTesting
+  static bool testIsSynonymOrSimilar(String a, String b) => _GameScreenState._isSynonymOrSimilar(a, b);
+
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
@@ -538,6 +541,72 @@ class _GameScreenState extends State<GameScreen>
     return 'noun';
   }
 
+  /// 2つの日本語選択肢が同義・類義語または紛らわしい語幹重複であるかを判定 (F-02: 同義語重複の完全排除)
+  static bool _isSynonymOrSimilar(String a, String b) {
+    if (a == b) return true;
+    final normA = a.trim();
+    final normB = b.trim();
+    if (normA.isEmpty || normB.isEmpty) return true;
+
+    // 1. 部分一致・包含チェック（2文字以上の完全包含）
+    if (normA.length >= 2 && normB.length >= 2) {
+      if (normA.contains(normB) || normB.contains(normA)) return true;
+    }
+
+    // 2. 代表的な同義・類義語クラスタ
+    const synonymClusters = [
+      // 感情・嗜好
+      {'好き', '好む', '好んでいる', '愛する', 'お気に入り', '好意'},
+      {'嫌い', '嫌う', '憎む', '嫌悪'},
+      // サイズ・量（大小）
+      {'大きい', '巨大な', '大きな', '莫大な', '広大な'},
+      {'小さい', 'わずかな', '微小な', '小さな', '少しの'},
+      {'多い', 'たくさんの', '多数の', '豊富な'},
+      {'少ない', 'わずかの', '不足した'},
+      // 発言・伝達
+      {'話す', '言う', '語る', '述べる', '伝える', '発言する'},
+      // 視覚・認識
+      {'見る', '眺める', '観る', '見つめる', '観察する'},
+      {'聞く', '聴く', '耳を傾ける'},
+      // 開始・終了
+      {'始める', '開始する', '起こす', '着手する'},
+      {'終わる', '終える', '終了する', '完了する'},
+      // 速度・難易度・状態
+      {'速い', '素早い', '急速な', 'スピーディーな'},
+      {'遅い', '鈍い', '緩やかな'},
+      {'難しい', '困難な', '大変な', '厳しい'},
+      {'簡単な', '易しい', '容易な', '単純な'},
+      {'正しい', '正確な', '適切な'},
+      {'間違った', '誤った', '不正な'},
+      // 思考・感情
+      {'考える', '思う', '考慮する', '思いめぐらす'},
+      {'嬉しい', '喜ぶ', '幸せな', '愉快な'},
+      {'悲しい', '哀しい', '憂鬱な', '落ち込んだ'},
+    ];
+
+    for (final cluster in synonymClusters) {
+      final aInCluster = cluster.any((word) => normA.contains(word) || word.contains(normA));
+      final bInCluster = cluster.any((word) => normB.contains(word) || word.contains(normB));
+      if (aInCluster && bInCluster) {
+        return true;
+      }
+    }
+
+    // 3. 漢字の主要語幹重複チェック（例: 「好」を含む同士、「話」を含む同士など）
+    for (int i = 0; i < normA.length; i++) {
+      final char = normA[i];
+      if (char.codeUnitAt(0) >= 0x4E00 && char.codeUnitAt(0) <= 0x9FFF) {
+        if (normB.contains(char)) {
+          if (char != '的' && char != '性' && char != '化' && char != '人' && char != '物' && char != '事' && char != '一') {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
   List<String> _generateChoices(WordModel correctWord) {
     final correctJapanese = _normalizeChoiceText(correctWord.japanese);
     final targetPosFamily = _getPosFamily(correctWord.partOfSpeech, correctWord.japanese);
@@ -548,7 +617,7 @@ class _GameScreenState extends State<GameScreen>
         w.english.toLowerCase().trim() != correctWord.english.toLowerCase().trim()
     ).toList();
 
-    // 2. 同一品詞ダミー厳選（Same-POS Matching: 品詞消去法を100%防止）
+    // 2. 同一品詞ダミー厳選（Same-POS Matching ＆ 同義語重複排除）
     final samePosCandidates = otherWords
         .where((w) => _getPosFamily(w.partOfSpeech, w.japanese) == targetPosFamily)
         .map((w) => _normalizeChoiceText(w.japanese))
@@ -557,11 +626,16 @@ class _GameScreenState extends State<GameScreen>
         .toList()..shuffle();
 
     final List<String> wrongChoices = [];
-    if (samePosCandidates.length >= 3) {
-      wrongChoices.addAll(samePosCandidates.take(3));
-    } else {
-      wrongChoices.addAll(samePosCandidates);
-      // 万が一足りない場合は他の品詞から安全に補填
+    for (final cand in samePosCandidates) {
+      if (wrongChoices.length >= 3) break;
+      if (!_isSynonymOrSimilar(correctJapanese, cand) &&
+          !wrongChoices.any((chosen) => _isSynonymOrSimilar(chosen, cand))) {
+        wrongChoices.add(cand);
+      }
+    }
+
+    // 万が一足りない場合は他の品詞から安全に補填
+    if (wrongChoices.length < 3) {
       final remainingCandidates = otherWords
           .map((w) => _normalizeChoiceText(w.japanese))
           .where((j) => j.isNotEmpty && j != correctJapanese && !wrongChoices.contains(j))
@@ -569,7 +643,10 @@ class _GameScreenState extends State<GameScreen>
           .toList()..shuffle();
       for (final rem in remainingCandidates) {
         if (wrongChoices.length >= 3) break;
-        wrongChoices.add(rem);
+        if (!_isSynonymOrSimilar(correctJapanese, rem) &&
+            !wrongChoices.any((chosen) => _isSynonymOrSimilar(chosen, rem))) {
+          wrongChoices.add(rem);
+        }
       }
     }
 
@@ -580,7 +657,8 @@ class _GameScreenState extends State<GameScreen>
     for (final fb in fallbackList) {
       if (wrongChoices.length >= 3) break;
       final norm = _normalizeChoiceText(fb);
-      if (norm != correctJapanese && !wrongChoices.contains(norm)) {
+      if (!_isSynonymOrSimilar(correctJapanese, norm) &&
+          !wrongChoices.any((chosen) => _isSynonymOrSimilar(chosen, norm))) {
         wrongChoices.add(norm);
       }
     }

@@ -296,12 +296,12 @@ class PixelCharacterWidget extends StatefulWidget {
     this.onTap,
   });
 
-  /// 暗記率（0〜100%）と解放フラグから、厳格に統一された成長状態を算出
+  /// 暗記率（0〜100%）と解放フラグから、厳格に統一された成長状態を算出 (F-13: 解放状態の永続化)
   static CharacterGrowthState stateFromRate(double rate, bool isUnlocked) {
-    if (!isUnlocked || rate <= 0.0) return CharacterGrowthState.locked; // 0%または未解放は完全単色黒シルエット
-    if (rate >= 80.0) return CharacterGrowthState.evolved;             // 80%以上は進化形態
-    if (rate >= 50.0) return CharacterGrowthState.healthy;             // 50〜79%は元気な状態
-    return CharacterGrowthState.lowHealth;                             // 1〜49%（学習開始後）は元気がない状態
+    if (!isUnlocked) return CharacterGrowthState.locked;   // 未解放チャプターのみ完全単色黒シルエット
+    if (rate >= 80.0) return CharacterGrowthState.evolved; // 80%以上は進化形態
+    if (rate >= 50.0) return CharacterGrowthState.healthy; // 50〜79%は元気な状態
+    return CharacterGrowthState.lowHealth;                 // 解放後は減衰や0%でもシルエットに戻らず元気がない基本形を維持
   }
 
   @override
@@ -688,31 +688,59 @@ class _PixelCharacterPainter48 extends CustomPainter {
     }
   }
 
-  /// お気に入りスタンプ胸バッジ合成描画 (F-14: 装備中スタンプのメインカラーを全面反映・二重枠線で全キャラ体色で高視認性)
+  Color _getStampDeepToneColor(Stamp stamp) {
+    switch (stamp.colorPaletteId % 16) {
+      case 0: return const Color(0xFF356661); // 深エメラルド
+      case 1: return const Color(0xFFA34A5E); // 深ローズ
+      case 2: return const Color(0xFF9C5B39); // 深テラコッタ
+      case 3: return const Color(0xFF2C5696); // 深オーシャン藍
+      case 4: return const Color(0xFF5A4491); // 深ラベンダー紫
+      case 5: return const Color(0xFF3B6B38); // 深フォレスト草緑
+      case 6: return const Color(0xFF5E422C); // 深カフェモカ茶
+      case 7: return const Color(0xFF8A6510); // 深サニーアンバー
+      case 8: return const Color(0xFF50246B); // 深ベリー紫
+      case 9: return const Color(0xFF1A2E6B); // 深ロイヤルサファイア
+      case 10: return const Color(0xFF6E1624); // 深クリムゾン紅
+      case 11: return const Color(0xFF75520D); // 深ヴィンテージブロンズ
+      case 12: return const Color(0xFF3B1873); // 深ホログラフィック
+      case 13: return const Color(0xFF7D6519); // 深ゴールド古美
+      case 14: return const Color(0xFF45525C); // 深スターライトプラチナ
+      case 15: return const Color(0xFF151821); // 深コズミックオニキス
+      default: return const Color(0xFF356661);
+    }
+  }
+
+  /// お気に入りスタンプ胸バッジ合成描画 (F-14: 動的トーン・オン・トーン ＆ 微細パールハイライト)
   void _drawChestBadge(Canvas canvas, double pixelSize, Stamp stamp) {
     final badgeCenter = Offset(12 * pixelSize, 14 * pixelSize);
     final double badgeRadius = pixelSize * 2.4;
     final stampColor = _getStampMainColor(stamp);
+    final deepToneColor = _getStampDeepToneColor(stamp);
 
     // 1. バッジ全体を選択スタンプの主要色で塗りつぶし
     final stampBodyPaint = Paint()..color = stampColor;
     canvas.drawCircle(badgeCenter, badgeRadius, stampBodyPaint);
 
-    // 2. 外枠（濃茶）＆ 内枠（ゴールド/白）の二重アウトライン（どんなキャラ体色でもクッキリ視認可能）
-    final outerBorderPaint = Paint()
+    // 2. 動的トーン・オン・トーン外枠 ＆ 微細パール光沢（どんな色でも100%美しく調和）
+    final outerRetroBorderPaint = Paint()
       ..color = const Color(0xFF2C302E)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
-    final innerGoldBorderPaint = Paint()
-      ..color = const Color(0xFFFFD700)
+    final deepToneBezelPaint = Paint()
+      ..color = deepToneColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
+      ..strokeWidth = 0.9;
+    final pearlHighlightPaint = Paint()
+      ..color = Colors.white.withAlpha(200)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5;
 
-    canvas.drawCircle(badgeCenter, badgeRadius, outerBorderPaint);
-    canvas.drawCircle(badgeCenter, badgeRadius - 0.7, innerGoldBorderPaint);
+    canvas.drawCircle(badgeCenter, badgeRadius, outerRetroBorderPaint);
+    canvas.drawCircle(badgeCenter, badgeRadius - 0.5, deepToneBezelPaint);
+    canvas.drawCircle(badgeCenter, badgeRadius - 1.0, pearlHighlightPaint);
 
-    // 3. 中央のスタンプ星/十字アクセント（純白＆ゴールドでキラリと輝く）
-    final highlightPaint = Paint()..color = Colors.white.withAlpha(230);
+    // 3. 中央のスタンプ星/十字アクセント（純白パールでキラリと輝く）
+    final highlightPaint = Paint()..color = Colors.white.withAlpha(240);
     final double miniPx = pixelSize * 0.55;
 
     final miniMatrix = [
