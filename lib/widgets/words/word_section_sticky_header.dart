@@ -77,7 +77,7 @@ class WordSectionStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '$memorizedCount/$totalCount 語',
+                    '暗記済: $memorizedCount/$totalCount 語',
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w600,

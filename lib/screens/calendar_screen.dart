@@ -357,107 +357,109 @@ class _CalendarScreenState extends State<CalendarScreen> {
               return LayoutBuilder(
                 builder: (context, constraints) {
                   final cellSize = min(constraints.maxWidth, constraints.maxHeight);
-                  // セルサイズに応じてスタンプサイズを動的調整（確実なオーバーフロー防止）
-                  final stampSize = max(14.0, cellSize * 0.50);
-                  final dayFontSize = max(9.0, cellSize * 0.18);
-                  final badgeFontSize = max(7.5, cellSize * 0.13);
+                  // スタンプをセルの約72〜75%で堂々と大きく描画（暗記数表示時も縮小せず維持）
+                  final stampSize = max(20.0, cellSize * 0.74);
+                  final dayFontSize = max(9.5, cellSize * 0.20);
+                  final badgeFontSize = max(7.5, cellSize * 0.16);
 
                   return Container(
                     decoration: BoxDecoration(
                       color: hasActivity
-                          ? _primaryAccent.withAlpha(30)
+                          ? _primaryAccent.withAlpha(25)
                           : const Color(0xFFF7F4EB),
-                      borderRadius: BorderRadius.circular(cellSize > 60 ? 12 : 8),
+                      borderRadius: BorderRadius.circular(cellSize > 50 ? 10 : 7),
                       border: Border.all(
                         color: hasActivity
                             ? _primaryAccent
                             : Colors.transparent,
-                        width: hasActivity ? 1.5 : 1.0,
+                        width: hasActivity ? 1.4 : 1.0,
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // 日付番号 (上部左寄せ)
-                          Align(
-                            alignment: Alignment.topLeft,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 2.0, top: 0.0),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // 1. 中央: 堂々と大きく表示されるスタンプ
+                        if (hasActivity)
+                          Center(
+                            child: (record.appliedStampId != null && _stampsMap.containsKey(record.appliedStampId!))
+                                ? Builder(
+                                    builder: (context) {
+                                      final s = _stampsMap[record.appliedStampId]!;
+                                      return PixelStampWidget(
+                                        id: s.id,
+                                        name: s.name,
+                                        rarity: StampRarity.fromString(s.rarity),
+                                        paletteId: s.colorPaletteId,
+                                        patternId: s.patternId,
+                                        frameId: s.frameId,
+                                        effectId: s.effectId,
+                                        isUnlocked: true,
+                                        size: stampSize,
+                                      );
+                                    },
+                                  )
+                                : Icon(
+                                    Icons.check_circle_rounded,
+                                    size: stampSize * 0.85,
+                                    color: const Color(0xFF4CAF50),
+                                  ),
+                          ),
+
+                        // 2. 左上固定: 日付番号
+                        Positioned(
+                          top: 2,
+                          left: 3,
+                          child: Text(
+                            '$day',
+                            style: TextStyle(
+                              fontSize: dayFontSize,
+                              fontWeight: FontWeight.w800,
+                              color: hasActivity
+                                  ? _textPrimary
+                                  : _textPrimary.withValues(alpha: 0.8),
+                              shadows: hasActivity
+                                  ? const [
+                                      Shadow(
+                                        color: Colors.white,
+                                        blurRadius: 3,
+                                        offset: Offset(0, 0),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                          ),
+                        ),
+
+                        // 3. 右下固定: 暗記数ピルバッジ (スタンプに重なる形で綺麗にオーバーレイ)
+                        if (hasActivity && memorizedCount > 0)
+                          Positioned(
+                            bottom: 2,
+                            right: 2,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 3.5, vertical: 0.5),
+                              decoration: BoxDecoration(
+                                color: _primaryAccent,
+                                borderRadius: BorderRadius.circular(4),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x25000000),
+                                    blurRadius: 2,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ],
+                              ),
                               child: Text(
-                                '$day',
+                                '+$memorizedCount',
                                 style: TextStyle(
-                                  fontSize: dayFontSize,
+                                  fontSize: badgeFontSize,
                                   fontWeight: FontWeight.bold,
-                                  color: hasActivity
-                                      ? _primaryAccent
-                                      : _textPrimary,
+                                  color: Colors.white,
+                                  height: 1.05,
                                 ),
                               ),
                             ),
                           ),
-
-                          // 中央: 堂々と大きく表示されるスタンプ（FittedBoxで安全に縮小フィット）
-                          Expanded(
-                            child: Center(
-                              child: hasActivity
-                                  ? FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: (record.appliedStampId != null && _stampsMap.containsKey(record.appliedStampId!))
-                                          ? Builder(
-                                              builder: (context) {
-                                                final s = _stampsMap[record.appliedStampId]!;
-                                                return PixelStampWidget(
-                                                  id: s.id,
-                                                  name: s.name,
-                                                  rarity: StampRarity.fromString(s.rarity),
-                                                  paletteId: s.colorPaletteId,
-                                                  patternId: s.patternId,
-                                                  frameId: s.frameId,
-                                                  effectId: s.effectId,
-                                                  isUnlocked: true,
-                                                  size: stampSize,
-                                                );
-                                              },
-                                            )
-                                          : Icon(
-                                              Icons.check_circle_rounded,
-                                              size: stampSize * 0.8,
-                                              color: const Color(0xFF4CAF50),
-                                            ),
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
-                          ),
-
-                          // 下部: 暗記数バッジ (あれば)
-                          if (hasActivity && memorizedCount > 0)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 1.0),
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
-                                  decoration: BoxDecoration(
-                                    color: _primaryAccent.withAlpha(40),
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                  child: Text(
-                                    '+$memorizedCount',
-                                    style: TextStyle(
-                                      fontSize: badgeFontSize,
-                                      fontWeight: FontWeight.bold,
-                                      color: _primaryAccent,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            )
-                          else
-                            const SizedBox(height: 2),
-                        ],
-                      ),
+                      ],
                     ),
                   );
                 },

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../db/app_database.dart';
 import '../models/word_detail_model.dart';
 import '../services/tts_service.dart';
+import 'common/bouncy_scale_tap.dart';
 
 /// 単語詳細モーダル (F-22)
 /// 発音記号・複数語義・品詞・例文・連語・定着度/減算pt・前後ナビ・上端下スワイプ終了
@@ -49,8 +50,9 @@ class _WordDetailModalState extends State<WordDetailModal> {
   late int _currentIndex;
   late Word _currentWord;
   late WordDetail _detail;
-  bool _isFavorite = false;
+  final ValueNotifier<bool> _isFavoriteNotifier = ValueNotifier<bool>(false);
   final ScrollController _scrollController = ScrollController();
+  int _senseRequestId = 0;
 
   // テーマカラー
   static const Color _bgColor = Color(0xFFFBF7EE);
@@ -68,19 +70,29 @@ class _WordDetailModalState extends State<WordDetailModal> {
     _loadWordAt(_currentIndex);
   }
 
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _isFavoriteNotifier.dispose();
+    TtsService.instance.stop();
+    super.dispose();
+  }
+
   void _loadWordAt(int index) {
+    final newWord = widget.wordList[index];
     setState(() {
       _currentIndex = index;
-      _currentWord = widget.wordList[_currentIndex];
-      _detail = WordDetail.fromWord(_currentWord);
-      _isFavorite = _currentWord.isFavorite;
+      _currentWord = newWord;
+      _detail = WordDetail.fromWord(newWord);
+      _isFavoriteNotifier.value = newWord.isFavorite;
     });
     // 単語切り替え時に自動発音
-    TtsService.instance.speak(_currentWord.english);
+    TtsService.instance.speak(newWord.english);
 
-    // 同一英単語の他語義（他チャプター含む）を非同期読み込み
-    widget.database.getAllSensesForWord(_currentWord.english).then((siblings) {
-      if (mounted && siblings.isNotEmpty && siblings.length > 1) {
+    // 同一英単語の他語義（他チャプター含む）を非同期読み込み（Request IDで順序整合性を完全保証）
+    final currentRequestId = ++_senseRequestId;
+    widget.database.getAllSensesForWord(newWord.english).then((siblings) {
+      if (mounted && currentRequestId == _senseRequestId && siblings.isNotEmpty && siblings.length > 1) {
         setState(() {
           _detail = WordDetail.fromWordWithSiblings(_currentWord, siblings);
         });
@@ -90,10 +102,8 @@ class _WordDetailModalState extends State<WordDetailModal> {
 
   Future<void> _toggleFavorite() async {
     HapticFeedback.selectionClick();
-    final nextFav = !_isFavorite;
-    setState(() {
-      _isFavorite = nextFav;
-    });
+    final nextFav = !_isFavoriteNotifier.value;
+    _isFavoriteNotifier.value = nextFav;
     await widget.database.toggleFavorite(_currentWord.id, nextFav);
     widget.onFavoriteChanged?.call();
   }
@@ -190,18 +200,18 @@ class _WordDetailModalState extends State<WordDetailModal> {
     );
   }
 
-  /// ヘッダー（1段目: バッジ・音声・お気に入り / 2段目: 横幅いっぱいの英単語 ＆ 発音記号）
+  /// ヘッダー（1段目: メタデータバッジ群 ＆ お気に入り / 2段目: 横幅いっぱいの英単語 ＆ 発音記号）
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 16, 10),
+      padding: const EdgeInsets.fromLTRB(20, 8, 16, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 1段目: 操作ボタン ＆ メタデータバッジ群
+          // 1段目: メタデータバッジ群 ＆ お気に入りボタン
           Row(
             children: [
-              // 左側: 音声再生ボタン ＆ バッジ群（原形/カテゴリ/CEFR/Chap）
+              // 左側: バッジ群（原形/カテゴリ/CEFR/Chap）
               Expanded(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -209,19 +219,6 @@ class _WordDetailModalState extends State<WordDetailModal> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // TTS発音ボタン
-                      IconButton(
-                        icon: const Icon(Icons.volume_up_rounded, color: _primaryAccent, size: 24),
-                        onPressed: () {
-                          HapticFeedback.selectionClick();
-                          TtsService.instance.speak(_detail.english);
-                        },
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                        splashRadius: 20,
-                        tooltip: '発音を聴く',
-                      ),
-                      const SizedBox(width: 4),
                       if (_detail.baseForm != null && _detail.baseForm!.isNotEmpty) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -301,18 +298,23 @@ class _WordDetailModalState extends State<WordDetailModal> {
               ),
               const SizedBox(width: 4),
 
-              // 右側: お気に入りトグルボタン
-              IconButton(
-                icon: Icon(
-                  _isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-                  color: _isFavorite ? const Color(0xFFD4B86A) : _textSecondary.withValues(alpha: 0.5),
-                  size: 26,
-                ),
-                onPressed: _toggleFavorite,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                splashRadius: 20,
-                tooltip: 'お気に入り',
+              // 右側: お気に入りトグルボタン (ValueNotifierで局所リビルド)
+              ValueListenableBuilder<bool>(
+                valueListenable: _isFavoriteNotifier,
+                builder: (context, isFav, _) {
+                  return IconButton(
+                    icon: Icon(
+                      isFav ? Icons.star_rounded : Icons.star_outline_rounded,
+                      color: isFav ? const Color(0xFFD4B86A) : _textSecondary.withValues(alpha: 0.5),
+                      size: 26,
+                    ),
+                    onPressed: _toggleFavorite,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    splashRadius: 20,
+                    tooltip: 'お気に入り',
+                  );
+                },
               ),
             ],
           ),
@@ -707,7 +709,7 @@ class _WordDetailModalState extends State<WordDetailModal> {
     );
   }
 
-  /// ボトム操作ナビゲーションバー（[← 前へ] [閉じる] [次へ →]）
+  /// ボトム操作ナビゲーションバー（[← 前へ] [閉じる] [次へ →] [🔊 音声]）
   Widget _buildBottomNav() {
     final canPrev = _currentIndex > 0;
     final canNext = _currentIndex < widget.wordList.length - 1;
@@ -735,7 +737,7 @@ class _WordDetailModalState extends State<WordDetailModal> {
                 ),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
 
             // 閉じるボタン
             Expanded(
@@ -755,7 +757,7 @@ class _WordDetailModalState extends State<WordDetailModal> {
                 child: const Text('閉じる', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
 
             // 次へボタン
             Expanded(
@@ -770,6 +772,37 @@ class _WordDetailModalState extends State<WordDetailModal> {
                   side: BorderSide(color: canNext ? _borderColor : _borderColor.withValues(alpha: 0.4)),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // 右下固定: 音声再生ボタン (親指で即座にタップ可能・立体パステル調)
+            BouncyScaleTap(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                TtsService.instance.speak(_detail.english);
+              },
+              pressedScale: 0.92,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _primaryAccent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _primaryAccent.withValues(alpha: 0.8), width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _primaryAccent.withValues(alpha: 0.35),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.volume_up_rounded,
+                  color: Colors.white,
+                  size: 22,
                 ),
               ),
             ),

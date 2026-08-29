@@ -687,24 +687,32 @@ class _PixelCharacterPainter48 extends CustomPainter {
     }
   }
 
-  /// お気に入りスタンプ胸バッジ合成描画 (F-14: 装備中スタンプのメインカラーを動的反映)
+  /// お気に入りスタンプ胸バッジ合成描画 (F-14: 装備中スタンプのメインカラーを全面反映・二重枠線で全キャラ体色で高視認性)
   void _drawChestBadge(Canvas canvas, double pixelSize, Stamp stamp) {
     final badgeCenter = Offset(12 * pixelSize, 14 * pixelSize);
-    final double badgeRadius = pixelSize * 2.2;
+    final double badgeRadius = pixelSize * 2.4;
+    final stampColor = _getStampMainColor(stamp);
 
-    // 1. ゴールドバッジ外枠
-    final goldPaint = Paint()..color = const Color(0xFFFFD700);
-    final borderPaint = Paint()
-      ..color = const Color(0xFFFFA000)
+    // 1. バッジ全体を選択スタンプの主要色で塗りつぶし
+    final stampBodyPaint = Paint()..color = stampColor;
+    canvas.drawCircle(badgeCenter, badgeRadius, stampBodyPaint);
+
+    // 2. 外枠（濃茶）＆ 内枠（ゴールド/白）の二重アウトライン（どんなキャラ体色でもクッキリ視認可能）
+    final outerBorderPaint = Paint()
+      ..color = const Color(0xFF2C302E)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
-    canvas.drawCircle(badgeCenter, badgeRadius, goldPaint);
-    canvas.drawCircle(badgeCenter, badgeRadius, borderPaint);
+    final innerGoldBorderPaint = Paint()
+      ..color = const Color(0xFFFFD700)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
 
-    // 2. 装備中スタンプのメインカラーを胸元バッジに動的反映
-    final stampColor = _getStampMainColor(stamp);
-    final motifPaint = Paint()..color = stampColor;
-    final double miniPx = pixelSize * 0.5;
+    canvas.drawCircle(badgeCenter, badgeRadius, outerBorderPaint);
+    canvas.drawCircle(badgeCenter, badgeRadius - 0.7, innerGoldBorderPaint);
+
+    // 3. 中央のスタンプ星/十字アクセント（純白＆ゴールドでキラリと輝く）
+    final highlightPaint = Paint()..color = Colors.white.withAlpha(230);
+    final double miniPx = pixelSize * 0.55;
 
     final miniMatrix = [
       [0, 1, 0],
@@ -722,7 +730,7 @@ class _PixelCharacterPainter48 extends CustomPainter {
               miniPx,
               miniPx,
             ),
-            motifPaint,
+            highlightPaint,
           );
         }
       }

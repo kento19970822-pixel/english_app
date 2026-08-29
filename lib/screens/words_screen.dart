@@ -120,37 +120,49 @@ class WordsScreenState extends State<WordsScreen> {
     );
   }
 
-  /// 前のセクション（チャプター・文字・カテゴリ）の先頭へスムーズにスクロール移動
+  /// 全セクションの正確な開始スクロールオフセットリストを算出 (Prefix Sums による累積誤差ゼロ計算)
+  List<double> _calculateSectionOffsets() {
+    if (_sections.isEmpty) return [0.0];
+
+    final double appBarHeight = _activeFilterCount > 0 ? 155.0 : 128.0;
+    final double headerHeight = 44.0;
+    final double bannerHeight = _sortMode == 'chap' ? 78.0 : 0.0;
+    final double tileHeight = 120.0;
+
+    final List<double> offsets = [0.0]; // インデックス0: 画面最上部（SliverAppBar含む）
+    double currentAccumulated = appBarHeight;
+
+    for (int i = 0; i < _sections.length; i++) {
+      if (i > 0) {
+        offsets.add(currentAccumulated);
+      }
+      final section = _sections[i];
+      final sectionHeight = headerHeight + bannerHeight + (section.words.length * tileHeight);
+      currentAccumulated += sectionHeight;
+    }
+
+    return offsets;
+  }
+
+  /// 前のセクション（チャプター・文字・カテゴリ）の先頭へスムーズにスクロール移動 (ズレ 0px)
   void _scrollToPreviousSection() {
     if (!_scrollController.hasClients || _sections.isEmpty) return;
 
     final currentOffset = _scrollController.offset;
-    final appBarHeight = _activeFilterCount > 0 ? 155.0 : 128.0;
+    final offsets = _calculateSectionOffsets();
 
-    // 各セクションの開始オフセットを算出
-    final List<double> sectionOffsets = [0.0];
-    double accumulatedOffset = appBarHeight;
-
-    for (int i = 0; i < _sections.length - 1; i++) {
-      final section = _sections[i];
-      final headerHeight = 44.0;
-      final bannerHeight = _sortMode == 'chap' ? 76.0 : 0.0;
-      final sectionHeight = headerHeight + bannerHeight + (section.words.length * 120.0);
-      accumulatedOffset += sectionHeight;
-      sectionOffsets.add(accumulatedOffset);
-    }
-
-    // 現在オフセットより前にあるセクションを探す
+    // 現在位置より手前にある直近のセクションオフセットを探索
     double targetOffset = 0.0;
-    for (int i = sectionOffsets.length - 1; i >= 0; i--) {
-      if (sectionOffsets[i] < currentOffset - 20.0) {
-        targetOffset = sectionOffsets[i];
+    for (int i = offsets.length - 1; i >= 0; i--) {
+      if (offsets[i] < currentOffset - 8.0) {
+        targetOffset = offsets[i];
         break;
       }
     }
 
+    final maxExtent = _scrollController.position.maxScrollExtent;
     _scrollController.animateTo(
-      targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      targetOffset.clamp(0.0, maxExtent),
       duration: const Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
     );
@@ -158,35 +170,26 @@ class WordsScreenState extends State<WordsScreen> {
     HapticFeedback.lightImpact();
   }
 
-  /// 次のセクション（チャプター・文字・カテゴリ）の先頭へスムーズにスクロール移動 (片手操作)
+  /// 次のセクション（チャプター・文字・カテゴリ）の先頭へスムーズにスクロール移動 (ズレ 0px)
   void _scrollToNextSection() {
     if (!_scrollController.hasClients || _sections.isEmpty) return;
 
     final currentOffset = _scrollController.offset;
-    final appBarHeight = _activeFilterCount > 0 ? 155.0 : 128.0;
+    final offsets = _calculateSectionOffsets();
 
-    double accumulatedOffset = appBarHeight;
-    double? nextSectionOffset;
-
-    for (int i = 0; i < _sections.length; i++) {
-      // i > 0 の各セクションの開始位置が現在位置より先にあるか判定
-      if (i > 0 && accumulatedOffset > currentOffset + 10.0) {
-        nextSectionOffset = accumulatedOffset;
+    // 現在位置より先にある直近のセクションオフセットを探索
+    double? nextOffset;
+    for (int i = 0; i < offsets.length; i++) {
+      if (offsets[i] > currentOffset + 8.0) {
+        nextOffset = offsets[i];
         break;
       }
-
-      final section = _sections[i];
-      final headerHeight = 44.0;
-      final bannerHeight = _sortMode == 'chap' ? 76.0 : 0.0;
-      final sectionHeight = headerHeight + bannerHeight + (section.words.length * 120.0);
-      accumulatedOffset += sectionHeight;
     }
 
-    // 次のセクションが見つかった場合そこへ、末尾に達している場合は先頭（offset: 0）へ
-    final targetOffset = nextSectionOffset ?? 0.0;
-
+    final targetOffset = nextOffset ?? 0.0; // 末尾の場合は先頭へループ
+    final maxExtent = _scrollController.position.maxScrollExtent;
     _scrollController.animateTo(
-      targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      targetOffset.clamp(0.0, maxExtent),
       duration: const Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
     );
@@ -485,8 +488,22 @@ class WordsScreenState extends State<WordsScreen> {
 
   void _updateWordInPlace(Word updatedWord) {
     final index = _allWords.indexWhere((w) => w.id == updatedWord.id);
+    final was80Plus = (index != -1) ? (_allWords[index].retentionPoint >= 80) : false;
+    final is80Plus = updatedWord.retentionPoint >= 80;
+
     if (index != -1) {
       _allWords[index] = updatedWord;
+    }
+
+    // チャプターごとのグローバル80pt統計（キャラバナー用）をO(1)で同期更新
+    final chap = updatedWord.chapter;
+    if (_chapterGlobalStats.containsKey(chap) && (was80Plus != is80Plus)) {
+      final currentStat = _chapterGlobalStats[chap]!;
+      final diff = is80Plus ? 1 : -1;
+      _chapterGlobalStats[chap] = (
+        total: currentStat.total,
+        memorized: (currentStat.memorized + diff).clamp(0, currentStat.total),
+      );
     }
 
     // フィルター条件（お気に入りON / 未暗記ON）がある場合は一覧再構築
@@ -503,7 +520,7 @@ class WordsScreenState extends State<WordsScreen> {
       if (wIndex != -1) {
         final newWords = List<Word>.from(sec.words);
         newWords[wIndex] = updatedWord;
-        final newMemCount = newWords.where((w) => w.isMemorized || w.retentionPoint >= 80).length;
+        final newMemCount = newWords.where((w) => w.isMemorized).length;
         _sections[i] = WordSection(
           key: sec.key,
           title: sec.title,

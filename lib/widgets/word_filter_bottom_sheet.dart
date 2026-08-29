@@ -187,7 +187,7 @@ class _WordFilterBottomSheetState extends State<WordFilterBottomSheet> {
   Widget build(BuildContext context) {
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxHeight: MediaQuery.of(context).size.height * 0.71,
       ),
       decoration: const BoxDecoration(
         color: _bgColor,

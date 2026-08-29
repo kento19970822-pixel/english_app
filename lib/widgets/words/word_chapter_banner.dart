@@ -44,8 +44,8 @@ class WordChapterBanner extends StatelessWidget {
     final growthState = PixelCharacterWidget.stateFromRate(percent.toDouble(), percent > 0);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      margin: const EdgeInsets.fromLTRB(16, 3, 16, 7),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(14),
@@ -76,7 +76,7 @@ class WordChapterBanner extends StatelessWidget {
           ),
           const SizedBox(width: 12),
 
-          // キャラクター情報 & 進捗
+          // キャラクター情報 & 80pt進捗
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,7 +131,20 @@ class WordChapterBanner extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Text(
+                      '80pt定着: $memorizedCount/$totalCount 語',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: textSecondaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
                 Row(
                   children: [
                     Expanded(
@@ -139,7 +152,7 @@ class WordChapterBanner extends StatelessWidget {
                         borderRadius: BorderRadius.circular(3),
                         child: LinearProgressIndicator(
                           value: totalCount > 0 ? memorizedCount / totalCount : 0,
-                          minHeight: 6,
+                          minHeight: 5,
                           backgroundColor: borderColor.withValues(alpha: 0.5),
                           valueColor: AlwaysStoppedAnimation<Color>(
                             isMastered
