@@ -120,22 +120,20 @@ class WordsScreenState extends State<WordsScreen> {
     );
   }
 
-  /// 全セクションの正確な開始スクロールオフセットリストを算出 (Prefix Sums による累積誤差ゼロ計算)
+  /// 全セクションの正確な開始スクロールオフセットリストを算出 (累積誤差 0.0px 保証)
   List<double> _calculateSectionOffsets() {
     if (_sections.isEmpty) return [0.0];
 
     final double appBarHeight = _activeFilterCount > 0 ? 155.0 : 128.0;
-    final double headerHeight = 44.0;
+    const double headerHeight = 44.0;
     final double bannerHeight = _sortMode == 'chap' ? 78.0 : 0.0;
-    final double tileHeight = 120.0;
+    const double tileHeight = 120.0;
 
-    final List<double> offsets = [0.0]; // インデックス0: 画面最上部（SliverAppBar含む）
+    final List<double> offsets = [];
     double currentAccumulated = appBarHeight;
 
     for (int i = 0; i < _sections.length; i++) {
-      if (i > 0) {
-        offsets.add(currentAccumulated);
-      }
+      offsets.add(currentAccumulated);
       final section = _sections[i];
       final sectionHeight = headerHeight + bannerHeight + (section.words.length * tileHeight);
       currentAccumulated += sectionHeight;
@@ -144,20 +142,32 @@ class WordsScreenState extends State<WordsScreen> {
     return offsets;
   }
 
-  /// 前のセクション（チャプター・文字・カテゴリ）の先頭へスムーズにスクロール移動 (ズレ 0px)
+  /// 現在のセクションインデックスを正確に特定
+  int _getCurrentSectionIndex(double currentOffset, List<double> offsets) {
+    if (offsets.isEmpty) return 0;
+    if (currentOffset < offsets.first - 10.0) return -1; // SliverAppBar表示領域
+
+    for (int i = offsets.length - 1; i >= 0; i--) {
+      if (currentOffset >= offsets[i] - 2.0) {
+        return i;
+      }
+    }
+    return 0;
+  }
+
+  /// 前のセクションへジャンプ (ズレ 0px)
   void _scrollToPreviousSection() {
     if (!_scrollController.hasClients || _sections.isEmpty) return;
 
     final currentOffset = _scrollController.offset;
     final offsets = _calculateSectionOffsets();
+    final currentIndex = _getCurrentSectionIndex(currentOffset, offsets);
 
-    // 現在位置より手前にある直近のセクションオフセットを探索
-    double targetOffset = 0.0;
-    for (int i = offsets.length - 1; i >= 0; i--) {
-      if (offsets[i] < currentOffset - 8.0) {
-        targetOffset = offsets[i];
-        break;
-      }
+    double targetOffset;
+    if (currentIndex <= 0) {
+      targetOffset = 0.0; // 先頭（SliverAppBar）へ戻る
+    } else {
+      targetOffset = offsets[currentIndex - 1];
     }
 
     final maxExtent = _scrollController.position.maxScrollExtent;
@@ -166,34 +176,32 @@ class WordsScreenState extends State<WordsScreen> {
       duration: const Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
     );
-
     HapticFeedback.lightImpact();
   }
 
-  /// 次のセクション（チャプター・文字・カテゴリ）の先頭へスムーズにスクロール移動 (ズレ 0px)
+  /// 次のセクションへジャンプ (ズレ 0px)
   void _scrollToNextSection() {
     if (!_scrollController.hasClients || _sections.isEmpty) return;
 
     final currentOffset = _scrollController.offset;
     final offsets = _calculateSectionOffsets();
+    final currentIndex = _getCurrentSectionIndex(currentOffset, offsets);
 
-    // 現在位置より先にある直近のセクションオフセットを探索
-    double? nextOffset;
-    for (int i = 0; i < offsets.length; i++) {
-      if (offsets[i] > currentOffset + 8.0) {
-        nextOffset = offsets[i];
-        break;
-      }
+    double targetOffset;
+    if (currentIndex < 0) {
+      targetOffset = offsets.first; // Section 0 の吸着位置へ
+    } else if (currentIndex < offsets.length - 1) {
+      targetOffset = offsets[currentIndex + 1];
+    } else {
+      targetOffset = 0.0; // 末尾の場合は先頭へループ
     }
 
-    final targetOffset = nextOffset ?? 0.0; // 末尾の場合は先頭へループ
     final maxExtent = _scrollController.position.maxScrollExtent;
     _scrollController.animateTo(
       targetOffset.clamp(0.0, maxExtent),
       duration: const Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
     );
-
     HapticFeedback.lightImpact();
   }
 

@@ -43,140 +43,144 @@ class WordChapterBanner extends StatelessWidget {
 
     final growthState = PixelCharacterWidget.stateFromRate(percent.toDouble(), percent > 0);
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 3, 16, 7),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isMastered ? primaryColor.withValues(alpha: 0.5) : borderColor,
-          width: isMastered ? 1.5 : 1.0,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 4,
-            offset: Offset(0, 1.5),
+    return SizedBox(
+      height: 78.0,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isMastered ? primaryColor.withValues(alpha: 0.5) : borderColor,
+            width: isMastered ? 1.5 : 1.0,
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // ドット絵キャラクター
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: PixelCharacterWidget(
-              speciesIndex: (chapterNum - 1).clamp(0, kTotalChapterCount - 1),
-              growthState: growthState,
-              actionState: isMastered ? CharacterActionState.humming : CharacterActionState.idle,
-              size: 44,
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x06000000),
+              blurRadius: 4,
+              offset: Offset(0, 1.5),
             ),
-          ),
-          const SizedBox(width: 12),
+          ],
+        ),
+        child: Row(
+          children: [
+            // ドット絵キャラクター
+            SizedBox(
+              width: 48,
+              height: 48,
+              child: PixelCharacterWidget(
+                speciesIndex: (chapterNum - 1).clamp(0, kTotalChapterCount - 1),
+                growthState: growthState,
+                actionState: isMastered ? CharacterActionState.humming : CharacterActionState.idle,
+                size: 44,
+              ),
+            ),
+            const SizedBox(width: 10),
 
-          // キャラクター情報 & 80pt進捗
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Ch.$chapterNum: $charName',
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
+            // キャラクター情報 & 80pt進捗 (2行でスッキリ表示)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Ch.$chapterNum: $charName',
+                            style: TextStyle(
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          if (isMastered)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8F5E9),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'MASTER ✨',
+                                style: TextStyle(fontSize: 9.0, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)),
+                              ),
+                            )
+                          else if (percent > 0)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF8E1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                '育成中 🌱',
+                                style: TextStyle(fontSize: 9.0, fontWeight: FontWeight.bold, color: Color(0xFF8D6E63)),
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFEAE0),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                '🔒 未学習',
+                                style: TextStyle(fontSize: 9.0, fontWeight: FontWeight.bold, color: Color(0xFF7F8C8D)),
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    if (isMastered)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          'MASTER ✨',
-                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)),
-                        ),
-                      )
-                    else if (percent > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF8E1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          '育成中 🌱',
-                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF8D6E63)),
-                        ),
-                      )
-                    else
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFEAE0),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          '🔒 未学習',
-                          style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Color(0xFF7F8C8D)),
+                      Text(
+                        '80pt定着: $memorizedCount/$totalCount 語',
+                        style: TextStyle(
+                          fontSize: 10.0,
+                          fontWeight: FontWeight.w600,
+                          color: textSecondaryColor,
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    Text(
-                      '80pt定着: $memorizedCount/$totalCount 語',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        color: textSecondaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(3),
-                        child: LinearProgressIndicator(
-                          value: totalCount > 0 ? memorizedCount / totalCount : 0,
-                          minHeight: 5,
-                          backgroundColor: borderColor.withValues(alpha: 0.5),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            isMastered
-                                ? primaryColor
-                                : (percent >= 50 ? const Color(0xFFD97736) : Colors.amber.shade700),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: LinearProgressIndicator(
+                            value: totalCount > 0 ? memorizedCount / totalCount : 0,
+                            minHeight: 5,
+                            backgroundColor: borderColor.withValues(alpha: 0.5),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              isMastered
+                                  ? primaryColor
+                                  : (percent >= 50 ? const Color(0xFFD97736) : Colors.amber.shade700),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '$percent%',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isMastered ? primaryColor : (percent > 0 ? textColor : textSecondaryColor),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$percent%',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isMastered ? primaryColor : (percent > 0 ? textColor : textSecondaryColor),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -160,34 +160,79 @@ class _WordDetailModalState extends State<WordDetailModal> {
 
           const Divider(height: 1, color: _borderColor),
 
-          // コンテンツ部（スクロール）
+          // コンテンツ部（Stack + Positioned による Floating 音声ボタン常時表示）
           Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 語義一覧 & 例文
-                  _buildSensesSection(),
+            child: Stack(
+              children: [
+                // 1. スクロールコンテンツ
+                SingleChildScrollView(
+                  controller: _scrollController,
+                  // Floating ボタン (54px) + 余白分の下部パディングを確保
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 86),
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 語義一覧 & 例文
+                      _buildSensesSection(),
 
-                  const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                  // コロケーション・連語情報（存在する場合）
-                  if (_detail.collocations.isNotEmpty) ...[
-                    _buildCollocationsSection(),
-                    const SizedBox(height: 16),
-                  ],
+                      // コロケーション・連語情報（存在する場合）
+                      if (_detail.collocations.isNotEmpty) ...[
+                        _buildCollocationsSection(),
+                        const SizedBox(height: 16),
+                      ],
 
-                  // 学習進捗ステータス
-                  _buildLearningStatusSection(),
+                      // 学習進捗ステータス
+                      _buildLearningStatusSection(),
 
-                  const SizedBox(height: 12),
-                ],
-              ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+                ),
+
+                // 2. 右下 Floating 音声再生ボタン (常時表示・親指で即座にタップ可能)
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: BouncyScaleTap(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      TtsService.instance.speak(_detail.english);
+                    },
+                    pressedScale: 0.90,
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: _primaryAccent,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _primaryAccent.withValues(alpha: 0.40),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                          const BoxShadow(
+                            color: Color(0x15000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.volume_up_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -709,7 +754,7 @@ class _WordDetailModalState extends State<WordDetailModal> {
     );
   }
 
-  /// ボトム操作ナビゲーションバー（[← 前へ] [閉じる] [次へ →] [🔊 音声]）
+  /// ボトム操作ナビゲーションバー（[← 前へ] [閉じる] [次へ →]）
   Widget _buildBottomNav() {
     final canPrev = _currentIndex > 0;
     final canNext = _currentIndex < widget.wordList.length - 1;
@@ -723,25 +768,25 @@ class _WordDetailModalState extends State<WordDetailModal> {
           children: [
             // 前へボタン
             Expanded(
-              flex: 2,
+              flex: 10,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.arrow_back_ios_rounded, size: 14),
-                label: const Text('前へ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                label: const Text('前へ', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
                 onPressed: canPrev ? _goToPrevious : null,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _textPrimary,
-                  disabledForegroundColor: _textSecondary.withValues(alpha: 0.4),
-                  side: BorderSide(color: canPrev ? _borderColor : _borderColor.withValues(alpha: 0.4)),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  disabledForegroundColor: _textSecondary.withValues(alpha: 0.35),
+                  side: BorderSide(color: canPrev ? _borderColor : _borderColor.withValues(alpha: 0.35)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
 
             // 閉じるボタン
             Expanded(
-              flex: 3,
+              flex: 12,
               child: ElevatedButton(
                 onPressed: () {
                   HapticFeedback.selectionClick();
@@ -750,59 +795,28 @@ class _WordDetailModalState extends State<WordDetailModal> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _textPrimary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: const Text('閉じる', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
 
             // 次へボタン
             Expanded(
-              flex: 2,
+              flex: 10,
               child: OutlinedButton.icon(
-                label: const Text('次へ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                label: const Text('次へ', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
                 icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
                 onPressed: canNext ? _goToNext : null,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _textPrimary,
-                  disabledForegroundColor: _textSecondary.withValues(alpha: 0.4),
-                  side: BorderSide(color: canNext ? _borderColor : _borderColor.withValues(alpha: 0.4)),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  disabledForegroundColor: _textSecondary.withValues(alpha: 0.35),
+                  side: BorderSide(color: canNext ? _borderColor : _borderColor.withValues(alpha: 0.35)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-
-            // 右下固定: 音声再生ボタン (親指で即座にタップ可能・立体パステル調)
-            BouncyScaleTap(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                TtsService.instance.speak(_detail.english);
-              },
-              pressedScale: 0.92,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: _primaryAccent,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _primaryAccent.withValues(alpha: 0.8), width: 1.2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _primaryAccent.withValues(alpha: 0.35),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.volume_up_rounded,
-                  color: Colors.white,
-                  size: 22,
                 ),
               ),
             ),
