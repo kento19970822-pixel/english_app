@@ -466,19 +466,18 @@ class WordsScreenState extends State<WordsScreen> {
       }
     }
 
-    // 全単語マスターからチャプターごとの真の全体進捗（総数・80pt以上暗記数・キャラ解放状態）を集計（フィルター非依存）
+    // 全単語マスターからチャプターごとの真の全体進捗（総数・80pt以上暗記数・キャラ解放状態）を集計（フィルター非依存、80pt以上のみ参照）
     final Map<int, ({int total, int memorized, bool isCharUnlocked})> globalStats = {};
     for (final w in _allWords) {
       final current = globalStats[w.chapter];
-      final isMem = w.retentionPoint >= 80;
-      final isStudied = w.retentionPoint > 0 || w.isMemorized || w.correctCount > 0;
+      final isMem80 = w.retentionPoint >= 80;
       if (current == null) {
-        globalStats[w.chapter] = (total: 1, memorized: isMem ? 1 : 0, isCharUnlocked: isStudied);
+        globalStats[w.chapter] = (total: 1, memorized: isMem80 ? 1 : 0, isCharUnlocked: isMem80);
       } else {
         globalStats[w.chapter] = (
           total: current.total + 1,
-          memorized: current.memorized + (isMem ? 1 : 0),
-          isCharUnlocked: current.isCharUnlocked || isStudied,
+          memorized: current.memorized + (isMem80 ? 1 : 0),
+          isCharUnlocked: current.isCharUnlocked || isMem80,
         );
       }
     }

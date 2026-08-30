@@ -60,7 +60,7 @@ void main() {
       expect(PixelCharacterWidget.stateFromRate(0.0, ch2.isCharacterUnlocked), CharacterGrowthState.locked);
     });
 
-    test('1 game play with low points (< 80pt) does NOT unlock character silhouette', () async {
+    test('1 game play with low points (< 80pt) or isMemorized alone does NOT unlock character silhouette', () async {
       await db.into(db.words).insert(
         const WordsCompanion(
           id: Value(1),
@@ -75,7 +75,23 @@ void main() {
       );
       await db.initChapterProgresses();
 
-      // 1ゲームプレイして1問正解 (15pt獲得, 未暗記)
+      // 手動暗記チェック (isMemorized = true) をつけたが retentionPoint は 0pt
+      await (db.update(db.words)..where((t) => t.chapter.equals(1))).write(
+        const WordsCompanion(
+          retentionPoint: Value(0),
+          isMemorized: Value(true),
+        ),
+      );
+      await db.syncAllChapterProgresses();
+
+      var progresses = await db.getAllChapterProgresses();
+      var ch1 = progresses.firstWhere((p) => p.chapter == 1);
+
+      // キャラクターは retentionPoint >= 80 のみ参照するため、シルエットのまま (locked)
+      expect(ch1.isCharacterUnlocked, isFalse);
+      expect(PixelCharacterWidget.stateFromRate(0.0, ch1.isCharacterUnlocked), CharacterGrowthState.locked);
+
+      // 1ゲームプレイして1問正解 (15pt獲得, retentionPoint < 80)
       await (db.update(db.words)..where((t) => t.chapter.equals(1))).write(
         const WordsCompanion(
           retentionPoint: Value(15),
@@ -85,15 +101,15 @@ void main() {
       );
       await db.syncAllChapterProgresses();
 
-      final progresses = await db.getAllChapterProgresses();
-      final ch1 = progresses.firstWhere((p) => p.chapter == 1);
+      progresses = await db.getAllChapterProgresses();
+      ch1 = progresses.firstWhere((p) => p.chapter == 1);
 
-      // 80pt未満かつ未暗記のため、シルエットは解除されない
+      // 80pt未満のため、シルエットは解除されない
       expect(ch1.isCharacterUnlocked, isFalse);
       expect(PixelCharacterWidget.stateFromRate(0.0, ch1.isCharacterUnlocked), CharacterGrowthState.locked);
     });
 
-    test('Reaching 80pt or isMemorized unlocks character; decaying to 0% retains lowHealth (never reverts to locked)', () async {
+    test('Reaching 80pt unlocks character; decaying to 0% retains lowHealth (never reverts to locked)', () async {
       await db.into(db.words).insert(
         const WordsCompanion(
           id: Value(1),
@@ -108,7 +124,7 @@ void main() {
       );
       await db.initChapterProgresses();
 
-      // 単語を学習 (暗記ポイント獲得)
+      // 単語を学習 (実質80pt以上獲得)
       await (db.update(db.words)..where((t) => t.chapter.equals(1))).write(
         const WordsCompanion(
           retentionPoint: Value(85),

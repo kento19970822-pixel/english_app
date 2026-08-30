@@ -1317,12 +1317,12 @@ class AppDatabase extends _$AppDatabase {
 
   /// 全チャプターの解放進捗率（70pt基準）・クリア状態（70pt90%基準）・解放状態・キャラ解放を単語マスターから一括同期 (N+1解消・1発集計SQL)
   Future<void> syncAllChapterProgresses() async {
-    // 1回の集計SQLで全チャプターの総数、実70pt以上数、実80pt/暗記達成数を一括集計
+    // 1回の集計SQLで全チャプターの総数、実70pt以上数、実80pt以上単語数を一括集計 (キャラ解放は80pt以上のみ参照)
     const query = '''
       SELECT chapter,
              COUNT(*) AS total_count,
              SUM(CASE WHEN retention_point >= 70 THEN 1 ELSE 0 END) AS unlock_count_70,
-             SUM(CASE WHEN retention_point >= 80 OR is_memorized = 1 THEN 1 ELSE 0 END) AS memorized_count_80
+             SUM(CASE WHEN retention_point >= 80 THEN 1 ELSE 0 END) AS memorized_count_80
       FROM words
       GROUP BY chapter
       ORDER BY chapter ASC;
@@ -1354,7 +1354,7 @@ class AppDatabase extends _$AppDatabase {
           ChapterProgressesCompanion(
             memorizedRate: Value(unlockRate), // ゲーム選択画面用: 70pt以上単語割合
             isCleared: Value(isCleared || cp.isCleared),
-            isCharacterUnlocked: Value(isCharUnlocked), // 一度80pt/暗記達成したら減衰しても永続維持
+            isCharacterUnlocked: Value(isCharUnlocked), // 一度80pt到達でキャラ解放、減衰しても永続維持
           ),
         );
         if (isCleared || cp.isCleared) {
@@ -1374,11 +1374,11 @@ class AppDatabase extends _$AppDatabase {
     int? nextUnlockedChapter;
     bool isNewUnlock = false;
 
-    // 80pt以上の単語または暗記済みフラグが存在するか確認 (キャラクター解放条件)
+    // 80pt以上の単語が存在するか確認 (キャラクター解放条件: retentionPoint >= 80 のみ参照)
     final memorizedWordsInChapter = await (select(words)
           ..where((t) =>
               t.chapter.equals(currentChapter) &
-              (t.retentionPoint.isBiggerOrEqualValue(80) | t.isMemorized.equals(true))))
+              t.retentionPoint.isBiggerOrEqualValue(80)))
         .get();
 
     await transaction(() async {
@@ -1395,7 +1395,7 @@ class AppDatabase extends _$AppDatabase {
           memorizedRate: Value(unlockRate), // ゲーム選択画面用: 70pt以上単語割合
           isCleared: Value(isCleared || (currentProgress?.isCleared ?? false)),
           clearedAt: isCleared ? Value(DateTime.now()) : const Value.absent(),
-          isCharacterUnlocked: Value(shouldUnlockChar), // 80pt/暗記達成でキャラ解放
+          isCharacterUnlocked: Value(shouldUnlockChar), // 実質80pt達成でキャラ解放
         ),
       );
 
