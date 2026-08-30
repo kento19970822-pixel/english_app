@@ -561,57 +561,11 @@ class WordsScreenState extends State<WordsScreen> {
     await widget.database.toggleFavorite(targetWord.id, newStatus);
   }
 
-  List<String> _parseCsvLine(String line) {
-    final List<String> result = [];
-    final StringBuffer buffer = StringBuffer();
-    bool insideQuotes = false;
-
-    for (int i = 0; i < line.length; i++) {
-      final char = line[i];
-      if (char == '"') {
-        if (insideQuotes && i + 1 < line.length && line[i + 1] == '"') {
-          buffer.write('"');
-          i++; // Skip the second quote in escaped pair ""
-        } else {
-          insideQuotes = !insideQuotes;
-        }
-      } else if (char == ',' && !insideQuotes) {
-        result.add(buffer.toString().trim());
-        buffer.clear();
-      } else {
-        buffer.write(char);
-      }
-    }
-    result.add(buffer.toString().trim());
-    return result;
-  }
-
   Future<void> _rebuildDatabase({bool showSnackBar = true}) async {
     setState(() => _isLoading = true);
     try {
       final csvString = await rootBundle.loadString('assets/words.csv');
-      final lines = csvString.split(RegExp(r'\r?\n'));
-      if (lines.isEmpty) return;
-
-      final rawHeader = _parseCsvLine(lines.first);
-      final header = rawHeader.map((h) => h.replaceAll('"', '').trim()).toList();
-      final List<Map<String, String>> rawData = [];
-
-      for (var i = 1; i < lines.length; i++) {
-        final line = lines[i].trim();
-        if (line.isEmpty) continue;
-        final values = _parseCsvLine(line);
-        if (values.length >= header.length) {
-          final map = <String, String>{};
-          for (var j = 0; j < header.length; j++) {
-            map[header[j]] = values[j];
-          }
-          rawData.add(map);
-        }
-      }
-
-      await widget.database.clearAllWords();
-      await widget.database.insertRawWords(rawData);
+      await widget.database.rebuildDatabaseFromCsv(csvString);
       final words = await widget.database.getAllWords();
       _allWords = words;
       _applyFilterAndGrouping();

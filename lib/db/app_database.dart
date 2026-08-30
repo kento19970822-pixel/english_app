@@ -432,85 +432,94 @@ class AppDatabase extends _$AppDatabase {
     String currentCefr = '';
     int cefrWordCount = 0;
 
-    await batch((batch) {
-      for (final item in interleavedList) {
-        final cefrStr = item['cefr']?.toString().toUpperCase().trim() ?? 'A1';
+    // 500件ずつのチャンクバッチ分割によりSQLite変数制限・メモリオーバーフローを完全防止
+    const chunkSize = 500;
+    for (var chunkStart = 0; chunkStart < interleavedList.length; chunkStart += chunkSize) {
+      final chunkEnd = (chunkStart + chunkSize < interleavedList.length)
+          ? chunkStart + chunkSize
+          : interleavedList.length;
+      final chunk = interleavedList.sublist(chunkStart, chunkEnd);
 
-        if (currentCefr.isEmpty) {
-          currentCefr = cefrStr;
-          cefrWordCount = 0;
-        } else if (cefrStr != currentCefr) {
-          if (cefrWordCount > 0) {
+      await batch((batch) {
+        for (final item in chunk) {
+          final cefrStr = item['cefr']?.toString().toUpperCase().trim() ?? 'A1';
+
+          if (currentCefr.isEmpty) {
+            currentCefr = cefrStr;
+            cefrWordCount = 0;
+          } else if (cefrStr != currentCefr) {
+            if (cefrWordCount > 0) {
+              globalChapter++;
+            }
+            currentCefr = cefrStr;
+            cefrWordCount = 0;
+          } else if (cefrWordCount > 0 && cefrWordCount % 100 == 0) {
             globalChapter++;
           }
-          currentCefr = cefrStr;
-          cefrWordCount = 0;
-        } else if (cefrWordCount > 0 && cefrWordCount % 100 == 0) {
-          globalChapter++;
-        }
 
-        cefrWordCount++;
+          cefrWordCount++;
 
-        final levelVal = item['level'] as int? ?? _cefrToLevel(cefrStr);
-        final englishStr = item['english']?.toString() ?? '';
-        final japaneseStr = item['japanese']?.toString() ?? '';
-        final phoneticStr = item['phonetic']?.toString();
-        final categoryStr = item['category']?.toString() ?? 'General';
-        final exampleStr = item['example']?.toString();
-        final exampleJpStr = item['exampleJp']?.toString();
-        final rawPos = item['partOfSpeech']?.toString().trim();
-        final posStr = (rawPos != null && rawPos.isNotEmpty) ? rawPos : detectPartOfSpeech(japaneseStr);
-        final collocationsStr = item['collocations']?.toString();
-        final baseFormStr = item['baseForm']?.toString();
-        final senseIndexVal = item['senseIndex'] as int? ?? 1;
-        final totalSensesVal = item['totalSenses'] as int? ?? 1;
-        final wordGroupStr = item['wordGroup']?.toString();
+          final levelVal = item['level'] as int? ?? _cefrToLevel(cefrStr);
+          final englishStr = item['english']?.toString() ?? '';
+          final japaneseStr = item['japanese']?.toString() ?? '';
+          final phoneticStr = item['phonetic']?.toString();
+          final categoryStr = item['category']?.toString() ?? 'General';
+          final exampleStr = item['example']?.toString();
+          final exampleJpStr = item['exampleJp']?.toString();
+          final rawPos = item['partOfSpeech']?.toString().trim();
+          final posStr = (rawPos != null && rawPos.isNotEmpty) ? rawPos : detectPartOfSpeech(japaneseStr);
+          final collocationsStr = item['collocations']?.toString();
+          final baseFormStr = item['baseForm']?.toString();
+          final senseIndexVal = item['senseIndex'] as int? ?? 1;
+          final totalSensesVal = item['totalSenses'] as int? ?? 1;
+          final wordGroupStr = item['wordGroup']?.toString();
 
-        // 複数語義の構造化JSON（明示指定があれば優先、なければカンマ区切りから自動生成）
-        String? otherMeaningsJson = item['otherMeanings']?.toString();
-        if (otherMeaningsJson == null || otherMeaningsJson.trim().isEmpty) {
-          final meanings = japaneseStr
-              .split(RegExp(r'[、,]'))
-              .map((m) => m.trim())
-              .where((m) => m.isNotEmpty)
-              .toList();
-          if (meanings.length > 1) {
-            final senses = meanings.asMap().entries.map((e) => {
-                  'sense_id': e.key + 1,
-                  'part_of_speech': detectPartOfSpeech(e.value),
-                  'meaning_ja': e.value,
-                  'cefr': cefrStr,
-                  'example_en': e.key == 0 ? exampleStr : null,
-                  'example_ja': e.key == 0 ? exampleJpStr : null,
-                }).toList();
-            otherMeaningsJson = jsonEncode(senses);
+          // 複数語義の構造化JSON（明示指定があれば優先、なければカンマ区切りから自動生成）
+          String? otherMeaningsJson = item['otherMeanings']?.toString();
+          if (otherMeaningsJson == null || otherMeaningsJson.trim().isEmpty) {
+            final meanings = japaneseStr
+                .split(RegExp(r'[、,]'))
+                .map((m) => m.trim())
+                .where((m) => m.isNotEmpty)
+                .toList();
+            if (meanings.length > 1) {
+              final senses = meanings.asMap().entries.map((e) => {
+                    'sense_id': e.key + 1,
+                    'part_of_speech': detectPartOfSpeech(e.value),
+                    'meaning_ja': e.value,
+                    'cefr': cefrStr,
+                    'example_en': e.key == 0 ? exampleStr : null,
+                    'example_ja': e.key == 0 ? exampleJpStr : null,
+                  }).toList();
+              otherMeaningsJson = jsonEncode(senses);
+            }
           }
-        }
 
-        batch.insert(
-          words,
-          WordsCompanion.insert(
-            english: englishStr,
-            japanese: japaneseStr,
-            partOfSpeech: Value(posStr),
-            cefr: Value(cefrStr),
-            level: Value(levelVal),
-            chapter: Value(globalChapter),
-            phonetic: Value(phoneticStr),
-            category: Value(categoryStr),
-            example: Value(exampleStr),
-            exampleJp: Value(exampleJpStr),
-            collocations: Value(collocationsStr),
-            otherMeanings: Value(otherMeaningsJson),
-            baseForm: Value(baseFormStr),
-            senseIndex: Value(senseIndexVal),
-            totalSenses: Value(totalSensesVal),
-            wordGroup: Value(wordGroupStr),
-            pointDecreasedTotal: const Value(0),
-          ),
-        );
-      }
-    });
+          batch.insert(
+            words,
+            WordsCompanion.insert(
+              english: englishStr,
+              japanese: japaneseStr,
+              partOfSpeech: Value(posStr),
+              cefr: Value(cefrStr),
+              level: Value(levelVal),
+              chapter: Value(globalChapter),
+              phonetic: Value(phoneticStr),
+              category: Value(categoryStr),
+              example: Value(exampleStr),
+              exampleJp: Value(exampleJpStr),
+              collocations: Value(collocationsStr),
+              otherMeanings: Value(otherMeaningsJson),
+              baseForm: Value(baseFormStr),
+              senseIndex: Value(senseIndexVal),
+              totalSenses: Value(totalSensesVal),
+              wordGroup: Value(wordGroupStr),
+              pointDecreasedTotal: const Value(0),
+            ),
+          );
+        }
+      });
+    }
 
     // チャプター進行状況テーブルも再生成
     await delete(chapterProgresses).go();
@@ -577,6 +586,59 @@ class AppDatabase extends _$AppDatabase {
     } catch (e) {
       debugPrint('initWordsIfEmpty error: $e');
     }
+  }
+
+  /// CSV文字列から全単語データベースを再構築（500件チャンク分割バッチでOOM/SQLite変数オーバーフローを完全防止）
+  Future<int> rebuildDatabaseFromCsv(String csvString) async {
+    final lines = csvString.split(RegExp(r'\r?\n'));
+    if (lines.isEmpty) return 0;
+
+    List<String> parseCsvLine(String line) {
+      final List<String> result = [];
+      final StringBuffer buffer = StringBuffer();
+      bool insideQuotes = false;
+      for (int i = 0; i < line.length; i++) {
+        final char = line[i];
+        if (char == '"') {
+          if (insideQuotes && i + 1 < line.length && line[i + 1] == '"') {
+            buffer.write('"');
+            i++;
+          } else {
+            insideQuotes = !insideQuotes;
+          }
+        } else if (char == ',' && !insideQuotes) {
+          result.add(buffer.toString().trim());
+          buffer.clear();
+        } else {
+          buffer.write(char);
+        }
+      }
+      result.add(buffer.toString().trim());
+      return result;
+    }
+
+    final rawHeader = parseCsvLine(lines.first);
+    final header = rawHeader.map((h) => h.replaceAll('"', '').trim()).toList();
+    final List<Map<String, String>> rawData = [];
+
+    for (var i = 1; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) continue;
+      final values = parseCsvLine(line);
+      if (values.length >= header.length) {
+        final map = <String, String>{};
+        for (var j = 0; j < header.length; j++) {
+          map[header[j]] = values[j];
+        }
+        rawData.add(map);
+      }
+    }
+
+    if (rawData.isEmpty) return 0;
+
+    await clearAllWords();
+    await insertRawWords(rawData);
+    return rawData.length;
   }
 
   /// 同一英単語の全語義（他チャプター含む）を取得
@@ -1592,13 +1654,20 @@ class AppDatabase extends _$AppDatabase {
     return wordsList;
   }
 
-  /// 既存の Words テーブルから WordSenses ＆ UserWordProgresses への自動同期（3NFマイグレーション）
+  /// 既存の Words テーブルから WordSenses ＆ UserWordProgresses への自動同期（3NFマイグレーション、500件チャンクバッチ）
   Future<void> populateSensesAndProgressFromWords() async {
     final allWordsList = await select(words).get();
     if (allWordsList.isEmpty) return;
 
-    await batch((b) {
-      for (final w in allWordsList) {
+    const chunkSize = 500;
+    for (var chunkStart = 0; chunkStart < allWordsList.length; chunkStart += chunkSize) {
+      final chunkEnd = (chunkStart + chunkSize < allWordsList.length)
+          ? chunkStart + chunkSize
+          : allWordsList.length;
+      final chunk = allWordsList.sublist(chunkStart, chunkEnd);
+
+      await batch((b) {
+        for (final w in chunk) {
         // 1. 第1語義
         b.insert(
           wordSenses,
@@ -1666,5 +1735,6 @@ class AppDatabase extends _$AppDatabase {
         );
       }
     });
+    }
   }
 }
