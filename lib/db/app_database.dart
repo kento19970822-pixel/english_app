@@ -43,7 +43,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -51,13 +51,23 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
-      for (final table in allTables) {
-        await m.deleteTable(table.actualTableName);
-        await m.createTable(table);
+      if (from < 15) {
+        // chapter_progresses に is_character_unlocked カラムを追加
+        try {
+          await m.addColumn(chapterProgresses, chapterProgresses.isCharacterUnlocked);
+        } catch (_) {}
       }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
+
+      // 既存DBへのフォールバック（is_character_unlocked カラムが未作成の場合に自動追加）
+      try {
+        await customStatement('ALTER TABLE chapter_progresses ADD COLUMN is_character_unlocked INTEGER NOT NULL DEFAULT 0;');
+      } catch (_) {
+        // カラムが既に存在する場合は無視
+      }
+
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_chapter ON words (chapter);');
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_cefr ON words (cefr);');
       await customStatement('CREATE INDEX IF NOT EXISTS idx_words_english ON words (english);');
