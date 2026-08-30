@@ -60,7 +60,40 @@ void main() {
       expect(PixelCharacterWidget.stateFromRate(0.0, ch2.isCharacterUnlocked), CharacterGrowthState.locked);
     });
 
-    test('Learning a word unlocks character; decaying to 0% retains lowHealth (never reverts to locked)', () async {
+    test('1 game play with low points (< 80pt) does NOT unlock character silhouette', () async {
+      await db.into(db.words).insert(
+        const WordsCompanion(
+          id: Value(1),
+          english: Value('apple'),
+          japanese: Value('りんご'),
+          partOfSpeech: Value('noun'),
+          cefr: Value('A1'),
+          level: Value(1),
+          chapter: Value(1),
+          category: Value('General'),
+        ),
+      );
+      await db.initChapterProgresses();
+
+      // 1ゲームプレイして1問正解 (15pt獲得, 未暗記)
+      await (db.update(db.words)..where((t) => t.chapter.equals(1))).write(
+        const WordsCompanion(
+          retentionPoint: Value(15),
+          isMemorized: Value(false),
+          correctCount: Value(1),
+        ),
+      );
+      await db.syncAllChapterProgresses();
+
+      final progresses = await db.getAllChapterProgresses();
+      final ch1 = progresses.firstWhere((p) => p.chapter == 1);
+
+      // 80pt未満かつ未暗記のため、シルエットは解除されない
+      expect(ch1.isCharacterUnlocked, isFalse);
+      expect(PixelCharacterWidget.stateFromRate(0.0, ch1.isCharacterUnlocked), CharacterGrowthState.locked);
+    });
+
+    test('Reaching 80pt or isMemorized unlocks character; decaying to 0% retains lowHealth (never reverts to locked)', () async {
       await db.into(db.words).insert(
         const WordsCompanion(
           id: Value(1),

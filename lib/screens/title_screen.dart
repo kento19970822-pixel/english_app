@@ -182,7 +182,7 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '脳に刻む、爽快スピード暗記。',
+                              '脳に刻む、爽快スピード暗記ゲーム',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 12.5,

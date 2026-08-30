@@ -413,6 +413,25 @@ class AppDatabase extends _$AppDatabase {
       }
 
       final sortedBucketKeys = buckets.keys.toList()..sort();
+
+      // 各頭文字バケット内をソート:
+      // 1. 原形 (isBaseForm == true) を派生形 (複数形・過去形等) より優先
+      // 2. originalIndex 昇順
+      for (final char in sortedBucketKeys) {
+        buckets[char]!.sort((a, b) {
+          final aSense = wordToSenses[a]!.first;
+          final bSense = wordToSenses[b]!.first;
+          final aBase = aSense['baseForm']?.toString().trim().toLowerCase();
+          final bBase = bSense['baseForm']?.toString().trim().toLowerCase();
+          final aIsBase = (aBase == null || aBase.isEmpty || aBase == a.toLowerCase());
+          final bIsBase = (bBase == null || bBase.isEmpty || bBase == b.toLowerCase());
+          if (aIsBase != bIsBase) {
+            return aIsBase ? -1 : 1; // 原形を優先
+          }
+          return (aSense['originalIndex'] as int).compareTo(bSense['originalIndex'] as int);
+        });
+      }
+
       final Map<String, int> wordSensePointer = {for (final k in wordToSenses.keys) k: 0};
 
       while (true) {
@@ -1298,26 +1317,26 @@ class AppDatabase extends _$AppDatabase {
 
   /// 全チャプターの解放進捗率（70pt基準）・クリア状態（70pt90%基準）・解放状態・キャラ解放を単語マスターから一括同期 (N+1解消・1発集計SQL)
   Future<void> syncAllChapterProgresses() async {
-    // 1回の集計SQLで全チャプターの総数、実70pt以上数、学習実績数を一括集計
+    // 1回の集計SQLで全チャプターの総数、実70pt以上数、実80pt/暗記達成数を一括集計
     const query = '''
       SELECT chapter,
              COUNT(*) AS total_count,
              SUM(CASE WHEN retention_point >= 70 THEN 1 ELSE 0 END) AS unlock_count_70,
-             SUM(CASE WHEN retention_point > 0 OR is_memorized = 1 OR correct_count > 0 THEN 1 ELSE 0 END) AS studied_count
+             SUM(CASE WHEN retention_point >= 80 OR is_memorized = 1 THEN 1 ELSE 0 END) AS memorized_count_80
       FROM words
       GROUP BY chapter
       ORDER BY chapter ASC;
     ''';
     final rows = await customSelect(query).get();
-    final Map<int, ({double unlockRate, bool hasStudied})> chapterStatsMap = {};
+    final Map<int, ({double unlockRate, bool hasMemorized80})> chapterStatsMap = {};
     for (final row in rows) {
       final ch = row.read<int>('chapter');
       final total = row.read<int>('total_count');
       final unlock70 = row.read<int>('unlock_count_70');
-      final studied = row.read<int>('studied_count');
+      final memorized80 = row.read<int>('memorized_count_80');
       chapterStatsMap[ch] = (
         unlockRate: total > 0 ? (unlock70 / total) * 100.0 : 0.0,
-        hasStudied: studied > 0,
+        hasMemorized80: memorized80 > 0,
       );
     }
 
@@ -1327,15 +1346,15 @@ class AppDatabase extends _$AppDatabase {
       for (final cp in allCp) {
         final stat = chapterStatsMap[cp.chapter];
         final unlockRate = stat?.unlockRate ?? 0.0;
-        final hasStudied = stat?.hasStudied ?? false;
+        final hasMemorized80 = stat?.hasMemorized80 ?? false;
         final isCleared = unlockRate >= 90.0;
-        final isCharUnlocked = hasStudied || cp.isCharacterUnlocked;
+        final isCharUnlocked = hasMemorized80 || cp.isCharacterUnlocked;
 
         await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter))).write(
           ChapterProgressesCompanion(
             memorizedRate: Value(unlockRate), // ゲーム選択画面用: 70pt以上単語割合
             isCleared: Value(isCleared || cp.isCleared),
-            isCharacterUnlocked: Value(isCharUnlocked), // 一度学習・暗記したら減衰しても永続維持
+            isCharacterUnlocked: Value(isCharUnlocked), // 一度80pt/暗記達成したら減衰しても永続維持
           ),
         );
         if (isCleared || cp.isCleared) {
@@ -1355,18 +1374,28 @@ class AppDatabase extends _$AppDatabase {
     int? nextUnlockedChapter;
     bool isNewUnlock = false;
 
+    // 80pt以上の単語または暗記済みフラグが存在するか確認 (キャラクター解放条件)
+    final memorizedWordsInChapter = await (select(words)
+          ..where((t) =>
+              t.chapter.equals(currentChapter) &
+              (t.retentionPoint.isBiggerOrEqualValue(80) | t.isMemorized.equals(true))))
+        .get();
+
     await transaction(() async {
       // 現在のチャプター進捗を更新
       final currentProgress = await (select(chapterProgresses)
             ..where((t) => t.chapter.equals(currentChapter)))
           .getSingleOrNull();
 
+      final shouldUnlockChar =
+          memorizedWordsInChapter.isNotEmpty || (currentProgress?.isCharacterUnlocked ?? false);
+
       await (update(chapterProgresses)..where((t) => t.chapter.equals(currentChapter))).write(
         ChapterProgressesCompanion(
           memorizedRate: Value(unlockRate), // ゲーム選択画面用: 70pt以上単語割合
           isCleared: Value(isCleared || (currentProgress?.isCleared ?? false)),
           clearedAt: isCleared ? Value(DateTime.now()) : const Value.absent(),
-          isCharacterUnlocked: const Value(true), // 学習・クリアしたチャプターはキャラ永続解放
+          isCharacterUnlocked: Value(shouldUnlockChar), // 80pt/暗記達成でキャラ解放
         ),
       );
 

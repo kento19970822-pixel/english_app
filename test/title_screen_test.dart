@@ -19,7 +19,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('ENGLISH QUEST'), findsOneWidget);
-    expect(find.text('脳に刻む、爽快スピード暗記。'), findsOneWidget);
+    expect(find.text('脳に刻む、爽快スピード暗記ゲーム'), findsOneWidget);
     expect(find.text('TAP TO START'), findsOneWidget);
     await db.close();
   });
