@@ -211,7 +211,7 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
       (cp) => cp.chapter == (buddyId + 1),
     ).firstOrNull;
     if (matching == null) return CharacterGrowthState.locked;
-    return PixelCharacterWidget.stateFromRate(matching.memorizedRate, matching.isUnlocked);
+    return PixelCharacterWidget.stateFromRate(matching.memorizedRate, matching.isCharacterUnlocked);
   }
 
   Future<void> _startGame() async {
@@ -562,11 +562,10 @@ class ModeSelectScreenState extends State<ModeSelectScreen> {
                                   const SizedBox(width: 8),
                                   PixelCharacterWidget(
                                     speciesIndex: cp.chapter - 1,
-                                    growthState: isUnlocked
-                                        ? (isCleared
-                                            ? CharacterGrowthState.evolved
-                                            : PixelCharacterWidget.stateFromRate(cp.memorizedRate, true))
-                                        : CharacterGrowthState.locked,
+                                    growthState: PixelCharacterWidget.stateFromRate(
+                                      cp.memorizedRate,
+                                      cp.isCharacterUnlocked,
+                                    ),
                                     size: 26,
                                   ),
                                   const SizedBox(width: 8),
