@@ -172,7 +172,7 @@ class RecordsScreenState extends State<RecordsScreen> {
                     child: TextButton.icon(
                       icon: const Icon(Icons.restart_alt_rounded, size: 16, color: Color(0xFFD9534F)),
                       label: const Text(
-                        '学習記録・連続日数をリセット',
+                        '全学習データ・進捗を完全リセット（初期化）',
                         style: TextStyle(
                           fontSize: 12,
                           color: Color(0xFFD9534F),
@@ -199,12 +199,12 @@ class RecordsScreenState extends State<RecordsScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: Color(0xFFD9534F)),
             SizedBox(width: 8),
-            Text('記録のリセット', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('全学習データ・進捗の完全リセット', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
           ],
         ),
         content: const Text(
-          '学習履歴、カレンダー記録、連続学習日数、スタンプ獲得状況をすべて初期状態（0日）にリセットしますか？\n（単語マスター自体は保持されます）',
-          style: TextStyle(fontSize: 13, color: Color(0xFF6B726E)),
+          'チャプター解放、キャラクター図鑑、スタンプ、学習履歴、連続学習日数、暗記進捗のすべてが初期状態に戻ります。\n\n全キャラクターが初期の黒シルエットに戻ります。この操作は取り消せません。実行しますか？',
+          style: TextStyle(fontSize: 13, color: Color(0xFF6B726E), height: 1.4),
         ),
         actions: [
           TextButton(
@@ -225,12 +225,12 @@ class RecordsScreenState extends State<RecordsScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     backgroundColor: Color(0xFF5F9E98),
-                    content: Text('学習記録と連続日数をリセットしました（0日）'),
+                    content: Text('すべての学習進捗・記録を初期化しました'),
                   ),
                 );
               }
             },
-            child: const Text('リセットする', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text('初期化する', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),

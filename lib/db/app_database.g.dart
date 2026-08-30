@@ -3014,6 +3014,20 @@ class $ChapterProgressesTable extends ChapterProgresses
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
+  static const VerificationMeta _isCharacterUnlockedMeta =
+      const VerificationMeta('isCharacterUnlocked');
+  @override
+  late final GeneratedColumn<bool> isCharacterUnlocked = GeneratedColumn<bool>(
+    'is_character_unlocked',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_character_unlocked" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _clearedAtMeta = const VerificationMeta(
     'clearedAt',
   );
@@ -3032,6 +3046,7 @@ class $ChapterProgressesTable extends ChapterProgresses
     isUnlocked,
     isCleared,
     memorizedRate,
+    isCharacterUnlocked,
     clearedAt,
   ];
   @override
@@ -3079,6 +3094,15 @@ class $ChapterProgressesTable extends ChapterProgresses
         ),
       );
     }
+    if (data.containsKey('is_character_unlocked')) {
+      context.handle(
+        _isCharacterUnlockedMeta,
+        isCharacterUnlocked.isAcceptableOrUnknown(
+          data['is_character_unlocked']!,
+          _isCharacterUnlockedMeta,
+        ),
+      );
+    }
     if (data.containsKey('cleared_at')) {
       context.handle(
         _clearedAtMeta,
@@ -3114,6 +3138,10 @@ class $ChapterProgressesTable extends ChapterProgresses
         DriftSqlType.double,
         data['${effectivePrefix}memorized_rate'],
       )!,
+      isCharacterUnlocked: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_character_unlocked'],
+      )!,
       clearedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}cleared_at'],
@@ -3144,6 +3172,9 @@ class ChapterProgressesData extends DataClass
   /// 最新のチャプター内暗記フラグ率 (0.0〜100.0)
   final double memorizedRate;
 
+  /// キャラクター解放フラグ (学習開始・暗記で一度解放されたら減衰しても永続維持)
+  final bool isCharacterUnlocked;
+
   /// クリア達成日時
   final DateTime? clearedAt;
   const ChapterProgressesData({
@@ -3152,6 +3183,7 @@ class ChapterProgressesData extends DataClass
     required this.isUnlocked,
     required this.isCleared,
     required this.memorizedRate,
+    required this.isCharacterUnlocked,
     this.clearedAt,
   });
   @override
@@ -3162,6 +3194,7 @@ class ChapterProgressesData extends DataClass
     map['is_unlocked'] = Variable<bool>(isUnlocked);
     map['is_cleared'] = Variable<bool>(isCleared);
     map['memorized_rate'] = Variable<double>(memorizedRate);
+    map['is_character_unlocked'] = Variable<bool>(isCharacterUnlocked);
     if (!nullToAbsent || clearedAt != null) {
       map['cleared_at'] = Variable<DateTime>(clearedAt);
     }
@@ -3175,6 +3208,7 @@ class ChapterProgressesData extends DataClass
       isUnlocked: Value(isUnlocked),
       isCleared: Value(isCleared),
       memorizedRate: Value(memorizedRate),
+      isCharacterUnlocked: Value(isCharacterUnlocked),
       clearedAt: clearedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(clearedAt),
@@ -3192,6 +3226,9 @@ class ChapterProgressesData extends DataClass
       isUnlocked: serializer.fromJson<bool>(json['isUnlocked']),
       isCleared: serializer.fromJson<bool>(json['isCleared']),
       memorizedRate: serializer.fromJson<double>(json['memorizedRate']),
+      isCharacterUnlocked: serializer.fromJson<bool>(
+        json['isCharacterUnlocked'],
+      ),
       clearedAt: serializer.fromJson<DateTime?>(json['clearedAt']),
     );
   }
@@ -3204,6 +3241,7 @@ class ChapterProgressesData extends DataClass
       'isUnlocked': serializer.toJson<bool>(isUnlocked),
       'isCleared': serializer.toJson<bool>(isCleared),
       'memorizedRate': serializer.toJson<double>(memorizedRate),
+      'isCharacterUnlocked': serializer.toJson<bool>(isCharacterUnlocked),
       'clearedAt': serializer.toJson<DateTime?>(clearedAt),
     };
   }
@@ -3214,6 +3252,7 @@ class ChapterProgressesData extends DataClass
     bool? isUnlocked,
     bool? isCleared,
     double? memorizedRate,
+    bool? isCharacterUnlocked,
     Value<DateTime?> clearedAt = const Value.absent(),
   }) => ChapterProgressesData(
     chapter: chapter ?? this.chapter,
@@ -3221,6 +3260,7 @@ class ChapterProgressesData extends DataClass
     isUnlocked: isUnlocked ?? this.isUnlocked,
     isCleared: isCleared ?? this.isCleared,
     memorizedRate: memorizedRate ?? this.memorizedRate,
+    isCharacterUnlocked: isCharacterUnlocked ?? this.isCharacterUnlocked,
     clearedAt: clearedAt.present ? clearedAt.value : this.clearedAt,
   );
   ChapterProgressesData copyWithCompanion(ChapterProgressesCompanion data) {
@@ -3234,6 +3274,9 @@ class ChapterProgressesData extends DataClass
       memorizedRate: data.memorizedRate.present
           ? data.memorizedRate.value
           : this.memorizedRate,
+      isCharacterUnlocked: data.isCharacterUnlocked.present
+          ? data.isCharacterUnlocked.value
+          : this.isCharacterUnlocked,
       clearedAt: data.clearedAt.present ? data.clearedAt.value : this.clearedAt,
     );
   }
@@ -3246,6 +3289,7 @@ class ChapterProgressesData extends DataClass
           ..write('isUnlocked: $isUnlocked, ')
           ..write('isCleared: $isCleared, ')
           ..write('memorizedRate: $memorizedRate, ')
+          ..write('isCharacterUnlocked: $isCharacterUnlocked, ')
           ..write('clearedAt: $clearedAt')
           ..write(')'))
         .toString();
@@ -3258,6 +3302,7 @@ class ChapterProgressesData extends DataClass
     isUnlocked,
     isCleared,
     memorizedRate,
+    isCharacterUnlocked,
     clearedAt,
   );
   @override
@@ -3269,6 +3314,7 @@ class ChapterProgressesData extends DataClass
           other.isUnlocked == this.isUnlocked &&
           other.isCleared == this.isCleared &&
           other.memorizedRate == this.memorizedRate &&
+          other.isCharacterUnlocked == this.isCharacterUnlocked &&
           other.clearedAt == this.clearedAt);
 }
 
@@ -3279,6 +3325,7 @@ class ChapterProgressesCompanion
   final Value<bool> isUnlocked;
   final Value<bool> isCleared;
   final Value<double> memorizedRate;
+  final Value<bool> isCharacterUnlocked;
   final Value<DateTime?> clearedAt;
   const ChapterProgressesCompanion({
     this.chapter = const Value.absent(),
@@ -3286,6 +3333,7 @@ class ChapterProgressesCompanion
     this.isUnlocked = const Value.absent(),
     this.isCleared = const Value.absent(),
     this.memorizedRate = const Value.absent(),
+    this.isCharacterUnlocked = const Value.absent(),
     this.clearedAt = const Value.absent(),
   });
   ChapterProgressesCompanion.insert({
@@ -3294,6 +3342,7 @@ class ChapterProgressesCompanion
     this.isUnlocked = const Value.absent(),
     this.isCleared = const Value.absent(),
     this.memorizedRate = const Value.absent(),
+    this.isCharacterUnlocked = const Value.absent(),
     this.clearedAt = const Value.absent(),
   });
   static Insertable<ChapterProgressesData> custom({
@@ -3302,6 +3351,7 @@ class ChapterProgressesCompanion
     Expression<bool>? isUnlocked,
     Expression<bool>? isCleared,
     Expression<double>? memorizedRate,
+    Expression<bool>? isCharacterUnlocked,
     Expression<DateTime>? clearedAt,
   }) {
     return RawValuesInsertable({
@@ -3310,6 +3360,8 @@ class ChapterProgressesCompanion
       if (isUnlocked != null) 'is_unlocked': isUnlocked,
       if (isCleared != null) 'is_cleared': isCleared,
       if (memorizedRate != null) 'memorized_rate': memorizedRate,
+      if (isCharacterUnlocked != null)
+        'is_character_unlocked': isCharacterUnlocked,
       if (clearedAt != null) 'cleared_at': clearedAt,
     });
   }
@@ -3320,6 +3372,7 @@ class ChapterProgressesCompanion
     Value<bool>? isUnlocked,
     Value<bool>? isCleared,
     Value<double>? memorizedRate,
+    Value<bool>? isCharacterUnlocked,
     Value<DateTime?>? clearedAt,
   }) {
     return ChapterProgressesCompanion(
@@ -3328,6 +3381,7 @@ class ChapterProgressesCompanion
       isUnlocked: isUnlocked ?? this.isUnlocked,
       isCleared: isCleared ?? this.isCleared,
       memorizedRate: memorizedRate ?? this.memorizedRate,
+      isCharacterUnlocked: isCharacterUnlocked ?? this.isCharacterUnlocked,
       clearedAt: clearedAt ?? this.clearedAt,
     );
   }
@@ -3350,6 +3404,9 @@ class ChapterProgressesCompanion
     if (memorizedRate.present) {
       map['memorized_rate'] = Variable<double>(memorizedRate.value);
     }
+    if (isCharacterUnlocked.present) {
+      map['is_character_unlocked'] = Variable<bool>(isCharacterUnlocked.value);
+    }
     if (clearedAt.present) {
       map['cleared_at'] = Variable<DateTime>(clearedAt.value);
     }
@@ -3364,6 +3421,7 @@ class ChapterProgressesCompanion
           ..write('isUnlocked: $isUnlocked, ')
           ..write('isCleared: $isCleared, ')
           ..write('memorizedRate: $memorizedRate, ')
+          ..write('isCharacterUnlocked: $isCharacterUnlocked, ')
           ..write('clearedAt: $clearedAt')
           ..write(')'))
         .toString();
@@ -6804,6 +6862,7 @@ typedef $$ChapterProgressesTableCreateCompanionBuilder =
       Value<bool> isUnlocked,
       Value<bool> isCleared,
       Value<double> memorizedRate,
+      Value<bool> isCharacterUnlocked,
       Value<DateTime?> clearedAt,
     });
 typedef $$ChapterProgressesTableUpdateCompanionBuilder =
@@ -6813,6 +6872,7 @@ typedef $$ChapterProgressesTableUpdateCompanionBuilder =
       Value<bool> isUnlocked,
       Value<bool> isCleared,
       Value<double> memorizedRate,
+      Value<bool> isCharacterUnlocked,
       Value<DateTime?> clearedAt,
     });
 
@@ -6847,6 +6907,11 @@ class $$ChapterProgressesTableFilterComposer
 
   ColumnFilters<double> get memorizedRate => $composableBuilder(
     column: $table.memorizedRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCharacterUnlocked => $composableBuilder(
+    column: $table.isCharacterUnlocked,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6890,6 +6955,11 @@ class $$ChapterProgressesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isCharacterUnlocked => $composableBuilder(
+    column: $table.isCharacterUnlocked,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get clearedAt => $composableBuilder(
     column: $table.clearedAt,
     builder: (column) => ColumnOrderings(column),
@@ -6921,6 +6991,11 @@ class $$ChapterProgressesTableAnnotationComposer
 
   GeneratedColumn<double> get memorizedRate => $composableBuilder(
     column: $table.memorizedRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isCharacterUnlocked => $composableBuilder(
+    column: $table.isCharacterUnlocked,
     builder: (column) => column,
   );
 
@@ -6973,6 +7048,7 @@ class $$ChapterProgressesTableTableManager
                 Value<bool> isUnlocked = const Value.absent(),
                 Value<bool> isCleared = const Value.absent(),
                 Value<double> memorizedRate = const Value.absent(),
+                Value<bool> isCharacterUnlocked = const Value.absent(),
                 Value<DateTime?> clearedAt = const Value.absent(),
               }) => ChapterProgressesCompanion(
                 chapter: chapter,
@@ -6980,6 +7056,7 @@ class $$ChapterProgressesTableTableManager
                 isUnlocked: isUnlocked,
                 isCleared: isCleared,
                 memorizedRate: memorizedRate,
+                isCharacterUnlocked: isCharacterUnlocked,
                 clearedAt: clearedAt,
               ),
           createCompanionCallback:
@@ -6989,6 +7066,7 @@ class $$ChapterProgressesTableTableManager
                 Value<bool> isUnlocked = const Value.absent(),
                 Value<bool> isCleared = const Value.absent(),
                 Value<double> memorizedRate = const Value.absent(),
+                Value<bool> isCharacterUnlocked = const Value.absent(),
                 Value<DateTime?> clearedAt = const Value.absent(),
               }) => ChapterProgressesCompanion.insert(
                 chapter: chapter,
@@ -6996,6 +7074,7 @@ class $$ChapterProgressesTableTableManager
                 isUnlocked: isUnlocked,
                 isCleared: isCleared,
                 memorizedRate: memorizedRate,
+                isCharacterUnlocked: isCharacterUnlocked,
                 clearedAt: clearedAt,
               ),
           withReferenceMapper: (p0) => p0

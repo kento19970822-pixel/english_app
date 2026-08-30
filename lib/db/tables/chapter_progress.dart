@@ -18,6 +18,9 @@ class ChapterProgresses extends Table {
   /// 最新のチャプター内暗記フラグ率 (0.0〜100.0)
   RealColumn get memorizedRate => real().withDefault(const Constant(0.0))();
 
+  /// キャラクター解放フラグ (学習開始・暗記で一度解放されたら減衰しても永続維持)
+  BoolColumn get isCharacterUnlocked => boolean().withDefault(const Constant(false))();
+
   /// クリア達成日時
   DateTimeColumn get clearedAt => dateTime().nullable()();
 

@@ -180,8 +180,8 @@ class _WordSearchBarState extends State<WordSearchBar> {
               } else if (value == 'reset_learning') {
                 await _showConfirmDialog(
                   context,
-                  title: '学習データ初期化',
-                  message: 'すべての単語の暗記ポイント、学習ログ、ステータスを初期状態にリセットします。この操作は取り消せません。実行しますか？',
+                  title: '全単語の暗記フラグを一括クリア',
+                  message: '単語帳の暗記チェック（暗記フラグ）を一括で未暗記に戻します。チャプター解放やスタンプ、学習記録は保持されます。実行しますか？',
                   isDestructive: true,
                   onConfirm: widget.onResetLearningData,
                 );
@@ -213,9 +213,9 @@ class _WordSearchBarState extends State<WordSearchBar> {
                 value: 'reset_learning',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_forever_rounded, size: 18, color: Colors.redAccent),
+                    Icon(Icons.cleaning_services_outlined, size: 18, color: Colors.orangeAccent),
                     SizedBox(width: 8),
-                    Text('学習進捗を完全リセット', style: TextStyle(fontSize: 13, color: Colors.redAccent)),
+                    Text('全単語の暗記フラグを一括クリア', style: TextStyle(fontSize: 13, color: Colors.orangeAccent)),
                   ],
                 ),
               ),

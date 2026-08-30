@@ -33,7 +33,7 @@ class WordsScreen extends StatefulWidget {
 class WordsScreenState extends State<WordsScreen> {
   List<Word> _allWords = [];
   List<WordSection> _sections = [];
-  Map<int, ({int total, int memorized})> _chapterGlobalStats = {};
+  Map<int, ({int total, int memorized, bool isCharUnlocked})> _chapterGlobalStats = {};
   int _totalFilteredCount = 0;
   int _lastLoadedWordsVersion = 0;
 
@@ -466,17 +466,19 @@ class WordsScreenState extends State<WordsScreen> {
       }
     }
 
-    // 全単語マスターからチャプターごとの真の全体進捗（総数・80pt以上暗記数）を集計（フィルター非依存）
-    final Map<int, ({int total, int memorized})> globalStats = {};
+    // 全単語マスターからチャプターごとの真の全体進捗（総数・80pt以上暗記数・キャラ解放状態）を集計（フィルター非依存）
+    final Map<int, ({int total, int memorized, bool isCharUnlocked})> globalStats = {};
     for (final w in _allWords) {
       final current = globalStats[w.chapter];
       final isMem = w.retentionPoint >= 80;
+      final isStudied = w.retentionPoint > 0 || w.isMemorized || w.correctCount > 0;
       if (current == null) {
-        globalStats[w.chapter] = (total: 1, memorized: isMem ? 1 : 0);
+        globalStats[w.chapter] = (total: 1, memorized: isMem ? 1 : 0, isCharUnlocked: isStudied);
       } else {
         globalStats[w.chapter] = (
           total: current.total + 1,
           memorized: current.memorized + (isMem ? 1 : 0),
+          isCharUnlocked: current.isCharUnlocked || isStudied,
         );
       }
     }
@@ -508,12 +510,14 @@ class WordsScreenState extends State<WordsScreen> {
 
     // チャプターごとのグローバル80pt統計（キャラバナー用）をO(1)で同期更新
     final chap = updatedWord.chapter;
-    if (_chapterGlobalStats.containsKey(chap) && (was80Plus != is80Plus)) {
+    if (_chapterGlobalStats.containsKey(chap)) {
       final currentStat = _chapterGlobalStats[chap]!;
-      final diff = is80Plus ? 1 : -1;
+      final diff = (was80Plus != is80Plus) ? (is80Plus ? 1 : -1) : 0;
+      final isStudied = updatedWord.retentionPoint > 0 || updatedWord.isMemorized || updatedWord.correctCount > 0;
       _chapterGlobalStats[chap] = (
         total: currentStat.total,
         memorized: (currentStat.memorized + diff).clamp(0, currentStat.total),
+        isCharUnlocked: currentStat.isCharUnlocked || isStudied,
       );
     }
 
@@ -739,10 +743,10 @@ class WordsScreenState extends State<WordsScreen> {
                                 },
                                 onResetLearningData: () async {
                                   final messenger = ScaffoldMessenger.of(context);
-                                  await widget.database.resetAllLearningData();
+                                  await widget.database.resetAllWordsMemorized();
                                   await _loadWords();
                                   messenger.showSnackBar(
-                                    const SnackBar(content: Text('学習データを初期化しました')),
+                                    const SnackBar(content: Text('全単語の暗記フラグをクリアしました')),
                                   );
                                 },
                                 bgColor: _bgColor,
@@ -874,6 +878,7 @@ class WordsScreenState extends State<WordsScreen> {
                                       section: section,
                                       totalChapterWords: stats?.total,
                                       memorizedChapterWords: stats?.memorized,
+                                      isCharacterUnlocked: stats?.isCharUnlocked ?? false,
                                     );
                                   },
                                 ),

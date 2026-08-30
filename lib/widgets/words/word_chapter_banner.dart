@@ -13,6 +13,7 @@ class WordChapterBanner extends StatelessWidget {
   final Color primaryColor;
   final int? totalChapterWords;
   final int? memorizedChapterWords;
+  final bool isCharacterUnlocked;
 
   const WordChapterBanner({
     super.key,
@@ -24,6 +25,7 @@ class WordChapterBanner extends StatelessWidget {
     this.primaryColor = const Color(0xFF2E8B57),
     this.totalChapterWords,
     this.memorizedChapterWords,
+    this.isCharacterUnlocked = false,
   });
 
   @override
@@ -39,9 +41,11 @@ class WordChapterBanner extends StatelessWidget {
     final isMastered = percent >= 80;
 
     final species = getCharacterSpecies(chapterNum);
-    final charName = percent > 0 ? species.japaneseName : '? ? ? ? ?';
+    // キャラクター解放済みであれば、減衰で0%になっても名前と姿を維持 (未解放のみシルエット & ?????)
+    final isUnlocked = isCharacterUnlocked || percent > 0;
+    final charName = isUnlocked ? species.japaneseName : '? ? ? ? ?';
 
-    final growthState = PixelCharacterWidget.stateFromRate(percent.toDouble(), percent > 0);
+    final growthState = PixelCharacterWidget.stateFromRate(percent.toDouble(), isUnlocked);
 
     return SizedBox(
       height: 78.0,

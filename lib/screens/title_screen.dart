@@ -72,7 +72,7 @@ class _TitleScreenState extends State<TitleScreen> with SingleTickerProviderStat
           _streakCount = streak;
           _totalDays = totalDays;
           _favoriteStamp = favStamp;
-          _buddyGrowth = growth == CharacterGrowthState.locked ? CharacterGrowthState.healthy : growth;
+          _buddyGrowth = growth;
           _isLoading = false;
         });
       }

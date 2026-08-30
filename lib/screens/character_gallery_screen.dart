@@ -114,7 +114,7 @@ class _CharacterGalleryScreenState extends State<CharacterGalleryScreen> {
     final chapter = speciesId + 1;
     final progress = _chapterProgressesMap[chapter];
     if (progress == null) return CharacterGrowthState.locked;
-    return PixelCharacterWidget.stateFromRate(progress.memorizedRate, progress.isUnlocked);
+    return PixelCharacterWidget.stateFromRate(progress.memorizedRate, progress.isCharacterUnlocked);
   }
 
   void _setAsBuddy(int speciesId) {

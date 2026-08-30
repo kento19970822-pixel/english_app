@@ -1063,6 +1063,7 @@ class AppDatabase extends _$AppDatabase {
             isUnlocked: Value(isInitiallyUnlocked),
             isCleared: const Value(false),
             memorizedRate: const Value(0.0),
+            isCharacterUnlocked: const Value(false), // 初期起動・完全リセット時は全章黒シルエット
           ),
           mode: InsertMode.insertOrReplace,
         );
@@ -1223,36 +1224,46 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  /// 全チャプターの解放進捗率（70pt基準）・クリア状態（70pt90%基準）・解放状態を単語マスターから一括同期 (N+1解消・1発集計SQL)
+  /// 全チャプターの解放進捗率（70pt基準）・クリア状態（70pt90%基準）・解放状態・キャラ解放を単語マスターから一括同期 (N+1解消・1発集計SQL)
   Future<void> syncAllChapterProgresses() async {
-    // 1回の集計SQLで全チャプターの総数、実70pt以上数（ゲーム選択画面・章解放用）を一括集計
+    // 1回の集計SQLで全チャプターの総数、実70pt以上数、学習実績数を一括集計
     const query = '''
       SELECT chapter,
              COUNT(*) AS total_count,
-             SUM(CASE WHEN retention_point >= 70 THEN 1 ELSE 0 END) AS unlock_count_70
+             SUM(CASE WHEN retention_point >= 70 THEN 1 ELSE 0 END) AS unlock_count_70,
+             SUM(CASE WHEN retention_point > 0 OR is_memorized = 1 OR correct_count > 0 THEN 1 ELSE 0 END) AS studied_count
       FROM words
       GROUP BY chapter
       ORDER BY chapter ASC;
     ''';
     final rows = await customSelect(query).get();
-    final Map<int, double> unlockRateMap = {};
+    final Map<int, ({double unlockRate, bool hasStudied})> chapterStatsMap = {};
     for (final row in rows) {
       final ch = row.read<int>('chapter');
       final total = row.read<int>('total_count');
       final unlock70 = row.read<int>('unlock_count_70');
-      unlockRateMap[ch] = total > 0 ? (unlock70 / total) * 100.0 : 0.0;
+      final studied = row.read<int>('studied_count');
+      chapterStatsMap[ch] = (
+        unlockRate: total > 0 ? (unlock70 / total) * 100.0 : 0.0,
+        hasStudied: studied > 0,
+      );
     }
 
     final allCp = await (select(chapterProgresses)..orderBy([(t) => OrderingTerm.asc(t.chapter)])).get();
 
     await transaction(() async {
       for (final cp in allCp) {
-        final unlockRate = unlockRateMap[cp.chapter] ?? 0.0;
+        final stat = chapterStatsMap[cp.chapter];
+        final unlockRate = stat?.unlockRate ?? 0.0;
+        final hasStudied = stat?.hasStudied ?? false;
         final isCleared = unlockRate >= 90.0;
+        final isCharUnlocked = hasStudied || cp.isCharacterUnlocked;
+
         await (update(chapterProgresses)..where((t) => t.chapter.equals(cp.chapter))).write(
           ChapterProgressesCompanion(
             memorizedRate: Value(unlockRate), // ゲーム選択画面用: 70pt以上単語割合
             isCleared: Value(isCleared || cp.isCleared),
+            isCharacterUnlocked: Value(isCharUnlocked), // 一度学習・暗記したら減衰しても永続維持
           ),
         );
         if (isCleared || cp.isCleared) {
@@ -1283,6 +1294,7 @@ class AppDatabase extends _$AppDatabase {
           memorizedRate: Value(unlockRate), // ゲーム選択画面用: 70pt以上単語割合
           isCleared: Value(isCleared || (currentProgress?.isCleared ?? false)),
           clearedAt: isCleared ? Value(DateTime.now()) : const Value.absent(),
+          isCharacterUnlocked: const Value(true), // 学習・クリアしたチャプターはキャラ永続解放
         ),
       );
 
