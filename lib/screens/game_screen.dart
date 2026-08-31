@@ -27,6 +27,7 @@ class WordModel {
   final int wrongCount;
   final int senseIndex;
   final int totalSenses;
+  final String? baseForm;
 
   WordModel({
     required this.id,
@@ -43,6 +44,7 @@ class WordModel {
     this.wrongCount = 0,
     this.senseIndex = 1,
     this.totalSenses = 1,
+    this.baseForm,
   });
 
   factory WordModel.fromDrift(Word driftWord) {
@@ -87,6 +89,7 @@ class WordModel {
       wrongCount: driftWord.wrongCount,
       senseIndex: driftWord.senseIndex,
       totalSenses: driftWord.totalSenses,
+      baseForm: driftWord.baseForm,
     );
   }
 }
@@ -553,51 +556,60 @@ class _GameScreenState extends State<GameScreen>
       if (normA.contains(normB) || normB.contains(normA)) return true;
     }
 
-    // 2. 代表的な同義・類義語クラスタ
+    // 2. 代表的な同義・類義語クラスタ (意味的衝突・紛らわしい誤答の完全排除)
     const synonymClusters = [
+      // 推測・推量・予想・思考・助動詞表現 (guess, suppose, assume, predict, will, may 等)
+      {'推測', '推測する', '推量', '推量する', '予想', '予想する', '見当', '推察', '推察する', '推定', '推定する', 'あてる', '〜だろう', 'だろう', '〜かもしれない', 'かもしれない', '〜と思う', '〜のはず', 'はずだ', '信じる', '思う', '考える', '考慮する', '思いめぐらす'},
       // 感情・嗜好
       {'好き', '好む', '好んでいる', '愛する', 'お気に入り', '好意'},
       {'嫌い', '嫌う', '憎む', '嫌悪'},
+      // 要求・依頼・希望
+      {'求める', '要求する', '頼む', '依頼する', '願う', '望む', '希望する', '請求する'},
+      // 許可・承認・容認
+      {'許す', '許可する', '認める', '容認する', '承認する', '受け入れる', '免除する'},
+      // 維持・保持・保存
+      {'保つ', '維持する', '保持する', '保存する', '残す', 'とっておく', 'キープする'},
+      // 試行・挑戦
+      {'試す', '挑戦する', 'やってみる', '試みる', 'トライする', '味見する'},
       // サイズ・量（大小）
       {'大きい', '巨大な', '大きな', '莫大な', '広大な'},
-      {'小さい', 'わずかな', '微小な', '小さな', '少しの'},
-      {'多い', 'たくさんの', '多数の', '豊富な'},
-      {'少ない', 'わずかの', '不足した'},
+      {'小さい', 'わずかな', '微小な', '小さな', '少しの', '些細な'},
+      {'多い', 'たくさんの', '多数の', '豊富な', '多量の'},
+      {'少ない', 'わずかの', '不足した', '乏しい'},
       // 発言・伝達
-      {'話す', '言う', '語る', '述べる', '伝える', '発言する'},
+      {'話す', '言う', '語る', '述べる', '伝える', '発言する', '告げる'},
       // 視覚・認識
-      {'見る', '眺める', '観る', '見つめる', '観察する'},
-      {'聞く', '聴く', '耳を傾ける'},
+      {'見る', '眺める', '観る', '見つめる', '観察する', '目撃する'},
+      {'聞く', '聴く', '耳を傾ける', '聞き入れる'},
       // 開始・終了
       {'始める', '開始する', '起こす', '着手する'},
-      {'終わる', '終える', '終了する', '完了する'},
+      {'終わる', '終える', '終了する', '完了する', '打ち切る'},
       // 速度・難易度・状態
       {'速い', '素早い', '急速な', 'スピーディーな'},
       {'遅い', '鈍い', '緩やかな'},
       {'難しい', '困難な', '大変な', '厳しい'},
-      {'簡単な', '易しい', '容易な', '単純な'},
-      {'正しい', '正確な', '適切な'},
-      {'間違った', '誤った', '不正な'},
-      // 思考・感情
-      {'考える', '思う', '考慮する', '思いめぐらす'},
-      {'嬉しい', '喜ぶ', '幸せな', '愉快な'},
-      {'悲しい', '哀しい', '憂鬱な', '落ち込んだ'},
+      {'簡単な', '易しい', '容易な', '単純な', '手軽な'},
+      {'正しい', '正確な', '適切な', '妥当な'},
+      {'間違った', '誤った', '不正な', '不正確な'},
+      // 感情状態
+      {'嬉しい', '喜ぶ', '幸せな', '愉快な', '満足な'},
+      {'悲しい', '哀しい', '憂鬱な', '落ち込んだ', '辛い'},
     ];
 
     for (final cluster in synonymClusters) {
-      final aInCluster = cluster.any((word) => normA.contains(word) || word.contains(normA));
-      final bInCluster = cluster.any((word) => normB.contains(word) || word.contains(normB));
+      final aInCluster = cluster.any((word) => normA == word || normA.contains(word) || word.contains(normA));
+      final bInCluster = cluster.any((word) => normB == word || normB.contains(word) || word.contains(normB));
       if (aInCluster && bInCluster) {
         return true;
       }
     }
 
-    // 3. 漢字の主要語幹重複チェック（例: 「好」を含む同士、「話」を含む同士など）
+    // 3. 漢字の主要語幹重複チェック（例: 「好」を含む同士、「話」を含む同士、「推」を含む同士など）
     for (int i = 0; i < normA.length; i++) {
       final char = normA[i];
       if (char.codeUnitAt(0) >= 0x4E00 && char.codeUnitAt(0) <= 0x9FFF) {
         if (normB.contains(char)) {
-          if (char != '的' && char != '性' && char != '化' && char != '人' && char != '物' && char != '事' && char != '一') {
+          if (char != '的' && char != '性' && char != '化' && char != '人' && char != '物' && char != '事' && char != '一' && char != '分') {
             return true;
           }
         }
@@ -610,12 +622,19 @@ class _GameScreenState extends State<GameScreen>
   List<String> _generateChoices(WordModel correctWord) {
     final correctJapanese = _normalizeChoiceText(correctWord.japanese);
     final targetPosFamily = _getPosFamily(correctWord.partOfSpeech, correctWord.japanese);
+    final correctBase = correctWord.baseForm?.toLowerCase().trim() ?? '';
+    final correctEng = correctWord.english.toLowerCase().trim();
 
-    // 1. 同一単語の別語義・同スペル単語を完全除外
-    final otherWords = allWords.where((w) =>
-        w.id != correctWord.id &&
-        w.english.toLowerCase().trim() != correctWord.english.toLowerCase().trim()
-    ).toList();
+    // 1. 同一単語・同スペル・同一語幹(baseForm一致)の単語を完全除外
+    final otherWords = allWords.where((w) {
+      if (w.id == correctWord.id) return false;
+      final wEng = w.english.toLowerCase().trim();
+      final wBase = w.baseForm?.toLowerCase().trim() ?? '';
+      if (wEng == correctEng) return false;
+      if (correctBase.isNotEmpty && (wEng == correctBase || wBase == correctBase)) return false;
+      if (wBase.isNotEmpty && wBase == correctEng) return false;
+      return true;
+    }).toList();
 
     // 2. 同一品詞ダミー厳選（Same-POS Matching ＆ 同義語重複排除）
     final samePosCandidates = otherWords

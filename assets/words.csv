@@ -29,8 +29,9 @@ business,1,1,A1,ビジネス,noun,/ˈbɪznəs/,Business,He has a successful busi
 correct,1,1,A1,正しい,adjective,/kərˈɛkt/,General,That is the correct answer.,それは正しい答えです。,,
 different,1,1,A1,違う,verb,/ˈdɪfərənt/,General,We have different opinions.,私たちは違う意見を持っている。,"[{""phrase"": ""different from"", ""meaning"": ""〜と異なる""}]",
 exciting,1,1,A1,わくわくする,verb,/ɪˈksaɪtɪŋ/,Culture,The movie was very exciting.,その映画はとてもわくわくした。,,
-fall,1,2,A1,落ちる・転ぶ,verb,/ˈfɔl/,General,Leaves fall from trees in autumn.,秋には木から葉が落ちる。,"[{""phrase"": ""fall in love"", ""meaning"": ""恋に落ちる""}, {""phrase"": ""fall asleep"", ""meaning"": ""眠りに落ちる""}, {""phrase"": ""fall behind"", ""meaning"": ""遅れをとる""}]",
-fall,2,2,A1,秋・落下,noun,/ˈfɔl/,Nature,I love the cool breeze in the fall.,私は秋の涼しいそよ風が大好きです。,"[{""phrase"": ""in the fall"", ""meaning"": ""秋に""}]",
+fall,1,3,A1,落ちる・転ぶ,verb,/ˈfɔl/,General,Leaves fall from trees in autumn.,秋には木から葉が落ちる。,"[{""phrase"": ""fall in love"", ""meaning"": ""恋に落ちる""}, {""phrase"": ""fall asleep"", ""meaning"": ""眠りに落ちる""}, {""phrase"": ""fall behind"", ""meaning"": ""遅れをとる""}]",
+fall,2,3,A1,秋,noun,/ˈfɔl/,Nature,I love the cool breeze in the fall.,私は秋の涼しいそよ風が大好きです。,"[{""phrase"": ""in the fall"", ""meaning"": ""秋に""}]",
+fall,3,3,A1,落下・転倒,noun,/ˈfɔl/,Nature,He had a bad fall from the ladder.,彼ははしごからひどく転落した。,"[{""phrase"": ""in the fall"", ""meaning"": ""秋に""}]",
 grandparent,1,1,A1,祖父母,noun,/ˈɡræˌndpɛrənt/,General,I love visiting my grandparent.,私は祖父母を訪ねるのが大好きです。,,
 help,1,1,A1,助ける,verb,/ˈhɛlp/,General,Can you help me with this?,これを手伝ってくれませんか？,,
 information,1,1,A1,情報,noun,/ˌɪnfərˈmeɪʃən/,General,We need more information about the project.,私たちはそのプロジェクトについてもっと情報が必要だ。,,
@@ -44,7 +45,7 @@ pink,1,1,A1,ピンク,noun,/ˈpɪŋk/,General,She is wearing a pink dress today.
 quick,1,1,A1,速い,adjective,/ˈkwɪk/,Nature,The cheetah is a very quick animal.,チーターはとても速い動物です。,,
 road,1,1,A1,道,noun,/ˈroʊd/,General,The road was very long.,道はとても長かった。,,
 sheep,1,1,A1,羊,noun,/ˈʃiːp/,General,The sheep are in the field.,羊は畑にいる。,,
-thousand,1,1,A1,千,noun,/ˈθaʊzənd/,General,There are a thousand stars in the sky.,空には千もの星がある。,,
+thousand,1,1,A1,1000,noun,/ˈθaʊzənd/,General,There are a thousand stars in the sky.,空には千もの星がある。,,
 understand,1,1,A1,理解する,verb,/ˌʌndərˈstænd/,General,I don't understand the question.,私は質問が理解できない。,"[{""phrase"": ""make oneself understood"", ""meaning"": ""自分の言いたいことを伝える""}]",
 village,1,1,A1,村,noun,/vˈɪlədʒ/,General,They visited many village during their trip.,彼らは旅行中に多くの村を訪れました。,,
 waiter,1,1,A1,ウェイター,noun,/ˈweɪtər/,General,The waiter took our order.,ウェイターが私たちの注文を取った。,,
@@ -88,7 +89,7 @@ life,1,3,A1,人生,noun,/laɪf/,Daily,He enjoys a healthy and active life.,彼�
 move,1,1,A1,動く,verb,/ˈmuːv/,General,He asked her to move.,彼は彼女に動くように頼んだ。,,
 night,1,2,A1,夜,noun,/naɪt/,Daily,The stars look so beautiful tonight.,今夜は星がとても美しく見えます。,,
 others,1,1,A1,他の人たち,noun,/ˈʌðərz/,General,"Some people like coffee, others prefer tea.",コーヒーが好きな人もいれば、お茶を好む人もいる。,,
-put,1,2,A1,置く,verb,/pʊt/,Daily,Please put the keys on the counter.,鍵をカウンターの上に置いてください。,"[{""phrase"": ""put on"", ""meaning"": ""身につける、着る""}, {""phrase"": ""put off"", ""meaning"": ""延期する""}, {""phrase"": ""put up with"", ""meaning"": ""〜を我慢する""}, {""phrase"": ""put together"", ""meaning"": ""組み立てる、まとめる""}]",
+put,1,2,A1,置く,verb,/pʊt/,Daily,Please put the keys on the counter.,鍵をカウンターの上に置いてください。,"[{""phrase"": ""put on"", ""meaning"": ""身につける、着る""}, {""phrase"": ""put off"", ""meaning"": ""延期する""}, {""phrase"": ""put up with"", ""meaning"": ""〜を我慢する""}, {""phrase"": ""put together"", ""meaning"": ""組み立てる、まとめる""}]",put
 quarter,1,1,A1,4分の1,noun,/ˈkwɔrtər/,General,The pizza was cut into quarter.,ピザは4分の1にカットされました。,,
 routine,1,1,A1,ルーティン,noun,/ruːtˈiːn/,General,She has a daily exercise routine.,彼女には毎日の運動ルーティンがある。,,
 sun,1,1,A1,太陽,noun,/ˈsʌn/,Nature,The sun is shining brightly today.,今日は太陽が明るく輝いている。,,
@@ -99,7 +100,7 @@ white,1,2,A1,白い,adjective,/waɪt/,Daily,She wore a lovely white dress to the
 yesterday,1,1,A1,昨日,noun,/ˈjɛstərˌdeɪ/,General,I went to the park yesterday.,私は昨日公園に行きました。,,
 afternoon,1,1,A1,午後,noun,/ˌæftərˈnuːn/,General,We have class in the afternoon.,私たちは午後に授業があります。,,
 bed,1,1,A1,ベッド,noun,/ˈbɛd/,Daily,I am going to bed now.,私は今から寝ます。,,
-cent,1,1,A1,セント,noun,/sˈent/,General,The candy costs 50 cent.,そのキャンディーは50セントです。,,
+cent,1,1,A1,セント（1/100ドル）,noun,/sˈent/,General,The candy costs 50 cent.,そのキャンディーは50セントです。,,
 december,1,1,A1,12月,noun,/dɪˈsɛmbər/,Nature,Christmas is in December.,クリスマスは12月です。,,
 exam,1,1,A1,試験,noun,/ɪɡzˈæm/,Academic,I have exam next week.,来週試験があります。,,
 fill,1,1,A1,満たす,verb,/fˈɪl/,Daily,The sound fill the room.,その音が部屋を満たす。,,
@@ -148,7 +149,7 @@ decide,1,1,A1,決める,verb,/dɪsˈaɪd/,Daily,I decide what to eat.,私は何�
 excited,1,1,A1,興奮した,noun,/ɪˈksaɪtəd/,General,The children were excited about the trip.,子供たちは旅行に興奮していた。,,
 floor,1,1,A1,階,noun,/flˈɔːr/,General,Their office is on the third floor.,彼らのオフィスは3階にあります。,,
 geography,1,1,A1,地理,noun,/dʒiˈɑɡrəfi/,Academic,He studied geography at university.,彼は大学で地理を学びました。,,
-hundred,1,1,A1,百,noun,/ˈhʌndrəd/,General,There are a hundred people here.,ここに百人の人がいます。,,
+hundred,1,1,A1,100,noun,/ˈhʌndrəd/,General,There are a hundred people here.,ここに百人の人がいます。,,
 include,1,1,A1,含む,verb,/ɪˈnkluːd/,General,The list does not include my name.,そのリストには私の名前が含まれていない。,,
 job,1,1,A1,仕事,noun,/ˈdʒɑb/,Business,I'm looking for a new job.,私は新しい仕事を探しています。,,
 little,1,1,A1,小さい,adjective,/ˈlɪtəl/,General,He is a little boy.,彼は小さな男の子です。,,
@@ -173,7 +174,7 @@ homework,1,1,A1,宿題,noun,/ˈhoʊˌmwɜːrk/,General,She has a lot of homework
 idea,1,1,A1,アイデア,noun,/aɪdˈiːə/,General,We need some new idea for the project.,私たちはプロジェクトのためのいくつかの新しいアイデアが必要です。,,
 late,1,1,A1,遅い,adjective,/ˈleɪt/,General,I am late for my appointment.,私は予約に遅れています。,,
 match,1,1,A1,試合,noun,/ˈmætʃ/,Culture,The soccer match was very exciting.,サッカーの試合はとてもエキサイティングでした。,,
-ninety,1,1,A1,90年代,noun,/nˈaɪntiː/,General,The nineties were a decade of change.,90年代は変化の10年だった。,,
+ninety,1,1,A1,90,noun,/nˈaɪntiː/,General,The nineties were a decade of change.,90年代は変化の10年だった。,,
 online,1,1,A1,オンライン,noun,/ˈɔˌnlaɪn/,Daily,I shop online frequently.,私は頻繁にオンラインで買い物をする。,,
 pool,1,1,A1,プール,noun,/ˈpuːl/,General,They were swimming in the pool.,彼らはプールで泳いでいました。,,
 right,1,3,A1,右、右の,noun,/ˈraɪt/,General,Turn to the right.,右に曲がってください。,,
@@ -206,7 +207,7 @@ bunny,1,1,A1,ウサギ,noun,/bˈʌniː/,General,The children were watching the b
 classroom,1,1,A1,教室,noun,/ˈklæˌsruːm/,General,The students are in the classroom.,生徒たちは教室にいます。,,
 doctor,1,1,A1,医者,noun,/ˈdɑktər/,Science,I need to see a doctor.,医者に診てもらう必要があります。,,
 elephant,1,1,A1,象,noun,/ˈɛləfənt/,General,The elephant is very big.,象はとても大きい。,,
-five,1,1,A1,五,noun,/ˈfaɪv/,General,There are five apples on the table.,テーブルの上に5つのリンゴがあります。,,
+five,1,1,A1,5,noun,/ˈfaɪv/,General,There are five apples on the table.,テーブルの上に5つのリンゴがあります。,,
 green,1,1,A1,緑,noun,/ˈɡriːn/,General,The grass is green.,草は緑色です。,,
 holiday,1,1,A1,休日,noun,/ˈhɑləˌdeɪ/,General,We are planning a holiday trip.,私たちは休日旅行を計画しています。,,
 interested,1,1,A1,興味がある,verb,/ˈɪntrəstəd/,Culture,I am interested in learning more about that.,私はそれについてもっと学ぶことに興味があります。,"[{""phrase"": ""interested in"", ""meaning"": ""〜に興味がある""}]",
@@ -230,7 +231,7 @@ grow,1,1,A1,成長する,verb,/ˈɡroʊ/,Nature,The plants will grow in the sun.
 however,1,1,A1,しかしながら,noun,/ˌhaʊˈɛvər/,Nature,"The weather was bad; however, we went for a walk.",天気は悪かった。しかしながら、私たちは散歩に出かけた。,,
 interest,1,1,A1,興味,noun,/ˈɪntrəst/,Science,He has an interest in science.,彼は科学に興味がある。,,
 long,1,1,A1,長い,adjective,/ˈlɔŋ/,General,It was a long day.,それは長い一日だった。,,
-more,1,2,A1,もっと,noun,/mɔːr/,Daily,I need more time to finish the work.,仕事を終わらせるためにもっと時間が必要です。,,
+more,1,2,A1,もっと,noun,/mɔːr/,Daily,I need more time to finish the work.,仕事を終わらせるためにもっと時間が必要です。,,much
 neighbour,1,1,A1,隣人,noun,/ˈneɪbər/,General,Our neighbour is very friendly.,私たちの隣人はとても親切です。,,
 onion,1,1,A1,玉ねぎ,noun,/ˈʌnjən/,General,I need some onion for the soup.,スープに玉ねぎが必要です。,,
 popular,1,1,A1,人気のある,verb,/ˈpɑpjələr/,General,This restaurant is very popular.,このレストランはとても人気がある。,,
@@ -322,7 +323,7 @@ glasses,1,1,A1,眼鏡,noun,/ˈɡlæsəz/,General,I need my glasses to see clearl
 hope,1,1,A1,希望,noun,/ˈhoʊp/,General,I have hope for a better future.,私はより良い未来への希望を持っています。,,
 list,1,1,A1,リスト,noun,/ˈlɪst/,General,Make a list of things.,物のリストを作成してください。,,
 moment,1,1,A1,瞬間,noun,/ˈmoʊmənt/,General,I will remember this moment forever.,私はこの瞬間を永遠に忘れないでしょう。,,
-nine,1,1,A1,九,noun,/ˈnaɪn/,General,There are nine players on a baseball team.,野球チームには9人の選手がいます。,,
+nine,1,1,A1,9,noun,/ˈnaɪn/,General,There are nine players on a baseball team.,野球チームには9人の選手がいます。,,
 parent,1,1,A1,親,noun,/ˈpɛrənt/,Daily,My parent are very supportive.,私の両親はとても協力的です。,,
 really,1,1,A1,本当に,adverb,/ˈrɪli/,General,It is really hot today.,今日は本当に暑い。,,
 success,1,1,A1,成功,noun,/səˈksɛsəz/,General,They celebrated their successes.,彼らは自分たちの成功を祝った。,,
@@ -393,7 +394,7 @@ teenager,1,1,A1,ティーンエイジャー,noun,/ˈtiːˌneɪdʒər/,General,He
 walk,1,1,A1,散歩,noun,/ˈwɔk/,Daily,Let's take a walk in the park.,公園を散歩しましょう。,,
 apron,1,1,A1,エプロン,noun,/ˈeɪprən/,General,She wore an apron while cooking.,彼女は料理中にエプロンをしていた。,,
 begin,1,1,A1,始める,verb,/bɪˈɡɪn/,General,Let's begin our meeting.,会議を始めましょう。,,
-cost,1,1,A1,費用,noun,/ˈkɑst/,General,What's the cost of the repair?,修理費用はいくらですか？,,
+cost,1,1,A1,費用,noun,/ˈkɑst/,General,What's the cost of the repair?,修理費用はいくらですか？,,cost
 desk,1,1,A1,机,noun,/ˈdɛsk/,Daily,I have a desk in my room.,私の部屋には机があります。,,
 example,1,1,A1,例,noun,/ɪˈɡzæmpəl/,General,This is a good example of teamwork.,これはチームワークの良い例だ。,,
 friend,1,1,A1,友達,noun,/ˈfrɛnd/,Daily,She is my best friend.,彼女は私の親友です。,,
@@ -459,7 +460,7 @@ ever,1,1,A1,今まで,noun,/ˈɛvər/,General,Have you ever been to Japan?,今�
 fourth,1,1,A1,4番目の,noun,/ˈfɔrθ/,Daily,This is the fourth time I've visited this place.,ここを訪れるのはこれが4回目です。,,
 grandfather,1,1,A1,祖父,noun,/ˈɡræˌndfɑðər/,General,My grandfather is very old.,私の祖父はとても年をとっている。,,
 home,1,1,A1,家,noun,/ˈhoʊm/,Daily,I am going home now.,私は今から家に帰ります。,,
-let,1,2,A1,〜させる,verb,/let/,Daily,Please let me know your final decision.,あなたの最終的な決定を私に教えてください。,,
+let,1,2,A1,〜させる,verb,/let/,Daily,Please let me know your final decision.,あなたの最終的な決定を私に教えてください。,,let
 meat,1,1,A1,肉,noun,/ˈmiːt/,Daily,I love to eat meat.,私は肉を食べるのが大好きです。,,
 part,1,1,A1,部分,noun,/ˈpɑrt/,General,This is my favorite part of the book.,これは本の中で私のお気に入りの部分だ。,,
 red,1,1,A1,赤い,adjective,/ˈrɛd/,General,The apple is red.,そのリンゴは赤い。,,
@@ -563,7 +564,7 @@ husband,1,1,A1,夫,noun,/ˈhʌzbənd/,Culture,My husband is a great cook.,私の
 life,2,3,A1,生活,noun,/laɪf/,Daily,The life plays an important role.,その生活は重要な役割を果たします。,,
 meaning,1,1,A1,意味,noun,/ˈmiːnɪŋ/,Culture,What is the meaning of this word?,この単語の意味は何ですか？,,
 police,1,1,A1,警察,noun,/pəlˈiːs/,General,The police arrived at the scene.,警察が現場に到着した。,,
-sixteen,1,1,A1,16歳,noun,/sɪˈkstiːn/,General,She is sixteen years old.,彼女は16歳です。,,
+sixteen,1,1,A1,16,noun,/sɪˈkstiːn/,General,She is sixteen years old.,彼女は16歳です。,,
 taxi,1,1,A1,タクシー,noun,/ˈtæksi/,Travel,Can you call a taxi?,タクシーを呼んでいただけますか？,,
 went,1,1,A1,行った,noun,/ˈwɛnt/,General,We went to the park yesterday.,私たちは昨日公園に行きました。,,go
 actor,1,1,A1,俳優,noun,/ˈæktər/,General,He is a famous actor in Hollywood.,彼はハリウッドの有名な俳優です。,,
@@ -572,7 +573,7 @@ concert,1,1,A1,コンサート,noun,/ˈkɑnsərt/,Culture,I went to a rock conce
 driver,1,1,A1,運転手,noun,/drˈaɪvɚ/,Daily,The driver were on strike for better pay.,運転手たちはより良い賃金のためにストライキを行った。,,
 funny,1,1,A1,面白い,adjective,/ˈfʌni/,General,That joke was really funny.,そのジョークは本当に面白かった。,,
 hot,1,1,A1,暑い,adjective,/ˈhɑt/,General,It is hot in the summer.,夏は暑いです。,,
-let,2,2,A1,〜しよう,verb,/let/,Daily,They let the situation carefully.,彼らは慎重にその状況を〜しよう。,,
+let,2,2,A1,〜しよう,verb,/let/,Daily,They let the situation carefully.,彼らは慎重にその状況を〜しよう。,,let
 mother,1,1,A1,母親たち,noun,/mˈʌðɚ/,Daily,The mother were chatting at the park.,母親たちは公園でおしゃべりをしていました。,,
 page,1,1,A1,ページ,noun,/ˈpeɪdʒ/,General,Turn to page 10.,10ページを開いてください。,,
 sea,1,1,A1,海,noun,/sˈiː/,Nature,The ship sailed across the sea.,船は海を渡って航海した。,,
@@ -617,7 +618,7 @@ dancer,1,1,A1,ダンサー,noun,/dˈænsɚ/,General,The dancer put on an amazing
 far,1,1,A1,遠い,adjective,/ˈfɑr/,Daily,The beach is not too far from our house.,ビーチは私たちの家からそれほど遠くありません。,,
 mouth,1,1,A1,口,noun,/ˈmaʊθ/,General,"Open your mouth, please.",口を開けてください。,,
 pay,1,1,A1,支払う,verb,/ˈpeɪ/,General,I need to pay the bills.,私は請求書を支払う必要があります。,"[{""phrase"": ""pay attention to"", ""meaning"": ""〜に注意を払う""}, {""phrase"": ""pay a visit"", ""meaning"": ""訪問する""}, {""phrase"": ""pay off"", ""meaning"": ""成果を上げる、完済する""}]",
-seventeen,1,1,A1,17歳,noun,/ˈsɛvəˈntiːn/,General,She is seventeen years old.,彼女は17歳です。,,
+seventeen,1,1,A1,17,noun,/ˈsɛvəˈntiːn/,General,She is seventeen years old.,彼女は17歳です。,,
 three,1,1,A1,3,noun,/ˈθriː/,General,I have three books.,私は3冊の本を持っている。,,
 wear,1,1,A1,着る,verb,/ˈwɛr/,Daily,You need to wear a warm coat in winter.,冬には暖かいコートを着る必要があります。,,
 artist,1,1,A1,芸術家,noun,/ˈɑrtəst/,Culture,She is a talented artist who paints portraits.,彼女は肖像画を描く才能のある芸術家だ。,,
@@ -669,8 +670,8 @@ thanks,1,1,A1,感謝,noun,/ˈθæŋks/,General,Thank you for your help.,手伝�
 will,2,2,A1,意志,noun,/wɪl/,Daily,The will plays an important role.,その意志は重要な役割を果たします。,,
 bird,1,1,A1,鳥,noun,/ˈbɜːrd/,Nature,The bird is singing.,鳥が鳴いています。,,
 climb,1,1,A1,登る,verb,/ˈklaɪm/,Nature,They decided to climb the mountain.,彼らは山に登ることに決めました。,,
-four,1,1,A1,四,noun,/ˈfɔr/,Daily,There are four chairs in the room.,部屋には4つの椅子があります。,,
-million,1,1,A1,数百万,noun,/mˈɪljən/,General,There are million of stars in the sky.,空には数百万の星があります。,,
+four,1,1,A1,4,noun,/ˈfɔr/,Daily,There are four chairs in the room.,部屋には4つの椅子があります。,,
+million,1,1,A1,100万,noun,/mˈɪljən/,General,There are million of stars in the sky.,空には数百万の星があります。,,
 plan,1,1,A1,計画,noun,/ˈplæn/,General,What is the plan for the weekend?,週末の計画は何ですか？,,
 saw,1,1,A1,見た,noun,/ˈsɔ/,Nature,I saw a bird in the garden.,私は庭で鳥を見ました。,,see
 think,1,1,A1,思う,verb,/ˈθɪŋk/,Nature,I think it will rain.,雨が降ると思う。,,
@@ -698,7 +699,7 @@ toilet,1,1,A1,トイレ,noun,/tˈɔɪlət/,General,Where are the toilet?,トイ�
 bookstore,1,1,A1,書店,noun,/ˈbʊˌkstɔr/,General,I bought this book at a bookstore.,私はこの本を書店で買いました。,,
 century,1,1,A1,世紀,noun,/sˈentʃɚiː/,General,It has been here for centuries.,それは何世紀にもわたってここにある。,,
 fairy,1,1,A1,妖精,noun,/fˈeriː/,General,The children believe in fairies.,子供たちは妖精を信じています。,,
-more,2,2,A1,より多くの,noun,/mɔːr/,Daily,The more plays an important role.,そのより多くのは重要な役割を果たします。,,
+more,2,2,A1,より多くの,noun,/mɔːr/,Daily,The more plays an important role.,そのより多くのは重要な役割を果たします。,,much
 pair,1,1,A1,一組,noun,/ˈpɛr/,General,I bought a new pair of shoes.,私は新しい靴を一組買った。,,
 sweet,1,1,A1,甘い・心地よい・お菓子,noun,/swiːt/,Daily,This ripe melon is delicious and very sweet.,この熟したメロンはおいしくてとても甘いです。,,
 tooth,1,1,A1,歯,noun,/ˈtuːθ/,General,I need to brush my tooth.,私は歯を磨く必要があります。,,
@@ -756,7 +757,7 @@ sad,1,1,A1,悲しい,adjective,/ˈsæd/,Daily,She is sad because she lost her to
 ticket,1,1,A1,切符・チケット,noun,/ˈtɪk.ɪt/,Travel,Please show your train ticket at the gate.,改札口で電車の切符をお見せください。,,
 change,1,1,A1,変化,noun,/ˈtʃeɪndʒ/,General,There has been a big change in my life.,私の人生に大きな変化があった。,,
 pretty,1,1,A1,可愛い,adjective,/ˈprɪti/,Daily,She has a pretty smile.,彼女は可愛い笑顔をしています。,,
-sixty,1,1,A1,６０,noun,/ˈsɪksti/,General,Sixty is an even number.,60は偶数です。,,
+sixty,1,1,A1,60,noun,/ˈsɪksti/,General,Sixty is an even number.,60は偶数です。,,
 traffic,1,1,A1,交通,noun,/ˈtræfɪk/,General,There is a lot of traffic today.,今日は交通量が多いです。,,
 compare,1,1,A1,比較する,verb,/kəˈmpɛr/,General,Let's compare the two products.,2つの製品を比較してみましょう。,,
 product,1,1,A1,製品,noun,/ˈprɑdəkt/,General,This is a high-quality product.,これは高品質な製品です。,,
@@ -766,7 +767,7 @@ cook,1,1,A1,料理する,verb,/ˈkʊk/,Daily,I love to cook for my family.,私�
 phone,1,1,A1,電話,noun,/ˈfoʊn/,Daily,I need to charge my phone.,私は電話を充電する必要がある。,,
 student,1,1,A1,生徒,noun,/ˈstuːdənt/,Academic,He is a hard-working student.,彼は勤勉な生徒です。,,
 clock,1,1,A1,時計・置き時計,noun,/klɑːk/,Daily,The wall clock in the kitchen shows 3 PM.,台所の壁掛け時計は午後3時を指しています。,,
-put,2,2,A1,入れる,verb,/pʊt/,Daily,They put the situation carefully.,彼らは慎重にその状況を入れる。,"[{""phrase"": ""put on"", ""meaning"": ""身につける、着る""}, {""phrase"": ""put off"", ""meaning"": ""延期する""}, {""phrase"": ""put up with"", ""meaning"": ""〜を我慢する""}, {""phrase"": ""put together"", ""meaning"": ""組み立てる、まとめる""}]",
+put,2,2,A1,入れる,verb,/pʊt/,Daily,They put the situation carefully.,彼らは慎重にその状況を入れる。,"[{""phrase"": ""put on"", ""meaning"": ""身につける、着る""}, {""phrase"": ""put off"", ""meaning"": ""延期する""}, {""phrase"": ""put up with"", ""meaning"": ""〜を我慢する""}, {""phrase"": ""put together"", ""meaning"": ""組み立てる、まとめる""}]",put
 send,1,1,A1,送る,verb,/sˈend/,Daily,I send a letter to her friend.,私は友達に手紙を送る。,"[{""phrase"": ""send out"", ""meaning"": ""発送する、放つ""}]",
 camera,1,1,A1,カメラ,noun,/ˈkæmərə/,General,She took a picture with her camera.,彼女はカメラで写真を撮りました。,,
 seen,1,1,A1,見た,noun,/ˈsiːn/,Culture,Have you seen that movie?,あなたはその映画を見ましたか？,,see
@@ -774,7 +775,7 @@ cafe,1,1,A1,カフェ,noun,/kəˈfeɪ/,General,We went to a cafe for a coffee.,�
 shopping,1,1,A1,買い物,noun,/ˈʃɑpɪŋ/,Daily,I went shopping for new shoes.,新しい靴を買いに行った。,,
 create,1,1,A1,創造する,verb,/kriːˈeɪt/,General,The artist create beautiful sculptures.,その芸術家は美しい彫刻を創造する。,"[{""phrase"": ""create an account"", ""meaning"": ""アカウントを作成する""}, {""phrase"": ""create opportunities"", ""meaning"": ""機会を創出する""}]",
 said,1,1,A1,言った,noun,/ˈsɛd/,General,He said hello to me.,彼は私にこんにちはと言った。,,say
-cut,1,1,A1,切る,verb,/ˈkʌt/,General,Please cut the paper.,紙を切ってください。,"[{""phrase"": ""cut down on"", ""meaning"": ""〜を減らす、削減する""}, {""phrase"": ""cut in"", ""meaning"": ""割り込む""}]",
+cut,1,1,A1,切る,verb,/ˈkʌt/,General,Please cut the paper.,紙を切ってください。,"[{""phrase"": ""cut down on"", ""meaning"": ""〜を減らす、削減する""}, {""phrase"": ""cut in"", ""meaning"": ""割り込む""}]",cut
 street,1,1,A1,通り,noun,/ˈstriːt/,General,They live on this street.,彼らはこの通りに住んでいます。,,
 cake,1,1,A1,ケーキ,noun,/kˈeɪk/,General,We have birthday cake.,私たちは誕生日ケーキがあります。,,
 snake,1,1,A1,ヘビ,noun,/ˈsneɪk/,General,A snake slithered across the road.,ヘビが道路を横切って滑った。,,
@@ -783,7 +784,7 @@ surf,1,1,A1,波乗り,noun,/ˈsɜːrf/,General,They went to the beach to surf.,�
 complete,1,1,A1,完了する,verb,/kəmplˈiːt/,General,I complete his homework quickly.,私は宿題をすぐに完了する。,,
 sleep,1,1,A1,睡眠,noun,/ˈsliːp/,Daily,I need to get some sleep.,私は少し睡眠をとる必要があります。,,
 cheese,1,1,A1,チーズ,noun,/tʃˈiːz/,Daily,I love to eat cheese.,私はチーズを食べるのが大好きです。,,
-seventy,1,1,A1,７０,noun,/ˈsɛvənti/,General,Seventy is a big number.,70は大きな数です。,,
+seventy,1,1,A1,70,noun,/ˈsɛvənti/,General,Seventy is a big number.,70は大きな数です。,,
 capital,2,2,A1,首都,noun,/ˈkæpətəl/,General,The capital plays an important role.,その首都は重要な役割を果たします。,,
 subject,1,1,A1,科目,noun,/səˈbdʒɛkt/,Daily,Math is my favorite subject.,数学は私の一番好きな科目です。,,
 son,1,1,A1,息子たち,noun,/sˈʌn/,General,She has two son.,彼女には2人の息子がいます。,,
@@ -839,7 +840,7 @@ uncertain,1,1,A2,不確かな,adjective,/əˈnsɜːrtən/,General,The future of 
 verb,1,1,A2,動詞,noun,/vˈɜːrb/,General,verb are words that describe actions.,動詞は行動を説明する言葉です。,,
 wheelchair,1,1,A2,車椅子,noun,/wˈiːltʃˌer/,General,They provide wheelchair for disabled people.,彼らは障害者のために車椅子を提供しています。,,
 younger,1,1,A2,より若い,adjective,/ˈjʌŋɡər/,Academic,My younger brother is still in school.,私の弟はまだ学校に通っています。,,
-zero,1,1,A2,ゼロ,noun,/ˈzɪroʊ/,General,The temperature was zero degrees Celsius.,気温は摂氏0度でした。,,
+zero,1,1,A2,0,noun,/ˈzɪroʊ/,General,The temperature was zero degrees Celsius.,気温は摂氏0度でした。,,
 abroad,1,1,A2,海外に,adverb,/əˈbrɔd/,Travel,He has lived abroad for many years.,彼は長年海外に住んでいます。,,
 behave,1,1,A2,振る舞う,verb,/bɪhˈeɪv/,General,I behave very professionally.,私は非常にプロフェッショナルに振る舞う。,,
 choice,1,1,A2,選択,noun,/tʃˈɔɪs/,General,You have a choice between two options.,二つの選択肢から選ぶことができます。,,
@@ -864,7 +865,7 @@ uneasy,1,1,A2,不安な,adjective,/əˈniːzi/,Daily,She felt uneasy about going
 virus,1,1,A2,ウイルス,noun,/ˈvaɪrəs/,Science,The computer has a virus.,コンピュータがウイルスに感染しています。,,
 waiting,1,1,A2,待っている,verb,/ˈweɪtɪŋ/,Daily,I am waiting for my friend.,友達を待っています。,,
 asian,1,1,A2,アジアの,noun,/ˈeɪʒən/,General,She is of Asian descent.,彼女はアジア系の血を引いています。,,
-beat,1,1,A2,打つ,verb,/bˈiːt/,General,The heart beat steadily in the chest.,心臓は胸の中で規則正しく打っている。,,
+beat,1,1,A2,打つ,verb,/bˈiːt/,General,The heart beat steadily in the chest.,心臓は胸の中で規則正しく打っている。,,beat
 clever,1,1,A2,賢い,adjective,/ˈklɛvər/,General,She is a very clever student.,彼女はとても賢い生徒だ。,,
 depending,1,1,A2,〜次第で,noun,/dɪˈpɛndɪŋ/,Nature,The decision depends on the weather.,決定は天気次第だ。,,
 employee,1,1,A2,従業員,noun,/ɛˈmplɔɪi/,Business,He is a good employee.,彼は良い従業員だ。,,
@@ -1045,7 +1046,7 @@ weak,1,1,A2,弱い,adjective,/ˈwiːk/,General,He's still weak after his illness
 advertisement,1,1,A2,広告,noun,/ədvˈɜːrtəzmənt/,General,The magazine is filled with advertisement.,その雑誌は広告で溢れていた。,,
 barber,1,1,A2,理容師,noun,/ˈbɑrbər/,General,He is a barber.,彼は理容師です。,,
 complain,1,1,A2,不満を言う,verb,/kəmplˈeɪn/,Culture,He often complain about the food.,私はよく食べ物について不満を言う。,"[{""phrase"": ""complain about"", ""meaning"": ""〜について不満を言う""}]",
-data,1,1,A2,データ,noun,/ˈdeɪtə/,Science,We need more data to analyze the trend.,トレンドを分析するためには、もっとデータが必要です。,,
+data,1,1,A2,データ,noun,/ˈdeɪtə/,Science,We need more data to analyze the trend.,トレンドを分析するためには、もっとデータが必要です。,,datum
 energetic,1,1,A2,精力的な,adjective,/ˌɛnərˈdʒɛtɪk/,General,He is an energetic young man.,彼は精力的な青年だ。,,
 factor,1,1,A2,要因,noun,/fˈæktɚ/,General,Several factor contributed to the company's success.,いくつかの要因が会社の成功に貢献した。,,
 gallery,1,1,A2,ギャラリー,noun,/ˈɡæləri/,Culture,The art gallery displayed modern paintings.,そのアートギャラリーは現代絵画を展示していた。,,
@@ -1152,7 +1153,7 @@ greatest,1,1,A2,最高の,noun,/ˈɡreɪtəst/,Academic,She is the greatest sing
 higher,1,1,A2,より高い,adjective,/ˈhaɪər/,Nature,The mountain is higher than that one.,その山はあれよりも高い。,,
 invite,1,1,A2,招待する,verb,/ɪˈnvaɪt/,General,I want to invite you to my party.,あなたを私のパーティーに招待したい。,,
 kept,2,2,A2,守った,noun,/ˈkɛpt/,General,The kept plays an important role.,その守ったは重要な役割を果たします。,,keep
-least,1,1,A2,少なくとも,noun,/ˈliːst/,General,I need at least two hours.,私は少なくとも2時間必要だ。,,
+least,1,1,A2,少なくとも,noun,/ˈliːst/,General,I need at least two hours.,私は少なくとも2時間必要だ。,,little
 musician,1,1,A2,音楽家,noun,/mjuˈzɪʃən/,Culture,She is a talented musician.,彼女は才能のある音楽家です。,,
 noisy,1,1,A2,騒がしい,adjective,/ˈnɔɪzi/,Daily,The street was very noisy at night.,夜になると通りはとても騒がしかった。,,
 owner,1,1,A2,オーナー,noun,/ˈoʊnər/,Daily,The owner of the shop is very friendly.,その店のオーナーはとても親切です。,,
@@ -1192,7 +1193,7 @@ gate,1,1,A2,門,noun,/ˈɡeɪt/,General,We waited for them at the gate.,私た�
 hall,1,1,A2,ホール,noun,/hˈɔːl/,Academic,The hall of the school were very noisy.,学校のホールはとても騒がしかった。,,
 image,1,1,A2,画像,noun,/ˈɪmədʒ/,General,The book had many beautiful image.,その本にはたくさんの美しい画像があった。,,
 land,1,1,A2,土地,noun,/ˈlænd/,Nature,The farmer owns a large piece of land.,農夫は大きな土地を所有しています。,,
-media,1,2,A2,メディア,noun,/ˈmiːdiə/,General,The media plays an important role in society.,メディアは社会で重要な役割を果たしています。,,
+media,1,2,A2,メディア,noun,/ˈmiːdiə/,General,The media plays an important role in society.,メディアは社会で重要な役割を果たしています。,,medium
 nut,1,1,A2,ナッツ,noun,/ˈnʌt/,General,She is allergic to nut.,私はナッツアレルギーです。,,
 order,1,3,A2,注文、注文する,verb,/ˈɔːrdɚ/,Business,I ordered coffee and cake.,コーヒーとケーキを注文しました。,"[{""phrase"": ""in order to"", ""meaning"": ""〜するために""}, {""phrase"": ""out of order"", ""meaning"": ""故障して""}]",
 played,1,1,A2,遊んだ,noun,/ˈpleɪd/,General,They played all day.,彼らは一日中遊んだ。,,
@@ -1265,7 +1266,7 @@ flu,1,1,A2,インフルエンザ,noun,/ˈfluː/,General,He has the flu.,彼は�
 greet,1,1,A2,挨拶する,verb,/ɡrˈiːt/,Daily,I greet everyone with a smile.,私は笑顔でみんなに挨拶する。,,
 honor,1,1,A2,名誉,noun,/ˈɑnər/,General,It is an honor to be here.,ここにいることは光栄です。,,
 informal,1,1,A2,非公式の,noun,/ɪˈnfɔrməl/,General,The meeting was informal and relaxed.,会議は非公式でリラックスしたものだった。,,
-less,1,1,A2,より少ない,adjective,/ˈlɛs/,General,I have less money than you.,私はあなたよりお金が少ない。,,
+less,1,1,A2,より少ない,adjective,/ˈlɛs/,General,I have less money than you.,私はあなたよりお金が少ない。,,little
 may,1,1,A2,かもしれない,auxiliary,/ˈmeɪ/,Nature,It may rain tomorrow.,明日は雨が降るかもしれない。,,
 noun,1,1,A2,名詞,noun,/ˈnaʊn/,General,"A noun is a word that names a person, place or thing.",名詞は人、場所、または物を指す言葉です。,,
 operating,1,1,A2,運営している,verb,/ˈɑpərˌeɪtɪŋ/,Science,The hospital is operating 24/7.,その病院は24時間年中無休で運営している。,,
@@ -1281,7 +1282,7 @@ dear,1,1,A2,親愛なる,verb,/ˈdɪr/,Daily,"Dear friends, thank you for your s
 earlier,1,1,A2,より早く,verb,/ˈɜːrliər/,General,We should have arrived earlier.,私たちはもっと早く到着すべきでした。,,
 felt,1,1,A2,感じた,noun,/ˈfɛlt/,General,She felt very tired after the workout.,彼女はワークアウト後、とても疲れたと感じた。,,feel
 grown,1,1,A2,成長した,noun,/ˈɡroʊn/,Nature,The tree has grown very tall.,その木はとても高く成長しました。,,grow
-hit,1,1,A2,打つ,verb,/ˈhɪt/,General,He hit the ball with a bat.,彼はバットでボールを打った。,,
+hit,1,1,A2,打つ,verb,/ˈhɪt/,General,He hit the ball with a bat.,彼はバットでボールを打った。,,hit
 increased,1,1,A2,増加した,noun,/ɪˈnkriːst/,General,The company's profits have increased this year.,会社の利益は今年増加しました。,,
 laid,1,1,A2,置いた,noun,/ˈleɪd/,General,She laid the book on the table.,彼女はテーブルに本を置いた。,,lay
 mark,1,1,A2,印,noun,/ˈmɑrk/,General,The teacher put a mark on the paper.,先生は紙に印をつけた。,,
@@ -1338,7 +1339,7 @@ huge,1,1,A2,巨大な,adjective,/ˈhjuːdʒ/,General,The elephant was huge.,そ�
 instead,1,1,A2,代わりに,adverb,/ɪˈnstɛd/,General,We went to the park instead of the zoo.,私たちは動物園の代わりに公園に行きました。,,
 lying,1,1,A2,横たわっている,verb,/ˈlaɪɪŋ/,General,The cat is lying on the sofa.,猫はソファの上に横たわっている。,,
 mind,1,1,A2,心,noun,/ˈmaɪnd/,General,I have a lot on my mind.,私はたくさんのことを考えている。,"[{""phrase"": ""make up one's mind"", ""meaning"": ""決心する""}, {""phrase"": ""change one's mind"", ""meaning"": ""考えを変える""}, {""phrase"": ""never mind"", ""meaning"": ""気にしないで""}]",
-older,1,1,A2,年上の,noun,/ˈoʊldər/,Science,My older brother is a doctor.,私の兄は医者です。,,
+older,1,1,A2,年上の,noun,/ˈoʊldər/,Science,My older brother is a doctor.,私の兄は医者です。,,old
 perform,1,2,A2,実行する,verb,/pərˈfɔrm/,Culture,The band will perform at the festival.,そのバンドはフェスティバルで演奏する。,,
 replaced,1,1,A2,交換した,noun,/ˌriːˈpleɪst/,General,He replaced the old tires.,彼は古いタイヤを交換した。,,
 shared,1,1,A2,共有した,noun,/ˈʃɛrd/,General,They shared a pizza for lunch.,彼らは昼食にピザを共有しました。,,
@@ -1653,7 +1654,7 @@ dropped,1,1,A2,落とした,noun,/ˈdrɑpt/,General,He accidentally dropped his 
 earned,1,1,A2,稼いだ,noun,/ˈɜːrnd/,Business,She earned a good salary.,彼女は良い給料を稼いだ。,,
 fridge,1,1,A2,冷蔵庫,noun,/ˈfrɪdʒ/,General,Put the milk in the fridge.,牛乳を冷蔵庫に入れてください。,,
 like,2,2,A2,〜のような、〜に似た,preposition,/laɪk/,Daily,He looks like his father.,彼は父親に似ている。,,
-media,2,2,A2,媒体,noun,/ˈmiːdiə/,General,The media plays an important role.,その媒体は重要な役割を果たします。,,
+media,2,2,A2,媒体,noun,/ˈmiːdiə/,General,The media plays an important role.,その媒体は重要な役割を果たします。,,medium
 personality,1,1,A2,性格,noun,/ˌpɜːrsəˈnælɪti/,General,Her personality is very outgoing and friendly.,彼女の性格は非常に社交的で友好的です。,,
 reached,1,1,A2,到達した,noun,/ˈriːtʃt/,General,The climber reached the summit.,登山者は頂上に到達した。,,
 sauce,1,1,A2,ソース,noun,/sˈɔːs/,General,Do you want extra sauce on your pasta?,パスタに余分なソースをかけますか？,,
@@ -1780,7 +1781,7 @@ filled,1,1,A2,満たされた,noun,/ˈfɪld/,Daily,The room was filled with smok
 linked,2,2,A2,関連付けられた,noun,/ˈlɪŋkt/,General,The linked plays an important role.,その関連付けられたは重要な役割を果たします。,,
 pronunciation,1,1,A2,発音,noun,/proʊˌnʌnsiˈeɪʃən/,General,Her pronunciation is very clear.,彼女の発音は非常に明確です。,,
 robin,1,1,A2,コマドリ,noun,/ˈrɑbən/,Nature,A robin was singing in the tree.,コマドリが木の上でさえずっていた。,,
-showed,1,1,A2,見せた,noun,/ˈʃoʊd/,General,He showed me his new car.,彼は私に彼の新しい車を見せた。,,
+showed,1,1,A2,見せた,noun,/ˈʃoʊd/,General,He showed me his new car.,彼は私に彼の新しい車を見せた。,,show
 attacked,1,1,A2,攻撃された,noun,/əˈtækt/,General,The city was attacked by enemy forces.,その都市は敵軍に攻撃された。,,
 believed,1,1,A2,信じた,noun,/bɪˈliːvd/,General,They believed his explanation.,彼らは彼の説明を信じた。,,
 clearly,1,1,A2,明確に,adverb,/ˈklɪrli/,General,He explained the situation clearly.,彼は状況を明確に説明した。,,
@@ -1854,7 +1855,7 @@ push,1,1,A2,押す,verb,/ˈpʊʃəz/,General,He pushes the door open.,彼はド�
 race,1,1,A2,レース,noun,/rˈeɪs/,General,The car race were held on the weekend.,週末にはカーレースが開催された。,,
 strange,1,1,A2,奇妙な,adjective,/ˈstreɪndʒ/,Daily,There was a strange noise in the room.,部屋の中で奇妙な音がした。,,
 argument,1,1,A2,議論,noun,/ˈɑrɡjəmənt/,General,They had an argument about the new policy.,彼らは新しい政策について議論した。,,
-best,1,1,A2,最高,noun,/ˈbɛst/,General,She is the best singer I have ever heard.,彼女は私が今まで聞いた中で最高の歌手です。,,
+best,1,1,A2,最高,noun,/ˈbɛst/,General,She is the best singer I have ever heard.,彼女は私が今まで聞いた中で最高の歌手です。,,good
 cola,1,1,A2,コーラ,noun,/ˈkoʊlə/,General,He ordered a cola with his pizza.,彼はピザと一緒にコーラを注文しました。,,
 differently,2,2,A2,違って,noun,/ˈdɪfrəntli/,General,The differently plays an important role.,その違っては重要な役割を果たします。,,
 pilgrim,1,1,A2,巡礼者,noun,/ˈpɪlɡrəm/,General,The pilgrim journeyed to the holy site.,巡礼者は聖地へ旅をした。,,
@@ -2116,7 +2117,7 @@ hired,1,1,B1,雇われた,noun,/ˈhaɪərd/,Business,She was hired as a marketin
 identity,1,2,B1,身元,noun,/aɪˈdɛntəti/,General,The police are still trying to determine the identity of the suspect.,警察はまだ容疑者の身元を特定しようとしている。,,
 joining,1,1,B1,参加する,verb,/ˈdʒɔɪnɪŋ/,General,I am thinking of joining the club.,私はクラブに参加することを考えている。,,
 key,1,1,B1,鍵,noun,/ˈkiː/,General,I can't find my key.,私は自分の鍵を見つけることができません。,,
-lay,1,1,B1,横たわる,verb,/lˈeɪ/,General,The cat lay on the warm floor.,猫は暖かい床に横たわっている。,,
+lay,1,1,B1,横たわる,verb,/lˈeɪ/,General,The cat lay on the warm floor.,猫は暖かい床に横たわっている。,,lie
 mess,1,1,B1,散らかした状態,noun,/ˈmɛsɪz/,General,The children made messes everywhere.,子供たちはあちこちを散らかした。,,
 nucleus,1,1,B1,核,noun,/ˈnuːkliəs/,Science,The nucleus is the center of the cell.,核は細胞の中心です。,,
 oily,1,2,B1,油っぽい,adjective,/ˈɔɪli/,General,The pizza was too oily for my taste.,そのピザは私の好みには油っぽすぎた。,,
@@ -2195,7 +2196,7 @@ outdoors,1,1,B1,屋外,noun,/ˈaʊˈtdɔrz/,Daily,They love spending time outdoo
 powered,1,1,B1,動力を供給された,noun,/ˈpaʊərd/,General,The car is powered by electricity.,その車は電気で動力を供給されています。,,
 quote,1,1,B1,引用,noun,/ˈkwoʊt/,General,He used a famous quote in his speech.,彼はスピーチで有名な引用を使った。,,
 rushing,1,1,B1,急いでいる,verb,/ˈrʌʃɪŋ/,General,The water was rushing down the stream.,水は小川を急いで流れ下っていた。,,
-stuck,1,1,B1,動けない,adjective,/ˈstʌk/,General,The car got stuck in the mud.,車が泥にはまって動けなくなった。,,
+stuck,1,1,B1,動けない,adjective,/ˈstʌk/,General,The car got stuck in the mud.,車が泥にはまって動けなくなった。,,stick
 theme,1,1,B1,テーマ,noun,/ˈθiːm/,General,The theme of the party was masquerade.,パーティーのテーマは仮面舞踏会だった。,,
 unfair,1,1,B1,不公平な,adjective,/əˈnfɛr/,General,It is unfair to treat them differently.,彼らを差別的に扱うのは不公平です。,,
 victor,1,1,B1,勝者,noun,/vˈɪktɚ/,General,The victor celebrated their success.,勝者たちは彼らの成功を祝った。,,
@@ -2369,7 +2370,7 @@ ape,1,1,B1,類人猿,noun,/ˈeɪp/,General,ape are intelligent animals.,類人�
 beta,1,1,B1,ベータ版,noun,/ˈbeɪtə/,Science,We are currently testing the beta version of the software.,現在、ソフトウェアのベータ版をテスト中です。,,
 chapter,1,1,B1,章,noun,/ˈtʃæptər/,General,I'm reading the next chapter.,次の章を読んでいます。,,
 detected,1,1,B1,検出された,noun,/dɪˈtɛktəd/,General,A problem was detected with the system.,システムに問題が検出された。,,
-elder,1,1,B1,年長者,noun,/ˈeldɚ/,General,The village elder were respected for their wisdom.,村の年長者たちは彼らの知恵で尊敬されていた。,,
+elder,1,1,B1,年長者,noun,/ˈeldɚ/,General,The village elder were respected for their wisdom.,村の年長者たちは彼らの知恵で尊敬されていた。,,old
 freshman,1,1,B1,新入生,noun,/ˈfrɛʃmən/,General,He is a freshman in college.,彼は大学の新入生です。,,
 generator,1,1,B1,発電機,noun,/dʒˈenɚˌeɪtɚ/,General,They used generator to provide electricity.,彼らは電気を供給するために発電機を使用した。,,
 halloween,1,1,B1,ハロウィーン,noun,/ˌhæləˈwiːn/,General,They dressed up in costumes for Halloween.,彼らはハロウィーンのためにコスチュームを着ました。,,
@@ -2549,11 +2550,11 @@ upside,1,1,B1,上向きの可能性,noun,/ˈʌˈpsaɪd/,General,The upside of th
 violently,1,1,B1,激しく,verb,/ˈvaɪələntli/,General,The storm shook the building violently.,嵐は建物を激しく揺さぶった。,,
 weighing,1,1,B1,重さを量る,verb,/ˈweɪɪŋ/,General,The grocer is weighing the produce before selling it.,その食料品店は販売する前に農産物の重さを量っている。,,
 attitude,1,1,B1,態度,noun,/ˈætəˌtuːd/,General,He has a positive attitude towards his work.,彼は仕事に対して前向きな態度を持っている。,,
-better,1,1,B1,より良い,adjective,/ˈbɛtər/,Nature,The weather is better today than yesterday.,今日の天気は昨日よりも良いです。,,
+better,1,1,B1,より良い,adjective,/ˈbɛtər/,Nature,The weather is better today than yesterday.,今日の天気は昨日よりも良いです。,,good
 competitive,1,2,B1,競争の激しい,adjective,/kəˈmpɛtətɪv/,Business,The job market is very competitive right now.,現在の雇用市場は非常に競争が激しい。,,
 dressing,1,1,B1,ドレッシング,noun,/ˈdrɛsɪŋ/,General,I like Italian dressing on my salad.,私はサラダにイタリアンドレッシングが好きだ。,,
 explode,1,1,B1,爆発する,verb,/ɪˈksploʊd/,General,The bomb will explode in five minutes.,爆弾は５分後に爆発するだろう。,,
-farther,1,1,B1,より遠くに,adverb,/ˈfɑrðər/,General,He walked farther than I did.,彼は私よりも遠くまで歩いた。,,
+farther,1,1,B1,より遠くに,adverb,/ˈfɑrðər/,General,He walked farther than I did.,彼は私よりも遠くまで歩いた。,,far
 gen,1,1,B1,世代,noun,/ˈdʒɛnərəl/,General,The new gen of smartphones is very impressive.,新世代のスマートフォンは非常に印象的だ。,,
 helicopter,1,1,B1,ヘリコプター,noun,/ˈhɛlɪˌkɑptər/,General,The helicopter flew over the city.,ヘリコプターが街の上空を飛んだ。,,
 inviting,1,1,B1,魅力的な,adjective,/ɪˈnvaɪtɪŋ/,Daily,The room was very inviting.,その部屋はとても魅力的だった。,,
@@ -2723,7 +2724,7 @@ investing,1,1,B1,投資している,verb,/ɪˈnvɛstɪŋ/,Business,They are inve
 lack,1,1,B1,不足,noun,/ˈlæk/,Daily,There is a lack of communication.,コミュニケーションが不足しています。,,
 manufactured,1,1,B1,製造された,noun,/ˌmænjəˈfæktʃərd/,General,The car was manufactured in Japan.,その車は日本で製造された。,,
 neighboring,1,1,B1,近隣の,noun,/ˈneɪbərɪŋ/,General,We visited the neighboring town.,私たちは近隣の町を訪れました。,,
-oldest,1,1,B1,最年長の,noun,/ˈoʊldəst/,General,She is the oldest of three sisters.,彼女は3人姉妹の最年長だ。,,
+oldest,1,1,B1,最年長の,noun,/ˈoʊldəst/,General,She is the oldest of three sisters.,彼女は3人姉妹の最年長だ。,,old
 packaging,1,1,B1,包装,noun,/ˈpækɪdʒɪŋ/,General,The packaging of the product was attractive.,製品の包装は魅力的だった。,,
 renewed,1,2,B1,再開された,noun,/rɪˈnuːd/,Culture,He has a renewed interest in art.,彼は芸術への関心を新たにした。,,
 stuffed,1,1,B1,詰められた,noun,/ˈstʌft/,General,The turkey was stuffed with bread and herbs.,七面鳥はパンとハーブで詰められていた。,,
@@ -3016,7 +3017,7 @@ boo,1,1,B1,ブー,noun,/ˈbuː/,General,"The crowd shouted boo"" at the player."
 charge,1,1,B1,料金,noun,/tʃˈɑːrdʒ/,Business,The bank charge a fee for the service.,銀行はそのサービスに料金を請求する。,"[{""phrase"": ""in charge of"", ""meaning"": ""〜を担当して""}, {""phrase"": ""free of charge"", ""meaning"": ""無料で""}]",
 dial,1,1,B1,ダイヤル,noun,/dˈaɪəl/,General,The old radio had dial instead of buttons.,その古いラジオにはボタンではなくダイヤルが付いていた。,,
 extraction,1,2,B1,抽出,noun,/ɪˈkstrækʃən/,General,The extraction of oil from the ground is a complex process.,地下からの石油の抽出は複雑なプロセスである。,,
-forbidden,1,1,B1,禁じられた,noun,/ˈfɔrbɪdən/,General,Smoking is forbidden in this building.,この建物内では喫煙は禁じられている。,,
+forbidden,1,1,B1,禁じられた,noun,/ˈfɔrbɪdən/,General,Smoking is forbidden in this building.,この建物内では喫煙は禁じられている。,,forbid
 grabbed,1,1,B1,つかんだ,noun,/ˈɡræbd/,General,He grabbed the railing to avoid falling.,彼は落ちないように手すりをつかんだ。,,
 healthier,1,1,B1,より健康,noun,/ˈhɛlθiər/,Science,Eating fruits and vegetables is healthier than eating junk food.,果物や野菜を食べることはジャンクフードを食べるよりも健康的だ。,,
 indicating,1,1,B1,示す,verb,/ˈɪndəˌkeɪtɪŋ/,Science,The data is indicating a positive trend.,データはポジティブな傾向を示している。,,
@@ -3170,7 +3171,7 @@ theater,1,1,B1,劇場,noun,/θˈiːətɚ/,Culture,There are several theater in t
 uninterested,1,1,B1,興味がない,adjective,/əˈnɪntrəstəd/,Culture,She seemed uninterested in the conversation.,彼女は会話に興味がないようだった。,,
 warn,1,1,B1,警告する,verb,/ˈwɔrn/,General,He tried to warn them of the danger.,彼は危険を警告しようとした。,,
 adverb,1,1,B1,副詞,noun,/ˈædvərb/,General,'Quickly' is an adverb.,「早く」は副詞です。,,
-bore,1,1,B1,退屈させる,verb,/bˈɔːr/,General,Long speeches usually bore me.,長いスピーチは大抵私を退屈させる。,,
+bore,1,1,B1,退屈させる,verb,/bˈɔːr/,General,Long speeches usually bore me.,長いスピーチは大抵私を退屈させる。,,bear
 crow,1,1,B1,カラス,noun,/ˈkroʊ/,General,A crow is sitting on the fence.,カラスがフェンスに止まっています。,,
 doubt,1,1,B1,疑い,adjective,/ˈdaʊt/,General,I have some doubt about his story.,私は彼の話にいくつかの疑いを持っている。,,
 eve,1,1,B1,前夜,noun,/ˈiːv/,Daily,The Christmas Eve is a special night for many.,クリスマスイブは多くの人にとって特別な夜だ。,,
@@ -3266,7 +3267,7 @@ bull,1,1,B1,雄牛,noun,/bˈʊl/,General,The bull are in the field.,雄牛が野
 contributed,1,2,B1,貢献した,noun,/kəˈntrɪbjutɪd/,General,She contributed greatly to the success of the project.,彼女はそのプロジェクトの成功に大きく貢献した。,,
 dragged,1,1,B1,引きずられた,noun,/ˈdræɡd/,General,He dragged the heavy box across the floor.,彼は重い箱を床を引きずりました。,,
 eighth,1,1,B1,8番目,noun,/ˈeɪtθ/,Daily,She came in eighth place in the race.,彼女はレースで8位に入った。,,
-fled,1,1,B1,逃げた,noun,/ˈflɛd/,General,The refugees fled their homes because of the war.,難民は戦争のために家から逃げた。,,
+fled,1,1,B1,逃げた,noun,/ˈflɛd/,General,The refugees fled their homes because of the war.,難民は戦争のために家から逃げた。,,flee
 guessing,1,1,B1,推測,noun,/ˈɡɛsɪŋ/,General,I'm just guessing what happened.,私は何が起こったのかを推測しているだけだ。,,
 honorable,1,1,B1,名誉ある,verb,/ˈɑnərəbəl/,General,He received an honorable discharge from the military.,彼は軍から名誉除隊を受けた。,,
 influenced,1,1,B1,影響を与えた,noun,/ˈɪnfluənst/,General,Her writing was heavily influenced by her travels.,彼女の文章は旅行に大きく影響を受けた。,,
@@ -3385,7 +3386,7 @@ borrowed,1,1,B1,借りた,noun,/ˈbɑˌroʊd/,General,She borrowed a book from t
 comprised,1,1,B1,構成されている,verb,/kəˈmpraɪzd/,General,The team is comprised of five members.,チームは5人のメンバーで構成されています。,,
 dimensional,1,1,B1,次元の,noun,/dɪˈmɛnʃənəl/,Science,The software is used for 3 dimensional design.,そのソフトウェアは3次元デザインに使用される。,,
 employed,1,1,B1,雇用した,noun,/ɛˈmplɔɪd/,Business,The factory employed many workers from the town.,その工場は町から多くの労働者を雇用した。,,
-furthest,1,1,B1,最も遠い,adjective,/ˈfɜːrθəst/,General,He ran to the furthest point of the park.,彼は公園の最も遠い地点まで走りました。,,
+furthest,1,1,B1,最も遠い,adjective,/ˈfɜːrθəst/,General,He ran to the furthest point of the park.,彼は公園の最も遠い地点まで走りました。,,far
 garment,1,1,B1,衣服,noun,/ɡˈɑːrmənt/,Daily,She makes her own garment.,私は自分で衣服を作ります。,,
 hosted,1,1,B1,主催した,noun,/ˈhoʊstɪd/,General,The city hosted the Olympic Games last year.,その都市は昨年オリンピックを主催した。,,
 importance,1,1,B1,重要性,noun,/ɪmpˈɔːrtəns/,Academic,The importance of education cannot be overstated.,教育の重要性はいくら強調してもしすぎることはありません。,,
@@ -3487,7 +3488,7 @@ fax,1,1,B1,ファックス,noun,/ˈfæksɪz/,General,They sent the documents via
 gathered,1,1,B1,集まった,noun,/ˈɡæðərd/,Daily,The family gathered for the holiday.,家族は休暇のために集まりました。,,
 handball,1,1,B1,ハンドボール,noun,/ˈhæˌndbɔl/,General,They play handball in the gym.,彼らは体育館でハンドボールをします。,,
 inter,1,1,B1,～間の,noun,/ɪˈntɜːr/,Academic,They organized an inter-school sports day.,彼らは学校間の運動会を企画した。,,
-lit,1,1,B1,火をつけた,noun,/ˈlɪt/,General,He lit the candle.,彼はろうそくに火をつけました。,,
+lit,1,1,B1,火をつけた,noun,/ˈlɪt/,General,He lit the candle.,彼はろうそくに火をつけました。,,light
 mosquito,1,1,B1,蚊,noun,/məskˈiːtoʊ/,Daily,The mosquitoes were terrible last night.,昨夜は蚊がひどかった。,,
 percentage,1,1,B1,パーセンテージ,noun,/pɚsˈentədʒ/,General,What are the percentage of students passing the test?,テストに合格した学生のパーセンテージは？,,
 require,1,1,B1,必要とする,verb,/ˌriːˈkwaɪər/,General,This job require a lot of experience.,この仕事は多くの経験を必要とします。,,
@@ -3598,7 +3599,7 @@ fetch,1,1,B1,取ってくる,verb,/ˈfɛtʃ/,General,Please fetch the ball.,ボ�
 giant,1,1,B1,巨大な,adjective,/ˈdʒaɪənt/,Nature,The giant tree stood tall.,その巨大な木は高くそびえ立っていた。,,
 hosting,1,1,B1,主催,noun,/ˈhoʊstɪŋ/,General,They are hosting a dinner party tonight.,彼らは今夜ディナーパーティーを主催している。,,
 insulin,1,1,B1,インスリン,noun,/ˈɪnsələn/,General,People with diabetes often need insulin injections.,糖尿病の人は、しばしばインスリン注射が必要になる。,,
-learnt,1,1,B1,学んだ,noun,/ˈlɜːrnt/,General,I learnt a lot today.,私は今日たくさんのことを学びました。,,
+learnt,1,1,B1,学んだ,noun,/ˈlɜːrnt/,General,I learnt a lot today.,私は今日たくさんのことを学びました。,,learn
 metallic,1,1,B1,金属製の,noun,/məˈtælɪk/,General,The door had a metallic sound.,ドアは金属のような音がした。,,
 princess,1,1,B1,お姫様,noun,/ˈprɪnsɛsɪz/,General,The princesses are wearing beautiful dresses.,お姫様たちは美しいドレスを着ています。,,
 rare,1,2,B1,珍しい,adjective,/ˈrɛr/,Nature,This species of bird is very rare.,この種の鳥は非常に珍しい。,,
@@ -3639,7 +3640,7 @@ bachelor,1,1,B1,独身男性,noun,/ˈbætʃələr/,General,He is a bachelor in h
 cuisine,1,1,B1,料理・郷土料理,noun,/kwɪˈziːn/,Nature,Italian cuisine is famous for pasta and pizza.,イタリア料理はパスタとピザで有名です。,,
 displayed,1,1,B1,展示した,noun,/dɪˈspleɪd/,Culture,The art gallery displayed the latest paintings.,美術館は最新の絵画を展示した。,,
 excluding,1,1,B1,除外して,noun,/ɪˈkskluːdɪŋ/,Business,The price is $100 excluding tax.,価格は税抜きで100ドルです。,,
-farthest,1,1,B1,最も遠い,adjective,/ˈfɑrðəst/,Daily,That's the farthest I've ever run.,あれは私が今まで走った中で最も遠い距離だ。,,
+farthest,1,1,B1,最も遠い,adjective,/ˈfɑrðəst/,Daily,That's the farthest I've ever run.,あれは私が今まで走った中で最も遠い距離だ。,,far
 gratitude,1,1,B1,感謝,noun,/ˈɡrætəˌtuːd/,General,She expressed her gratitude for their help.,彼女は彼らの助けに感謝の意を表した。,,
 hormone,1,1,B1,ホルモン,noun,/hˈɔːrmˌoʊn/,Daily,hormone play a critical role in the body's functions.,ホルモンは体の機能において重要な役割を果たしている。,,
 indirectly,1,1,B1,間接的に,adverb,/ɪndərˈɛktli/,General,He was indirectly involved in the scandal.,彼はそのスキャンダルに間接的に関与していた。,,
@@ -3722,7 +3723,7 @@ loudspeaker,1,1,B1,拡声器,noun,/ˈlaʊˌdspiːkər/,General,The announcement 
 mood,1,1,B1,気分,noun,/ˈmuːd/,General,He is in a bad mood today.,彼は今日は機嫌が悪い。,,
 prep,1,1,B1,準備,noun,/ˈprɛp/,General,We need to do some prep work before the party.,私たちはパーティーの前にいくつかの準備作業をする必要があります。,,
 righteous,1,2,B1,正義の,noun,/ˈraɪtʃəs/,General,He felt righteous in his decision to stand up for what he believed in.,彼は自分が信じることのために立ち上がるという決断に正義を感じた。,,
-set,1,1,B1,セット,noun,/ˈsɛt/,General,I need a new set of dishes.,新しい食器セットが必要です。,"[{""phrase"": ""set up"", ""meaning"": ""設立する、設定する""}, {""phrase"": ""set off"", ""meaning"": ""出発する、引き起こす""}]",
+set,1,1,B1,セット,noun,/ˈsɛt/,General,I need a new set of dishes.,新しい食器セットが必要です。,"[{""phrase"": ""set up"", ""meaning"": ""設立する、設定する""}, {""phrase"": ""set off"", ""meaning"": ""出発する、引き起こす""}]",set
 telegraph,1,1,B1,電報,noun,/tˈeləɡrˌæf/,General,They used to communicate by telegraph.,彼らはかつて電報で通信していた。,,
 aired,1,1,B1,放送された,noun,/ˈɛrd/,Daily,The show was aired last night.,その番組は昨夜放送された。,,
 beautifully,1,1,B1,美しく,verb,/ˈbjuːtəfli/,General,The garden was beautifully arranged.,庭は美しく配置されていた。,,
@@ -3752,7 +3753,7 @@ legally,1,1,B1,法的に,adverb,/ˈliːɡəli/,Business,The contract was legally
 muscle,1,1,B1,筋肉,noun,/mˈʌsəl/,General,He works out to build his muscle.,私は筋肉をつけるためにトレーニングをしている。,,
 possibly,1,1,B1,おそらく,verb,/ˈpɑsəbli/,Nature,It will possibly rain tomorrow.,明日おそらく雨が降るだろう。,,
 rainforest,1,1,B1,熱帯雨林,noun,/ˈraɪˌnfɔrəst/,Nature,Many animals live in the rainforest.,多くの動物が熱帯雨林に生息しています。,,
-stole,1,1,B1,盗んだ,noun,/ˈstoʊl/,General,Someone stole his wallet from his pocket.,誰かが彼のポケットから財布を盗んだ。,,
+stole,1,1,B1,盗んだ,noun,/ˈstoʊl/,General,Someone stole his wallet from his pocket.,誰かが彼のポケットから財布を盗んだ。,,steal
 tenth,1,1,B1,10番目の,noun,/ˈtɛnθ/,Daily,This is the tenth time I've told you.,これは私があなたに言う10回目です。,,
 announce,1,1,B1,発表する,verb,/ənˈaʊns/,General,The company will announce its new product next month.,その会社は来月、新製品を発表します。,,
 bi,1,1,B1,アンコール,noun,/bˈaɪ/,General,"The crowd shouted bi!"" after the performance.""",パフォーマンスの後、観客は「アンコール！」と叫んだ。,,
@@ -3782,7 +3783,7 @@ loving,1,1,B1,愛情深い,adjective,/ˈlʌvɪŋ/,General,She is a loving mother
 mischief,1,1,B1,いたずら,noun,/ˈmɪstʃəf/,General,The children were always up to mischief.,子供たちはいつもいたずらばかりしていた。,,
 promote,1,1,B1,促進する,verb,/prəˈmoʊt/,General,The government is working to promote tourism.,政府は観光を促進するために取り組んでいる。,,
 reserved,1,1,B1,予約済みの,noun,/rɪˈzɜːrvd/,Travel,This table is reserved for a party of five.,このテーブルは5名様のご予約席です。,,
-sought,1,2,B1,求めた,noun,/ˈsɔt/,General,He sought advice from his mentor.,彼はメンターにアドバイスを求めた。,,
+sought,1,2,B1,求めた,noun,/ˈsɔt/,General,He sought advice from his mentor.,彼はメンターにアドバイスを求めた。,,seek
 trafficking,1,1,B1,密輸,noun,/ˈtræfɪkɪŋ/,General,The police uncovered a drug trafficking operation.,警察は麻薬密輸組織を摘発した。,,
 animated,1,2,B1,活気のある,verb,/ˈænəˌmeɪtəd/,Culture,The children enjoyed the animated movie.,子供たちはアニメ映画を楽しんだ。,,
 boxing,1,1,B1,ボクシング,noun,/ˈbɑksɪŋ/,General,He is training for a boxing match.,彼はボクシングの試合に向けてトレーニングしている。,,
@@ -3824,7 +3825,7 @@ leaked,1,1,B1,漏れた,noun,/ˈliːkt/,General,The information was leaked to th
 modified,1,1,B1,修正された,noun,/ˈmɑdəˌfaɪd/,General,The original design was modified to improve performance.,元の設計は性能を向上させるために修正された。,,
 performance,1,1,B1,パフォーマンス,noun,/pɚfˈɔːrməns/,General,The performance was outstanding.,そのパフォーマンスは素晴らしかった。,,
 revise,1,1,B1,修正する,verb,/rɪvˈaɪz/,Academic,I need to revise my essay.,私は自分のエッセイを修正する必要があります。,,
-spread,1,2,B1,広がる,verb,/sprˈed/,General,The news spread quickly through social media.,ニュースはソーシャルメディアを通じて急速に広がる。,,
+spread,1,2,B1,広がる,verb,/sprˈed/,General,The news spread quickly through social media.,ニュースはソーシャルメディアを通じて急速に広がる。,,spread
 trumpet,1,1,B1,トランペット,noun,/ˈtrʌmpət/,Academic,He plays the trumpet in the school band.,彼は学校のバンドでトランペットを演奏しています。,,
 accidental,1,1,B1,偶然の,noun,/ˌæksəˈdɛntəl/,General,It was an accidental meeting.,それは偶然の出会いだった。,,
 bust,1,1,B1,胸像,noun,/bˈʌst/,Culture,The museum had several bust of famous people.,博物館には何人かの有名人の胸像があった。,,
@@ -3977,7 +3978,7 @@ relaxed,1,1,B1,リラックスした,noun,/rɪˈlækst/,General,She felt relaxed
 stubborn,1,1,B1,頑固な,adjective,/ˈstʌbərn/,General,He is a stubborn person.,彼は頑固な人だ。,,
 tremble,1,1,B1,震える,verb,/ˈtrɛmbəl/,General,She was trembling with fear.,彼女は恐怖で震えていた。,,
 apart,1,1,B1,離れて,noun,/əˈpɑrt/,General,They live far apart from each other.,彼らは互いに遠く離れて住んでいます。,,
-burned,1,1,B1,焼けた,noun,/ˈbɜːrnd/,General,The toast was burned.,トーストは焼けていた。,,
+burned,1,1,B1,焼けた,noun,/ˈbɜːrnd/,General,The toast was burned.,トーストは焼けていた。,,burn
 careless,1,1,B1,不注意な,adjective,/ˈkɛrləs/,General,He was careless and broke the vase.,彼は不注意で花瓶を割ってしまった。,,
 deaf,1,1,B1,耳が聞こえない,adjective,/ˈdɛf/,Daily,He is deaf in one ear.,彼は片方の耳が聞こえない。,,
 extending,1,1,B1,拡張している,verb,/ɪˈkstɛndɪŋ/,General,They are extending the road.,彼らは道路を拡張している。,,
@@ -4025,7 +4026,7 @@ relation,1,1,B1,関係,noun,/riˈleɪʃən/,General,They have a good working rel
 shuttle,1,1,B1,シャトル,noun,/ʃˈʌtəl/,General,The shuttle provides transportation between the airport and hotels.,シャトルは空港とホテル間の輸送を提供する。,,
 throne,1,1,B1,王座,noun,/ˈθroʊn/,General,The king sat on his throne.,王は王座に座っていた。,,
 alcohol,1,1,B1,アルコール,noun,/ˈælkəˌhɑl/,General,Excessive alcohol consumption can be harmful to your health.,過度のアルコール摂取は健康に有害である可能性がある。,,
-beaten,1,1,B1,打ち負かされた,noun,/ˈbiːtən/,General,The team was beaten in the final match.,チームは決勝戦で打ち負かされた。,,
+beaten,1,1,B1,打ち負かされた,noun,/ˈbiːtən/,General,The team was beaten in the final match.,チームは決勝戦で打ち負かされた。,,beat
 conditioning,1,1,B1,調整,noun,/kəˈndɪʃənɪŋ/,General,The air conditioning was not working.,エアコンの調整が効いていませんでした。,,
 diver,1,1,B1,ダイバー,noun,/ˈdaɪvər/,General,The diver explored the underwater cave.,ダイバーは水中洞窟を探検しました。,,
 eyesight,1,1,B1,視力,noun,/ˈaɪˌsaɪt/,General,His eyesight has started to fail.,彼の視力は衰え始めた。,,
@@ -4149,7 +4150,7 @@ biblical,1,1,B1,聖書の,noun,/ˈbɪbləkəl/,General,The story has a biblical 
 cavalry,1,1,B1,騎兵,noun,/ˈkævəlri/,General,The cavalry charged into battle.,騎兵は戦闘に突撃した。,,
 defeated,1,1,B1,敗北した,noun,/dɪˈfiːtəd/,Culture,The team was defeated in the final game.,チームは決勝戦で敗北した。,,
 embedded,1,1,B1,埋め込まれた,noun,/ɛˈmbɛdɪd/,General,The bullet was embedded deep in the wall.,銃弾は壁の奥深くに埋め込まれていた。,,
-frozen,1,1,B1,凍った,noun,/ˈfroʊzən/,Nature,The lake was frozen solid.,湖は完全に凍っていた。,,
+frozen,1,1,B1,凍った,noun,/ˈfroʊzən/,Nature,The lake was frozen solid.,湖は完全に凍っていた。,,freeze
 informative,2,2,B1,情報を提供する,verb,/ɪˈnfɔrmətɪv/,Academic,They informative the situation carefully.,彼らは慎重にその状況を情報を提供する。,,
 marshal,2,2,B1,まとめる,verb,/ˈmɑrʃəl/,General,They marshal the situation carefully.,彼らは慎重にその状況をまとめる。,,
 performer,1,1,B1,パフォーマー,noun,/pərˈfɔrmər/,Culture,The performer captivated the audience with her dance.,そのパフォーマーは彼女のダンスで観客を魅了した。,,
@@ -4238,7 +4239,7 @@ improper,2,2,B1,不適当な,adjective,/ɪˈmprɑpər/,General,This is a very im
 mislead,2,2,B1,欺く,verb,/mɪˈsliːd/,General,They mislead the situation carefully.,彼らは慎重にその状況を欺く。,,
 poison,1,1,B1,毒,noun,/ˈpɔɪzən/,General,The snake’s bite was filled with poison.,ヘビの噛み跡は毒で満たされていた。,,
 remain,1,1,B1,残る,verb,/rɪˈmeɪn/,General,Some questions remain unanswered.,いくつかの質問は未回答のまま残っている。,,
-stolen,1,1,B1,盗まれた,noun,/ˈstoʊlən/,Daily,My bike was stolen last night.,私の自転車は昨夜盗まれました。,,
+stolen,1,1,B1,盗まれた,noun,/ˈstoʊlən/,Daily,My bike was stolen last night.,私の自転車は昨夜盗まれました。,,steal
 trusted,1,1,B1,信頼された,noun,/ˈtrʌstɪd/,General,He is a trusted advisor.,彼は信頼できるアドバイザーです。,,
 argued,1,1,B1,主張した,noun,/ˈɑrɡjud/,Culture,They argued about which movie to watch.,彼らはどの映画を見るかについて議論した。,,
 basis,1,1,B1,基礎,noun,/ˈbeɪsəs/,General,His argument was based on a false premise.,彼の議論は誤った前提に基づいていました。,,
@@ -4383,9 +4384,9 @@ recruited,1,1,B1,募集された,noun,/rɪˈkruːtɪd/,General,New members were 
 shadowy,1,1,B1,影の多い,adjective,/ˈʃædoʊi/,General,He made a deal in a shadowy corner of the bar.,彼はバーの影の多い隅で取引をしました。,,
 thump,2,2,B1,どすんと叩く,verb,/ˈθʌmp/,General,They thump the situation carefully.,彼らは慎重にその状況をどすんと叩く。,,
 adviser,1,1,B1,アドバイザー,noun,/æˈdvaɪzər/,General,He sought advice from his financial adviser.,彼はファイナンシャルアドバイザーに助言を求めた。,,
-burnt,1,1,B1,焦げた,noun,/ˈbɜːrnt/,General,The toast was burnt.,トーストは焦げていた。,,
+burnt,1,1,B1,焦げた,noun,/ˈbɜːrnt/,General,The toast was burnt.,トーストは焦げていた。,,burn
 chorus,1,1,B1,コーラス,noun,/ˈkɔrəs/,Culture,The chorus of the song is very catchy.,その歌のコーラスは非常に耳に残る。,,
-dug,1,1,B1,掘った,noun,/ˈdʌɡ/,General,They dug a hole in the backyard.,彼らは裏庭に穴を掘った。,,
+dug,1,1,B1,掘った,noun,/ˈdʌɡ/,General,They dug a hole in the backyard.,彼らは裏庭に穴を掘った。,,dig
 eclipse,2,2,B1,影を薄くする,verb,/ɪklˈɪps/,Nature,They eclipse the situation carefully.,彼らは慎重にその状況を影を薄くする。,,
 promoting,1,1,B1,促進している,verb,/prəˈmoʊtɪŋ/,General,The company is promoting its new product.,その会社は新製品を促進しています。,,
 rope,1,1,B1,ロープ,noun,/ˈroʊp/,General,He uses a rope to climb.,彼はロープを使って登ります。,,
@@ -4403,7 +4404,7 @@ treasury,2,2,B1,財務省,noun,/trˈeʒɚiː/,Business,The treasury plays an imp
 aye,1,2,B1,はい,adjective,/ˈaɪ/,General,The council voted aye on the proposal.,評議会はその提案に賛成票を投じた。,,
 bundle,2,2,B1,包み,noun,/bˈʌndəl/,General,The bundle plays an important role.,その包みは重要な役割を果たします。,,
 crushing,1,1,B1,押しつぶす,verb,/ˈkrʌʃɪŋ/,General,The weight was crushing the cardboard box.,重さが段ボール箱を押しつぶしていた。,,
-dealt,1,1,B1,対処した,noun,/ˈdɛlt/,General,They dealt with the problem effectively.,彼らはその問題に効果的に対処した。,,
+dealt,1,1,B1,対処した,noun,/ˈdɛlt/,General,They dealt with the problem effectively.,彼らはその問題に効果的に対処した。,,deal
 enrollment,2,2,B1,入学者数,noun,/enrˈoʊlmənt/,Academic,The enrollment plays an important role.,その入学者数は重要な役割を果たします。,,
 printing,1,1,B1,印刷,noun,/ˈprɪntɪŋ/,General,The printing of the book will start next week.,その本の印刷は来週始まるだろう。,,
 roster,1,1,B1,名簿,noun,/ˈrɑstər/,General,The team has a full roster of players for the season.,チームはシーズンに向けて選手の完全な名簿を持っています。,,
@@ -4680,7 +4681,7 @@ anyhow,1,1,B1,とにかく,verb,/ˈɛniˌhaʊ/,General,"I don't like the idea, b
 commanding,1,1,B1,堂々とした,noun,/kəˈmændɪŋ/,General,He had a commanding presence on stage.,彼は舞台で堂々とした存在感を示した。,,
 puppet,1,1,B1,人形,noun,/pˈʌpət/,General,The children enjoyed the puppet show.,子供たちは人形劇を楽しんだ。,,
 regarded,2,2,B1,見なされた,noun,/rəˈɡɑrdəd/,General,The regarded plays an important role.,その見なされたは重要な役割を果たします。,,
-spit,1,1,B1,唾を吐く,verb,/ˈspɪt/,Culture,He spit out the bad-tasting food.,彼はまずい味の食べ物を吐き出した。,,
+spit,1,1,B1,唾を吐く,verb,/ˈspɪt/,Culture,He spit out the bad-tasting food.,彼はまずい味の食べ物を吐き出した。,,spit
 attending,1,1,B1,出席している,verb,/əˈtɛndɪŋ/,General,She is attending a conference in London.,彼女はロンドンで開催される会議に出席している。,,
 continental,1,1,B1,大陸の,noun,/ˌkɑntəˈnɛntəl/,General,The continental shelf extends out from the coast.,大陸棚は海岸から外に広がっている。,,
 pissed,1,1,B1,腹を立てた,noun,/ˈpɪst/,General,He was pissed off about the delay.,彼は遅延に腹を立てていた。,,
@@ -4979,8 +4980,8 @@ static,2,2,B1,変化のない,adjective,/ˈstætɪk/,General,This is a very stat
 striker,2,2,B1,攻撃者,noun,/strˈaɪkɚ/,General,The striker plays an important role.,その攻撃者は重要な役割を果たします。,,
 strongly,2,2,B1,激しく,verb,/ˈstrɔŋli/,Academic,They strongly the situation carefully.,彼らは慎重にその状況を激しく。,,
 sorrow,2,2,B1,悲嘆,noun,/ˈsɑroʊ/,Daily,The sorrow plays an important role.,その悲嘆は重要な役割を果たします。,,
-sought,2,2,B1,探した,noun,/ˈsɔt/,General,The sought plays an important role.,その探したは重要な役割を果たします。,,
-spread,2,2,B1,拡散する,verb,/sprˈed/,General,They spread the situation carefully.,彼らは慎重にその状況を拡散する。,,
+sought,2,2,B1,探した,noun,/ˈsɔt/,General,The sought plays an important role.,その探したは重要な役割を果たします。,,seek
+spread,2,2,B1,拡散する,verb,/sprˈed/,General,They spread the situation carefully.,彼らは慎重にその状況を拡散する。,,spread
 sustained,2,2,B1,継続的な,adjective,/səˈsteɪnd/,General,This is a very sustained example.,これは非常に継続的なな例です。,,
 statistic,2,2,B1,統計値,noun,/stəˈtɪstɪk/,General,The statistic plays an important role.,その統計値は重要な役割を果たします。,,
 spirits,2,2,B1,気分,noun,/ˈspɪrəts/,General,The spirits plays an important role.,その気分は重要な役割を果たします。,,
@@ -5017,7 +5018,7 @@ biologist,1,1,B2,生物学者,noun,/baɪˈɑlədʒəst/,Nature,She is a marine b
 comprehensive,1,2,B2,包括的な,adjective,/ˌkɑmpriˈhɛnsɪv/,Academic,The report is a comprehensive analysis of the problem.,その報告書は問題の包括的な分析である。,,
 dispensable,1,1,B2,不要な,adjective,/dɪˈspɛnsəbəl/,General,These features are dispensable.,これらの機能は不要である。,,
 encrypted,1,1,B2,暗号化された,noun,/ɛˈnkrɪptɪd/,General,The messages were encrypted for security.,メッセージはセキュリティのために暗号化されていた。,,
-forgave,1,1,B2,許した,noun,/fərˈɡeɪv/,General,She forgave him for his mistake.,彼女は彼の過ちを許した。,,
+forgave,1,1,B2,許した,noun,/fərˈɡeɪv/,General,She forgave him for his mistake.,彼女は彼の過ちを許した。,,forgive
 glitch,1,1,B2,不具合,noun,/ˈɡlɪtʃ/,General,There was a glitch in the system.,システムに不具合があった。,,
 horrific,1,2,B2,恐ろしい,adjective,/hɔˈrɪfɪk/,General,The accident was horrific.,その事故は恐ろしかった。,,
 illustrating,1,1,B2,例証する,verb,/ˈɪləˌstreɪtɪŋ/,General,He used a story illustrating the point.,彼はその点を例証する物語を使った。,,
@@ -5126,7 +5127,7 @@ jab,1,1,B2,突き刺す,verb,/ˈdʒæb/,General,He gave the punching bag a jab.,
 kennel,1,1,B2,犬小屋,noun,/ˈkɛnəl/,General,The dog stays in the kennel when we go out.,私たちが外出するとき、犬は犬小屋にいる。,,
 looming,1,1,B2,迫り来る,verb,/ˈluːmɪŋ/,General,The deadline is looming.,締め切りが迫り来ている。,,
 marred,1,2,B2,傷つけた,noun,/ˈmɑrd/,General,The beautiful view was marred by pollution.,その美しい景色は汚染によって損なわれた。,,
-nuclei,1,1,B2,核,noun,/ˈnuːkliˌaɪ/,General,Cells contain nuclei.,細胞は核を含んでいる。,,
+nuclei,1,1,B2,核,noun,/ˈnuːkliˌaɪ/,General,Cells contain nuclei.,細胞は核を含んでいる。,,nucleus
 openness,1,1,B2,開放性,noun,/ˈoʊpənnəs/,General,The company values openness and transparency.,その会社は開放性と透明性を重視している。,,
 penalty,1,1,B2,罰金,noun,/ˈpɛnəlti/,General,He received a penalty for speeding.,彼はスピード違反で罰金を受けました。,,
 quarrel,1,1,B2,口論,noun,/kwˈɔːrəl/,General,They had frequent quarrel over minor issues.,彼らは些細なことで頻繁に口論をした。,,
@@ -6332,7 +6333,7 @@ aggressor,1,1,B2,侵略者,noun,/əɡrˈesɚ/,General,The aggressor attacked wit
 blunder,1,1,B2,大失敗,noun,/ˈblʌndər/,General,It was a huge blunder to forget the tickets.,チケットを忘れるのは大きな大失敗だった。,,
 cornerstone,1,2,B2,礎石,noun,/kˈɔːrnɚstˌoʊn/,Nature,Honesty and integrity are the cornerstone of a good reputation.,正直さと誠実さは、良い評判の礎である。,,
 dysfunctional,1,1,B2,機能不全の,noun,/dɪˈsfʌŋkʃənəl/,Daily,The family is considered dysfunctional by social workers.,その家族はソーシャルワーカーによって機能不全とみなされている。,,
-eldest,1,1,B2,最年長の,noun,/ˈɛldəst/,General,She is the eldest of three siblings.,彼女は3人兄弟の最年長である。,,
+eldest,1,1,B2,最年長の,noun,/ˈɛldəst/,General,She is the eldest of three siblings.,彼女は3人兄弟の最年長である。,,old
 falsely,1,1,B2,偽って,noun,/ˈfɔlsli/,Science,He falsely claimed to be a doctor.,彼は偽って医者を名乗りました。,,
 groan,1,1,B2,うめき声,noun,/ˈɡroʊn/,General,She let out a groan when she heard the news.,彼女はニュースを聞いてうめき声をあげました。,,
 hardened,1,1,B2,硬化した,noun,/ˈhɑrdənd/,Nature,The clay hardened in the sun.,粘土は太陽の下で硬化した。,,
@@ -6350,7 +6351,7 @@ undertook,1,1,B2,着手した,noun,/ˌʌndərˈtʊk/,Nature,She undertook a rese
 vision,1,1,B2,視力,noun,/ˈvɪʒən/,General,His vision is not very good.,彼の視力はあまり良くない。,,
 weld,1,1,B2,溶接する,verb,/ˈwɛld/,General,They needed to weld the metal plates together.,彼らは金属板を一緒に溶接する必要があった。,,
 adore,1,2,B2,崇拝する,verb,/ədˈɔːr/,General,I adore his grandchildren.,私は孫たちを溺愛している。,,
-bet,1,1,B2,賭け,noun,/bˈet/,Culture,They made bet on the outcome of the game.,彼らは試合の結果に賭けをした。,,
+bet,1,1,B2,賭け,noun,/bˈet/,Culture,They made bet on the outcome of the game.,彼らは試合の結果に賭けをした。,,bet
 chopped,1,1,B2,刻んだ,noun,/ˈtʃɑpt/,General,He chopped the vegetables for the soup.,彼はスープのために野菜を刻んだ。,,
 dormant,1,1,B2,休眠状態の,noun,/ˈdɔrmənt/,General,The volcano had been dormant for centuries.,その火山は何世紀も休眠状態だった。,,
 ensured,1,2,B2,確実にした,noun,/ɛˈnʃʊrd/,General,They ensured the safety of all the participants.,彼らはすべての参加者の安全を確実にした。,,
@@ -7249,7 +7250,7 @@ nutrition,1,1,B2,栄養,noun,/nuˈtrɪʃən/,General,Good nutrition is essential
 outlining,1,1,B2,概説する,verb,/ˈaʊˌtlaɪnɪŋ/,General,She was outlining her plan for the presentation.,彼女はプレゼンテーションの計画を概説していた。,,
 prepping,1,1,B2,準備,noun,/ˈprɛpɪŋ/,Daily,She was prepping for her presentation all morning.,彼女は午前中ずっとプレゼンテーションの準備をしていた。,,
 righteousness,1,1,B2,正しさ,noun,/ˈraɪtʃəsnəs/,General,He was driven by a strong sense of righteousness.,彼は強い正義感に突き動かされていた。,,
-sunk,1,1,B2,沈んだ,noun,/ˈsʌŋk/,General,The ship sunk in the storm.,船は嵐で沈んだ。,,
+sunk,1,1,B2,沈んだ,noun,/ˈsʌŋk/,General,The ship sunk in the storm.,船は嵐で沈んだ。,,sink
 textbook,1,1,B2,教科書,noun,/tˈekstbˌʊk/,Academic,Students need to buy their textbook before school starts.,生徒は学校が始まる前に教科書を買う必要があります。,,
 ungodly,1,2,B2,不信心な,adjective,/əˈnɡɔdli/,General,The noise was at an ungodly hour.,その騒音は不道徳な時間だった。,,
 venetian,1,1,B2,ベネチアの,noun,/vəˈniːʃən/,General,The building had Venetian-style windows.,その建物にはベネチア風の窓があった。,,
@@ -7283,7 +7284,7 @@ fundraiser,1,1,B2,資金調達者,noun,/ˈfʌˌndreɪzər/,Business,The school i
 glued,1,1,B2,接着した,noun,/ˈɡluːd/,General,The pieces were glued together.,部品は接着された。,,
 harmless,1,1,B2,無害な,adjective,/ˈhɑrmləs/,General,It was a harmless prank.,それは無害ないたずらだった。,,
 immortal,1,1,B2,不滅の,noun,/ɪˈmɔrtəl/,General,The artist's works are considered immortal.,その芸術家の作品は不滅であると考えられている。,,
-lice,1,1,B2,シラミ,noun,/lˈaɪs/,Academic,The children were sent home due to a lice outbreak at school.,子供たちは学校でシラミが発生したため家に送り返された。,,
+lice,1,1,B2,シラミ,noun,/lˈaɪs/,Academic,The children were sent home due to a lice outbreak at school.,子供たちは学校でシラミが発生したため家に送り返された。,,louse
 massacred,1,1,B2,虐殺した,noun,/ˈmæsəkərd/,General,The villagers were massacred by the invading army.,村人たちは侵略軍によって虐殺された。,,
 nicknamed,1,1,B2,ニックネームをつけられた,noun,/ˈnɪˌkneɪmd/,General,He was nicknamed 'Shorty'.,彼は「チビ」というニックネームをつけられた。,,
 overtly,1,1,B2,公然と,noun,/oʊˈvɜːrtli/,General,He overtly expressed his disagreement with the plan.,彼はその計画に対する反対を公然と表明した。,,
@@ -7359,7 +7360,7 @@ bracing,1,2,B2,元気が出る,verb,/ˈbreɪsɪŋ/,Nature,The bracing sea air in
 chaired,1,1,B2,議長を務めた,noun,/ˈtʃɛrd/,General,She chaired the meeting.,彼女が会議の議長を務めた。,,
 defiance,1,1,B2,反抗,noun,/dɪfˈaɪəns/,General,His actions were an act of defiance.,彼の行動は反抗行為だった。,,
 exercised,1,1,B2,行使された,noun,/ˈɛksərˌsaɪzd/,General,The judge exercised his authority.,裁判官は自分の権限を行使した。,,
-forbade,1,1,B2,禁じた,noun,/fərˈbeɪd/,General,The law forbade the sale of alcohol to minors.,法律は未成年者へのアルコールの販売を禁じた。,,
+forbade,1,1,B2,禁じた,noun,/fərˈbeɪd/,General,The law forbade the sale of alcohol to minors.,法律は未成年者へのアルコールの販売を禁じた。,,forbid
 gesture,1,1,B2,身振り,noun,/dʒˈestʃɚ/,Daily,He used hand gesture to communicate with them.,私は彼らとコミュニケーションをとるために手ぶりを使った。,,
 hourly,1,1,B2,毎時の,noun,/ˈaʊrli/,General,The bus leaves on an hourly basis.,バスは毎時出発する。,,
 insatiable,1,2,B2,飽くことのない,adjective,/ɪˈnseɪʃəbəl/,General,He had an insatiable appetite for knowledge.,彼は知識に対して飽くなき欲求を持っていた。,,
@@ -8295,7 +8296,7 @@ usable,1,2,B2,使用可能な,adjective,/ˈjuːzəbəl/,General,The tools are st
 vehemently,1,1,B2,激しく,verb,/ˈviːəməntli/,General,He vehemently denied any involvement in the scandal.,彼はそのスキャンダルへの関与を激しく否定した。,,
 weary,1,1,B2,疲れた,noun,/ˈwɪri/,General,I am weary of all this arguing.,私はこの全ての議論にうんざりしている。,,
 absentee,1,1,B2,欠席者,noun,/ˌæbsəˈntiː/,General,There were several absentee from the meeting.,会議には数人の欠席者がいた。,,
-bound,1,2,B2,縛られた,noun,/ˈbaʊnd/,Business,The company is bound by the contract.,その会社は契約に縛られている。,,
+bound,1,2,B2,縛られた,noun,/ˈbaʊnd/,Business,The company is bound by the contract.,その会社は契約に縛られている。,,bind
 courteous,1,1,B2,礼儀正しい,adjective,/ˈkɜːrtiəs/,General,He was always courteous to the staff.,彼は常にスタッフに礼儀正しかった。,,
 delusional,1,1,B2,妄想的な,adjective,/dɪˈluːʒənəl/,General,He had delusional beliefs about his own abilities.,彼は自分の能力について妄想的な信念を持っていた。,,
 evocative,1,1,B2,喚起する,verb,/ɪˈvɑkətɪv/,General,The photograph was very evocative of childhood memories.,その写真は幼少期の思い出を非常に喚起させるものだった。,,
@@ -8335,7 +8336,7 @@ unbearable,1,1,B2,耐えられない,adjective,/əˈnbɛrəbəl/,General,The pai
 venom,1,1,B2,毒,noun,/ˈvɛnəm/,General,The snake has venom.,そのヘビは毒を持っている。,,
 warranted,1,1,B2,正当な,adjective,/ˈwɔrəntɪd/,General,His actions were warranted under the circumstances.,彼の行動は状況下で正当だった。,,
 anchorman,1,1,B2,ニュースキャスター,noun,/ˈæŋkərˌmæn/,General,The anchorman announced the breaking news.,ニュースキャスターが速報を伝えた。,,
-bled,1,1,B2,出血した,noun,/ˈblɛd/,General,His knee bled after he fell.,転んだ後、彼の膝から出血しました。,,
+bled,1,1,B2,出血した,noun,/ˈblɛd/,General,His knee bled after he fell.,転んだ後、彼の膝から出血しました。,,bleed
 cordial,1,1,B2,友好的な,adjective,/ˈkɔrdʒəl/,General,They had a cordial conversation over coffee.,彼らはコーヒーを飲みながら友好的な会話をした。,,
 downgraded,1,1,B2,格下げした,noun,/ˈdaʊˈnɡreɪdəd/,Business,The stock was downgraded by the analysts.,その株はアナリストによって格下げされた。,,
 exploding,1,1,B2,爆発している,verb,/ɪˈksploʊdɪŋ/,General,The fireworks were exploding in the sky.,花火が空で爆発していた。,,
@@ -8599,7 +8600,7 @@ bitten,1,1,B2,噛まれた,noun,/ˈbɪtən/,General,He was bitten by a dog.,彼�
 cane,1,1,B2,杖,noun,/ˈkeɪn/,Daily,He uses a cane to walk.,彼は歩くために杖を使っている。,,
 demeanor,1,2,B2,態度,noun,/dɪˈmiːnər/,General,His demeanor was always very calm.,彼の態度は常に非常に穏やかでした。,,
 exposing,1,2,B2,さらす,verb,/ɪˈkspoʊzɪŋ/,Nature,The sun is exposing the skin to harmful UV rays.,太陽は有害な紫外線を肌にさらしている。,,
-forgiven,1,1,B2,許された,noun,/fərˈɡɪvən/,General,He has been forgiven for his mistake.,彼は自分の過ちを許された。,,
+forgiven,1,1,B2,許された,noun,/fərˈɡɪvən/,General,He has been forgiven for his mistake.,彼は自分の過ちを許された。,,forgive
 groundwater,1,1,B2,地下水,noun,/ˈɡraʊˌndwɑtər/,General,The well draws its water from the groundwater.,その井戸は地下水から水を引いている。,,
 hiss,1,1,B2,シューという音,noun,/ˈhɪs/,General,The snake made a hissing sound.,そのヘビはシューという音を立てた。,,
 invalid,1,2,B2,病人,noun,/ˈɪnvələd/,Science,The hospital had special facilities for invalid.,その病院には体の不自由な人のための特別な設備があった。,,
@@ -8809,7 +8810,7 @@ nominating,2,2,B2,推薦する,verb,/ˈnɑməˌneɪtɪŋ/,General,They nominatin
 outgoing,1,1,B2,外交的な,adjective,/ˈaʊˌtɡoʊɪŋ/,General,She is an outgoing and friendly person.,彼女は外交的でフレンドリーな人だ。,,
 piccolo,1,1,B2,ピッコロ,noun,/ˈpɪkəˌloʊ/,General,She plays the piccolo in the orchestra.,彼女はオーケストラでピッコロを演奏している。,,
 regal,1,2,B2,威厳のある,verb,/ˈriːɡəl/,General,She had a regal presence.,彼女は威厳のある雰囲気を持っていた。,,
-sewn,1,1,B2,縫われた,noun,/ˈsoʊn/,Daily,The dress was sewn by hand.,そのドレスは手で縫われた。,,
+sewn,1,1,B2,縫われた,noun,/ˈsoʊn/,Daily,The dress was sewn by hand.,そのドレスは手で縫われた。,,sew
 tournament,1,1,B2,トーナメント,noun,/ˈtʊrnəmənt/,General,The tennis tournament lasted for two weeks.,そのテニストーナメントは2週間続きました。,,
 ultraviolet,1,1,B2,紫外線,noun,/ˌʌltrəˈvaɪəlɪt/,General,Ultraviolet rays can damage your skin.,紫外線は肌を傷つける可能性があります。,,
 weaponry,1,1,B2,兵器,noun,/ˈwɛpənri/,General,The country's military showcased its latest weaponry.,その国軍は最新の兵器を披露した。,,
@@ -8871,7 +8872,7 @@ term,1,1,B2,期間,noun,/ˈtɜːrm/,General,He served a two-year term as preside
 unchecked,1,1,B2,抑制されない,adjective,/əˈntʃɛkt/,Science,The disease was allowed to spread unchecked.,その病気は抑制されないまま蔓延した。,,
 wildest,1,1,B2,最も野生的な,adjective,/ˈwaɪldɪst/,Nature,Her wildest dreams were about travelling the world.,彼女の最も野生的な夢は、世界中を旅することだった。,,
 anon,1,2,B2,すぐに,adverb,/anon/,General,I'll be there anon.,私はすぐにそこに着くでしょう。,,
-bent,1,1,B2,曲がった,noun,/ˈbɛnt/,General,The metal bar was bent out of shape.,金属の棒は形がゆがんで曲がっていました。,,
+bent,1,1,B2,曲がった,noun,/ˈbɛnt/,General,The metal bar was bent out of shape.,金属の棒は形がゆがんで曲がっていました。,,bend
 consenting,1,2,B2,同意している,verb,/kəˈnsɛntɪŋ/,General,The experiment was performed with consenting adults.,その実験は同意した成人と共に行われた。,,
 decreasing,1,1,B2,減少している,verb,/dɪˈkriːsɪŋ/,General,The number of students is decreasing every year.,生徒の数は毎年減少している。,,
 enclave,1,1,B2,飛び地,noun,/ˈɑˌnkleɪv/,General,The resort was a quiet enclave.,そのリゾートは静かな飛び地だった。,,
@@ -9012,7 +9013,7 @@ fiasco,1,1,B2,大失敗,noun,/fiˈæskoʊ/,General,The event was a complete fias
 glimmer,1,1,B2,かすかな光,noun,/ɡlˈɪmɚ/,General,A few glimmer of hope remain.,かすかな希望がいくつか残っている。,,
 hale,1,2,B2,元気な,adjective,/ˈheɪl/,General,"Despite his age, he was still hale and hearty.",彼は高齢にもかかわらず、まだ元気で丈夫だった。,,
 insight,1,2,B2,洞察,noun,/ˈɪnsˌaɪt/,General,The book offers new insight into the human mind.,その本は人間の心についての新たな洞察を提供している。,,
-leapt,1,1,B2,跳び上がった,noun,/ˈlɛpt/,General,The cat leapt onto the counter with ease.,その猫はやすやすとカウンターに跳び上がった。,,
+leapt,1,1,B2,跳び上がった,noun,/ˈlɛpt/,General,The cat leapt onto the counter with ease.,その猫はやすやすとカウンターに跳び上がった。,,leap
 maze,1,1,B2,迷路,noun,/mˈeɪz/,General,The garden was a complex maze.,庭は複雑な迷路だった。,,
 narcotic,2,2,B2,麻酔薬,noun,/nɑˈrkɑtɪk/,Science,The narcotic plays an important role.,その麻酔薬は重要な役割を果たします。,,
 overwhelmingly,1,1,B2,圧倒的に,adverb,/ˌoʊvərˈwɛlmɪŋli/,General,The proposal was overwhelmingly supported by the members.,その提案は会員から圧倒的に支持された。,,
@@ -9191,7 +9192,7 @@ researching,1,1,B2,調査している,verb,/riˈsɜːrtʃɪŋ/,Science,The scien
 substrate,1,1,B2,基質,noun,/ˈsʌˌbstreɪt/,General,The enzyme binds to the substrate and catalyzes the reaction.,酵素は基質に結合し、反応を触媒する。,,
 tug,1,1,B2,引く,verb,/ˈtʌɡ/,Daily,The child gave the dog a tug.,その子供は犬を引っ張った。,,
 unsolved,1,1,B2,未解決の,noun,/əˈnsɑlvd/,General,The mystery remains unsolved to this day.,その謎は今日まで未解決のままである。,,
-wound,1,1,B2,傷,noun,/wˈaʊnd/,General,The soldier suffered severe wound in the battle.,兵士は戦闘で重傷を負った。,,
+wound,1,1,B2,傷,noun,/wˈaʊnd/,General,The soldier suffered severe wound in the battle.,兵士は戦闘で重傷を負った。,,wind
 auntie,1,1,B2,おばさん,noun,/ˈænti/,General,I love my auntie.,私はおばさんが大好きだ。,,
 bloodshed,1,1,B2,流血,noun,/ˈblʌˌdʃɛd/,General,The war resulted in widespread bloodshed.,その戦争は広範囲にわたる流血をもたらした。,,
 curled,1,1,B2,丸まった,noun,/ˈkɜːrld/,General,The cat was curled up on the sofa.,猫はソファの上で丸まっていた。,,
@@ -9281,7 +9282,7 @@ revisited,1,1,B2,再検討した,noun,/riˈvɪzətɪd/,General,The topic was rev
 stagnation,1,1,B2,停滞,noun,/stæˈɡneɪʃən/,General,The economy is experiencing a period of stagnation.,経済は停滞期を経験している。,,
 twisted,1,1,B2,ねじれた,noun,/ˈtwɪstəd/,General,The metal was twisted out of shape.,その金属は形がねじれていた。,,
 uncomfortably,1,1,B2,不快に,adverb,/əˈnkʌmftəbli/,General,He sat uncomfortably on the hard chair.,彼は硬い椅子に不快に座った。,,
-worse,1,1,B2,より悪い,adjective,/wˈɜːrs/,General,The situation is getting worse.,状況は悪化している。,,
+worse,1,1,B2,より悪い,adjective,/wˈɜːrs/,General,The situation is getting worse.,状況は悪化している。,,bad
 atrocious,1,2,B2,ひどい,adjective,/əˈtroʊʃəs/,Nature,"The weather was atrocious, with heavy rain and strong winds.",天候はひどく、大雨と強風に見舞われた。,,
 butch,1,1,B2,男らしい,adjective,/ˈbʊtʃ/,General,He has a very butch haircut.,彼は非常に男らしいヘアスタイルをしています。,,
 contingency,1,1,B2,不測の事態,noun,/kəntˈɪndʒənsiː/,General,The plan includes measures to address all possible contingencies.,その計画には、起こりうるすべての不測の事態に対処するための対策が含まれている。,,
@@ -9353,7 +9354,7 @@ ripping,1,1,B2,裂ける,verb,/ˈrɪpɪŋ/,Nature,The wind was ripping the sails
 shore,1,1,B2,岸,noun,/ˈʃɔr/,General,We walked along the shore at sunset.,私たちは夕暮れ時に岸辺を歩いた。,,
 testing,1,1,B2,テスト,noun,/ˈtɛstɪŋ/,Science,We are testing the new software.,私たちは新しいソフトウェアをテストしています。,,
 ultimate,1,1,B2,究極の,noun,/ˈʌltəmət/,General,This is the ultimate goal of the project.,これはプロジェクトの究極の目標です。,,
-worst,1,1,B2,最悪,noun,/ˈwɜːrst/,Culture,That was the worst movie I've ever seen.,あれは私が見た中で最悪の映画だった。,,
+worst,1,1,B2,最悪,noun,/ˈwɜːrst/,Culture,That was the worst movie I've ever seen.,あれは私が見た中で最悪の映画だった。,,bad
 aurora,1,1,B2,オーロラ,noun,/ərˈɔrə/,General,They saw the aurora borealis during their trip.,彼らは旅行中にオーロラを見た。,,
 baggy,1,1,B2,だぶだぶの,noun,/ˈbæɡi/,General,He was wearing baggy pants.,彼はだぶだぶのパンツをはいていた。,,
 cropped,1,1,B2,切り取られた,noun,/ˈkrɑpt/,Culture,The photo was cropped to focus on the main subject.,その写真は、主な被写体に焦点を当てるために切り取られた。,,
@@ -9429,7 +9430,7 @@ wrongly,1,1,B2,間違って,noun,/ˈrɔŋli/,General,He was wrongly accused.,彼
 augment,1,1,B2,増強する,verb,/ɔːɡmˈent/,Science,The software augment the user's abilities.,そのソフトウェアはユーザーの能力を増強する。,,
 blueberry,1,1,B2,ブルーベリー,noun,/ˈbluːˌbɛri/,Daily,She likes to eat blueberries with yogurt.,彼女はヨーグルトと一緒にブルーベリーを食べるのが好きだ。,,
 citrus,1,1,B2,柑橘類,noun,/ˈsɪtrəs/,General,Lemons are citrus fruits.,レモンは柑橘類です。,,
-dreamt,1,1,B2,夢を見た,noun,/ˈdrɛmt/,Daily,I dreamt about flying last night.,昨夜、空を飛ぶ夢を見た。,,
+dreamt,1,1,B2,夢を見た,noun,/ˈdrɛmt/,Daily,I dreamt about flying last night.,昨夜、空を飛ぶ夢を見た。,,dream
 experimented,1,1,B2,実験した,noun,/ɪˈkspɛrəməntəd/,Science,They experimented with different methods to solve the problem.,彼らは問題を解決するためにさまざまな方法を試した。,,
 financially,1,1,B2,財政的に,adverb,/fəˈnænʃəli/,General,The company is financially stable despite the recent challenges.,会社は最近の課題にもかかわらず、財政的に安定しています。,,
 gulp,1,1,B2,ごくりと飲む,verb,/ˈɡʌlp/,Daily,He gulped down his coffee.,彼はコーヒーをごくりと飲んだ。,,
@@ -9759,7 +9760,7 @@ firsthand,1,1,B2,直接に,adverb,/fərˈsthænd/,General,I had firsthand experi
 guideline,1,1,B2,ガイドライン,noun,/ˈɡaɪˌdlaɪn/,General,The new guideline explains how to complete the form.,新しいガイドラインは、フォームの記入方法を説明している。,,
 hearsay,1,2,B2,うわさ,noun,/ˈhiːˌrseɪ/,General,The evidence presented was based on hearsay.,提出された証拠はうわさに基づいていた。,,
 identical,1,1,B2,同一の,noun,/aɪˈdɛntɪkəl/,General,The twins are identical.,その双子は同一だ。,,
-lent,1,1,B2,貸した,noun,/ˈlɛnt/,General,He lent me his car for the weekend.,彼は週末に私に車を貸してくれた。,,
+lent,1,1,B2,貸した,noun,/ˈlɛnt/,General,He lent me his car for the weekend.,彼は週末に私に車を貸してくれた。,,lend
 metric,1,1,B2,メートル法の,noun,/ˈmɛtrɪk/,General,The country uses the metric system.,その国はメートル法を使っている。,,
 oxygen,1,1,B2,酸素,noun,/ˈɑksədʒən/,General,We need oxygen to breathe.,私たちは呼吸するために酸素が必要です。,,
 prosecuted,1,1,B2,起訴された,noun,/ˈprɑsɪˌkjuːtɪd/,General,He was prosecuted for his crimes.,彼は自分の罪で起訴された。,,
@@ -10439,7 +10440,7 @@ bosom,1,2,B2,胸,noun,/ˈbʊzəm/,Daily,She held the child close to her bosom.,�
 cartilage,1,1,B2,軟骨,noun,/ˈkɑrtələdʒ/,General,The cartilage in the knee provides cushioning.,膝の軟骨はクッションの役割を果たす。,,
 defence,1,1,B2,防御,noun,/dɪfˈens/,General,The team had a strong defence.,そのチームは強力な防御を持っていた。,,
 equip,1,1,B2,装備する,verb,/ɪˈkwɪp/,General,The company will equip the employees with new laptops.,会社は従業員に新しいラップトップを装備するだろう。,,
-fungi,1,1,B2,菌類,noun,/ˈfʌndʒaɪ/,General,Mushrooms are a type of fungi.,キノコは菌類の一種です。,,
+fungi,1,1,B2,菌類,noun,/ˈfʌndʒaɪ/,General,Mushrooms are a type of fungi.,キノコは菌類の一種です。,,fungus
 gearing,2,2,B2,～を準備する,verb,/ˈɡɪrɪŋ/,General,They gearing the situation carefully.,彼らは慎重にその状況を～を準備する。,,
 homeowner,1,1,B2,住宅所有者,noun,/hˈoʊmˌoʊnɚ/,General,The homeowner are responsible for maintaining their property.,住宅所有者は自分の財産を維持する責任がある。,,
 impending,1,1,B2,差し迫った,noun,/ɪˈmpɛndɪŋ/,General,The impending storm caused a lot of anxiety.,差し迫った嵐は多くの不安を引き起こした。,,
@@ -11138,7 +11139,7 @@ sighting,1,1,B2,目撃,noun,/ˈsaɪtɪŋ/,Nature,The sighting of the rare bird e
 tumbled,1,1,B2,転げ落ちた,noun,/ˈtʌmbəld/,Daily,The child tumbled down the hill.,子供は丘を転げ落ちた。,,
 unite,2,2,B2,結合する,verb,/ˈjuːˌnaɪt/,General,They unite the situation carefully.,彼らは慎重にその状況を結合する。,,
 amplitude,1,1,B2,振幅,noun,/ˈæmplətˌuːd/,General,The amplitude of the waves were measured.,波の振幅が測定されました。,,
-bred,1,1,B2,繁殖した,noun,/ˈbrɛd/,General,The dogs were bred for hunting.,その犬たちは狩猟のために繁殖されました。,,
+bred,1,1,B2,繁殖した,noun,/ˈbrɛd/,General,The dogs were bred for hunting.,その犬たちは狩猟のために繁殖されました。,,breed
 commodore,1,1,B2,代将,noun,/ˈkɑməˌdɔr/,General,The commodore was in command of the naval squadron.,代将は海軍の戦隊を指揮していた。,,
 discarded,1,1,B2,廃棄した,noun,/dɪˈskɑrdɪd/,General,She discarded the old newspapers.,彼女は古い新聞を廃棄した。,,
 entitlement,1,1,B2,権利,noun,/entˈaɪtəlmənt/,General,They are fighting for their entitlement.,彼らは自分たちの権利のために戦っている。,,
@@ -11307,7 +11308,7 @@ tighter,1,1,B2,よりきつい,adjective,/ˈtaɪtər/,General,The screw was tigh
 untimely,2,2,B2,不慮の,noun,/əˈntaɪmli/,General,The untimely plays an important role.,その不慮のは重要な役割を果たします。,,
 avatar,1,2,B2,アバター,noun,/ˈævətˌɑːr/,Culture,"In the online game, users create their own avatar.",オンラインゲームでは、ユーザーは自分のアバターを作成する。,,
 banged,1,1,B2,ドンドンと叩いた,noun,/ˈbæŋd/,General,He banged on the door.,彼はドアをドンドンと叩いた。,,
-crept,1,1,B2,忍び寄った,noun,/ˈkrɛpt/,Nature,The cat crept towards the bird.,猫は鳥に向かって忍び寄った。,,
+crept,1,1,B2,忍び寄った,noun,/ˈkrɛpt/,Nature,The cat crept towards the bird.,猫は鳥に向かって忍び寄った。,,creep
 donation,1,1,B2,寄付,noun,/doʊˈneɪʃən/,General,The charity received a large donation.,その慈善団体は多額の寄付を受け取った。,,
 eighteenth,1,1,B2,18番目の,noun,/eɪˈtiːnθ/,Daily,He came in eighteenth place.,彼は18位で到着した。,,
 flammable,1,1,B2,可燃性の,noun,/ˈflæməbəl/,General,"Be careful, this liquid is flammable.",注意してください、この液体は可燃性です。,,
@@ -11837,7 +11838,7 @@ irritated,1,1,B2,イライラした,noun,/ˈɪrəˌteɪtəd/,General,I was irrit
 makeover,1,1,B2,イメチェン,noun,/ˈmæˌkoʊvər/,Daily,She gave the room a makeover.,彼女は部屋をイメチェンさせた。,,
 priority,1,1,B2,優先事項,noun,/praɪˈɔːrətiː/,General,We need to set our priorities for the project.,私たちはプロジェクトの優先順位を設定する必要がある。,,
 retail,1,1,B2,小売,noun,/ˈriːˌteɪl/,General,The company operates in the retail sector.,その会社は小売部門で事業を行っています。,,
-spun,1,1,B2,紡いだ,noun,/ˈspʌn/,General,The spider spun a web.,クモは巣を紡いだ。,,
+spun,1,1,B2,紡いだ,noun,/ˈspʌn/,General,The spider spun a web.,クモは巣を紡いだ。,,spin
 tinted,1,1,B2,色付きの,noun,/ˈtɪntɪd/,General,The window had a tinted glass.,窓は色付きのガラスでした。,,
 aching,1,1,B2,痛む,verb,/ˈeɪkɪŋ/,General,My muscles were aching after the long workout.,長い運動の後、私の筋肉は痛んでいました。,,
 businessmen,1,1,B2,ビジネスマン,noun,/ˈbɪznɪˌsmɛn/,Business,The businessmen were discussing a new deal.,ビジネスマンたちは新しい取引について話し合っていた。,,
@@ -11863,9 +11864,9 @@ inert,1,1,B2,不活性な,adjective,/ɪˈnɜːrt/,General,The gas is inert and d
 medium,1,1,B2,媒体,noun,/mˈiːdiːəm/,General,Television is a popular medium for advertising.,テレビは広告の人気の媒体です。,,
 predictor,1,1,B2,予測因子,noun,/prɪˈdɪktər/,Science,Age is a strong predictor of heart disease.,年齢は心臓病の強力な予測因子である。,,
 ruse,1,1,B2,策略,noun,/rˈuːz/,General,It turned out that his story was just a ruse to get money.,彼の話は、お金を得るための単なる策略であることが判明しました。,,
-sprung,1,2,B2,飛び出した,noun,/ˈsprʌŋ/,General,The cat sprung from the bushes.,猫が茂みから飛び出した。,,
+sprung,1,2,B2,飛び出した,noun,/ˈsprʌŋ/,General,The cat sprung from the bushes.,猫が茂みから飛び出した。,,spring
 tightened,1,1,B2,締め付けられた,noun,/ˈtaɪtənd/,General,The belt was tightened around his waist.,ベルトは彼の腰に締め付けられた。,,
-arose,1,2,B2,生じた,noun,/ɚˈoʊz/,General,A conflict arose between the two groups.,2つのグループ間で対立が生じた。,,
+arose,1,2,B2,生じた,noun,/ɚˈoʊz/,General,A conflict arose between the two groups.,2つのグループ間で対立が生じた。,,arise
 being,1,1,B2,存在,noun,/bˈiːɪŋ/,General,We are all human being.,私たちは皆人間である。,,
 cheddar,1,1,B2,チェダーチーズ,noun,/ˈtʃɛdər/,General,I like cheddar cheese on my sandwich.,私はサンドイッチにチェダーチーズが好きだ。,,
 dreaded,1,2,B2,恐ろしい,adjective,/ˈdrɛdɪd/,General,He had a dreaded feeling about the exam.,彼は試験について恐ろしい気持ちを抱いていた。,,
@@ -12375,7 +12376,7 @@ bullock,1,1,B2,去勢牛,noun,/ˈbʊlək/,General,The farmer used a bullock to p
 crippled,1,1,B2,麻痺した,noun,/ˈkrɪpəld/,General,The accident crippled his leg.,その事故で彼の足は麻痺した。,,
 drifting,1,1,B2,漂流,noun,/ˈdrɪftɪŋ/,Nature,The boat was drifting on the sea.,ボートは海を漂流していた。,,
 expel,1,1,B2,追放する,verb,/ɪˈkspɛl/,Academic,The student was expelled from the school.,その生徒は学校から追放された。,,
-froze,1,1,B2,凍った,noun,/frˈoʊz/,Nature,The lake froze over in the winter.,冬に湖は凍りついた。,,
+froze,1,1,B2,凍った,noun,/frˈoʊz/,Nature,The lake froze over in the winter.,冬に湖は凍りついた。,,freeze
 inaugurated,1,1,B2,就任した,noun,/ɪˈnɔɡərˌeɪtɪd/,General,The new president was inaugurated last week.,新しい大統領は先週就任した。,,
 magnifying,1,1,B2,拡大する,verb,/ˈmæɡnəˌfaɪɪŋ/,General,The magnifying glass made the small print easier to read.,その虫眼鏡は、小さな文字を読みやすくしました。,,
 prod,1,2,B2,つつく,verb,/ˈprɑd/,General,She had to prod him to get him to do his work.,彼女は彼に仕事をするように促さなければならなかった。,,
@@ -12548,7 +12549,7 @@ industrialized,1,1,B2,工業化された,noun,/ɪˈndʌstriəˌlaɪzd/,General,T
 modesty,1,1,B2,謙虚さ,noun,/ˈmɑdəsti/,General,He showed modesty despite his great achievements.,彼は素晴らしい業績にもかかわらず謙虚さを示しました。,,
 prevailed,1,1,B2,普及した,noun,/prɪˈveɪld/,General,Common sense prevailed in the end.,最終的には常識が普及した。,,
 relocate,1,1,B2,移転する,verb,/riˈloʊkeɪt/,General,The company decided to relocate their headquarters.,会社は本社を移転することを決定しました。,,
-split,1,1,B2,分割する,verb,/ˈsplɪt/,General,We decided to split the bill equally amongst us.,私たちは請求書を均等に分割することに決めた。,,
+split,1,1,B2,分割する,verb,/ˈsplɪt/,General,We decided to split the bill equally amongst us.,私たちは請求書を均等に分割することに決めた。,,split
 tasked,1,1,B2,任務を負わされた,noun,/ˈtæskt/,General,The team was tasked with completing the project by Friday.,チームは金曜日までにプロジェクトを完了する任務を負わされました。,,
 alto,1,1,B2,アルト,noun,/ˈæltoʊ/,General,She sings in the alto section of the choir.,彼女は合唱団のアルトセクションで歌う。,,
 blur,1,1,B2,ぼかし,noun,/ˈblɜːr/,General,The photograph has a blur around the edges.,その写真は端がぼやけている。,,
@@ -13594,7 +13595,7 @@ probing,1,1,B2,探る,verb,/ˈproʊbɪŋ/,General,The reporter was probing for t
 restore,1,1,B2,修復する,verb,/rɪˈstɔr/,Culture,The museum will restore the old painting.,その美術館は古い絵画を修復する予定だ。,,
 scholar,1,1,B2,学者,noun,/skˈɑːlɚ/,Academic,The scholar debated the historical texts.,学者たちは歴史的文献について議論した。,,
 tome,2,2,B2,書物,noun,/tˈoʊm/,Academic,The tome plays an important role.,その書物は重要な役割を果たします。,,
-arisen,1,1,B2,生じた,noun,/ərˈɪzən/,General,A dispute has arisen between the two companies.,2つの会社の間で紛争が生じた。,,
+arisen,1,1,B2,生じた,noun,/ərˈɪzən/,General,A dispute has arisen between the two companies.,2つの会社の間で紛争が生じた。,,arise
 basilica,1,1,B2,バシリカ,noun,/bəˈsɪlɪkə/,General,The basilica is a beautiful example of Roman architecture.,バシリカはローマ建築の美しい例です。,,
 combing,1,1,B2,髪を梳かす,verb,/ˈkoʊmɪŋ/,General,She was combing her hair in the mirror.,彼女は鏡で髪を梳いていた。,,
 downright,1,1,B2,全くの,noun,/ˈdaʊˌnraɪt/,General,His actions were downright unethical.,彼の行動は全く非倫理的でした。,,
@@ -13643,7 +13644,7 @@ rider,1,1,B2,乗り手,noun,/rˈaɪdɚ/,Daily,The rider were all wearing helmets
 sorting,1,1,B2,仕分け,noun,/ˈsɔrtɪŋ/,General,They are sorting the packages.,彼らは荷物を仕分けしています。,,
 trance,2,2,B2,催眠状態,noun,/trˈæns/,Culture,The trance plays an important role.,その催眠状態は重要な役割を果たします。,,
 azure,1,1,B2,紺碧の,noun,/ˈæʒər/,General,The sky was a beautiful azure blue.,空は美しい紺碧の青色だった。,,
-borne,1,1,B2,耐えた,noun,/ˈbɔrn/,General,The company has borne significant losses this year.,その会社は今年、大きな損失を耐えてきました。,,
+borne,1,1,B2,耐えた,noun,/ˈbɔrn/,General,The company has borne significant losses this year.,その会社は今年、大きな損失を耐えてきました。,,bear
 cascade,1,1,B2,滝,noun,/kæskˈeɪd/,General,The waterfalls create beautiful cascade.,滝は美しい連瀑を創り出す。,,
 destroyer,1,1,B2,駆逐艦,noun,/dɪˈstrɔɪər/,General,The destroyer patrolled the waters.,駆逐艦は海域をパトロールした。,,
 eastward,2,2,B2,東向きの,noun,/ˈiːstwərd/,General,The eastward plays an important role.,その東向きのは重要な役割を果たします。,,
@@ -13713,7 +13714,7 @@ impart,2,2,B2,伝える,verb,/ɪˈmpɑrt/,General,They impart the situation care
 musk,2,2,B2,ムスク,noun,/ˈmʌsk/,General,The musk plays an important role.,そのムスクは重要な役割を果たします。,,
 physiology,1,1,B2,生理学,noun,/ˌfɪziˈɑlədʒi/,Science,Understanding human physiology is essential for medicine.,人間の生理学を理解することは医学にとって不可欠です。,,
 rescuing,1,1,B2,救助する,verb,/ˈrɛskjuɪŋ/,General,The firefighters were rescuing people.,消防士たちは人々を救助していた。,,
-spat,1,1,B2,（ささいな）口論,noun,/ˈspæt/,General,They had a spat over a trivial matter.,彼らは些細なことで口論した。,,
+spat,1,1,B2,（ささいな）口論,noun,/ˈspæt/,General,They had a spat over a trivial matter.,彼らは些細なことで口論した。,,spit
 avenge,1,1,B2,復讐する,verb,/əˈvɛndʒ/,General,He vowed to avenge his father's death.,彼は父親の死に復讐することを誓った。,,
 biopsy,1,1,B2,生検,noun,/ˈbaɪɑpsi/,Science,The doctor ordered a biopsy to check for cancer.,医師は癌の検査のために生検を指示した。,,
 coexist,1,1,B2,共存する,verb,/ˌkoʊəˈɡzɪst/,General,Different cultures can coexist peacefully in the same society.,異なる文化が同じ社会の中で平和的に共存できる。,,
@@ -14021,7 +14022,7 @@ municipality,2,2,B2,市町村,noun,/ˌmjuːnɪsəˈpæləti/,General,The municip
 preferably,1,1,B2,できれば,noun,/ˈprɛfərəbli/,Culture,I would preferably go to the beach rather than the museum.,できれば、美術館よりもビーチに行きたい。,,
 repairing,1,1,B2,修理している,verb,/rɪˈpɛrɪŋ/,General,He is repairing his bicycle.,彼は自転車を修理している。,,
 somewhat,1,1,B2,いくらか,noun,/ˈsʌˈmwʌt/,Nature,The weather is somewhat better today.,今日の天気はいくらか良くなっている。,,
-awoke,1,1,B2,目が覚めた,noun,/əˈwoʊk/,Daily,He awoke to the sound of birds singing.,彼は鳥のさえずりの音で目が覚めた。,,
+awoke,1,1,B2,目が覚めた,noun,/əˈwoʊk/,Daily,He awoke to the sound of birds singing.,彼は鳥のさえずりの音で目が覚めた。,,awake
 broadcast,2,2,B2,放送,noun,/ˈbrɔˌdkæst/,Culture,The broadcast plays an important role.,その放送は重要な役割を果たします。,,
 caterpillar,1,1,B2,毛虫,noun,/kˈætəpˌɪlɚ/,Nature,The caterpillar were eating the leaves of the plant.,毛虫が植物の葉を食べていました。,,
 depriving,1,1,B2,奪う,verb,/dɪˈpraɪvɪŋ/,Culture,They were depriving the child of food.,彼らは子供から食べ物を奪っていた。,,
@@ -14120,7 +14121,7 @@ patiently,1,1,B2,辛抱強く,verb,/ˈpeɪʃəntli/,General,She patiently waited
 richness,1,1,B2,豊かさ,noun,/ˈrɪtʃnəs/,General,The richness of the culture was evident in the artwork.,文化の豊かさは芸術作品に明らかだった。,,
 sitter,1,1,B2,ベビーシッター,noun,/ˈsɪtər/,General,The sitter looked after the children while the parents were out.,両親が出かけている間、ベビーシッターが子供たちの面倒を見た。,,
 alternatively,1,1,B2,代わりに,adverb,/ɔˈltɜːrnətɪvli/,Daily,"We can go to the beach, or alternatively, we can stay home.",私たちはビーチに行くことができます。あるいは、家にいることもできます。,,
-bound,2,2,B2,～する義務がある,verb,/ˈbaʊnd/,Business,They bound the situation carefully.,彼らは慎重にその状況を～する義務がある。,,
+bound,2,2,B2,～する義務がある,verb,/ˈbaʊnd/,Business,They bound the situation carefully.,彼らは慎重にその状況を～する義務がある。,,bind
 cuddly,1,1,B2,抱きしめたくなる,verb,/ˈkʌdli/,General,The teddy bear is soft and cuddly.,そのテディベアは柔らかく、抱きしめたくなる。,,
 defend,1,1,B2,守る,verb,/dɪˈfɛnd/,General,They have to defend their position.,彼らは自分たちの立場を守らなければならない。,,
 pillar,1,1,B2,柱,noun,/ˈpɪlər/,General,The building has large pillar in the front.,その建物は正面に大きな柱がある。,,
@@ -14624,7 +14625,7 @@ slur,1,1,B2,中傷,noun,/ˈslɜːr/,General,He used a racial slur in his speech.
 actionable,2,2,B2,実行可能な,adjective,/ˈækʃənəbəl/,General,This is a very actionable example.,これは非常に実行可能なな例です。,,
 compensated,1,1,B2,補償された,noun,/ˈkɑmpəˌnseɪtəd/,General,The workers were compensated for their overtime work.,労働者は残業に対して補償された。,,
 duplex,1,1,B2,二世帯住宅,noun,/ˈduːˌplɛksɪz/,General,Many duplexes are being built in the area.,この地域では多くの二世帯住宅が建設されている。,,
-phenomena,1,1,B2,現象,noun,/fəˈnɑmənə/,General,The Northern Lights are a beautiful phenomena.,オーロラは美しい現象である。,,
+phenomena,1,1,B2,現象,noun,/fəˈnɑmənə/,General,The Northern Lights are a beautiful phenomena.,オーロラは美しい現象である。,,phenomenon
 relegated,2,2,B2,追いやられた,noun,/ˈrɛləˌɡeɪtɪd/,General,The relegated plays an important role.,その追いやられたは重要な役割を果たします。,,
 sash,1,1,B2,サッシュ,noun,/ˈsæʃ/,General,She wore a sash around her waist.,彼女は腰にサッシュを巻いていた。,,
 afield,2,2,B2,本拠地から）離れて,noun,/əˈfiːld/,Daily,The afield plays an important role.,その本拠地から）離れては重要な役割を果たします。,,
@@ -14993,7 +14994,7 @@ disparity,2,2,B2,不均衡,noun,/dɪˈspɛrəti/,General,The disparity plays an 
 persuaded,1,1,B2,説得した,noun,/pərˈsweɪdəd/,Culture,She persuaded me to go to the concert.,彼女は私をコンサートに行くように説得した。,,
 resolve,2,2,B2,決意する,verb,/riˈzɑlv/,General,They resolve the situation carefully.,彼らは慎重にその状況を決意する。,,
 suburb,1,1,B2,郊外,noun,/sˈʌbɚb/,General,They live in the suburb of the city.,彼らは都市の郊外に住んでいる。,,
-arose,2,2,B2,起こった,noun,/ɚˈoʊz/,General,The arose plays an important role.,その起こったは重要な役割を果たします。,,
+arose,2,2,B2,起こった,noun,/ɚˈoʊz/,General,The arose plays an important role.,その起こったは重要な役割を果たします。,,arise
 cadet,1,1,B2,士官候補生,noun,/kədˈet/,General,The cadet marched in formation during the parade.,士官候補生たちはパレードの間、隊列を組んで行進しました。,,
 delve,2,2,B2,掘り下げる,verb,/ˈdɛlv/,Science,They delve the situation carefully.,彼らは慎重にその状況を掘り下げる。,,
 pike,1,1,B2,カワカマス,noun,/ˈpaɪk/,General,The fisherman caught a large pike.,漁師は大きなカワカマスを捕まえた。,,
@@ -15716,7 +15717,7 @@ scrambled,1,1,B2,スクランブルエッグ,noun,/ˈskræmbəld/,General,She ma
 completeness,1,1,B2,完全性,noun,/kəˈmpliːtnəs/,Science,We need to ensure the completeness of the data.,私たちはデータの完全性を確保する必要がある。,,
 slide,1,1,B2,滑り台,noun,/ˈslaɪd/,General,The children love to play on the slide.,子供たちは滑り台で遊ぶのが大好きだ。,,
 coloration,1,1,B2,色彩,noun,/ˌkʌlərˈeɪʃən/,Nature,The coloration of the bird is very striking.,その鳥の色彩は非常に印象的である。,,
-sank,1,1,B2,沈んだ,noun,/ˈsæŋk/,General,The ship sank in the storm.,船は嵐で沈んだ。,,
+sank,1,1,B2,沈んだ,noun,/ˈsæŋk/,General,The ship sank in the storm.,船は嵐で沈んだ。,,sink
 cellphone,1,1,B2,携帯電話,noun,/ˈsɛlfoʊn/,Daily,I use my cellphone every day.,私は毎日携帯電話を使います。,,
 susceptibility,1,1,B2,感受性,noun,/səˌsɛptəˈbɪləti/,General,He has a high susceptibility to infection.,彼は感染に対する高い感受性を持っている。,,
 crawling,1,1,B2,這う,verb,/ˈkrɔlɪŋ/,General,The baby was crawling on the floor.,赤ちゃんは床を這っていた。,,
@@ -15754,7 +15755,7 @@ sweetie,1,2,B2,恋人,noun,/ˈswiːti/,General,He called his girlfriend 'sweetie
 contending,2,2,B2,競合する,verb,/kəˈntɛndɪŋ/,General,They contending the situation carefully.,彼らは慎重にその状況を競合する。,,
 silicone,1,1,B2,シリコーン,noun,/ˈsɪləˌkoʊn/,Science,Silicone is used in many industrial and medical applications.,シリコーンは多くの産業および医療用途で使用されている。,,
 custodian,2,2,B2,管理者,noun,/kəstˈoʊdiːən/,Academic,The custodian plays an important role.,その管理者は重要な役割を果たします。,,
-sprang,1,1,B2,跳び上がった,noun,/ˈspræŋ/,General,The cat sprang from the chair.,猫が椅子から跳び上がった。,,
+sprang,1,1,B2,跳び上がった,noun,/ˈspræŋ/,General,The cat sprang from the chair.,猫が椅子から跳び上がった。,,spring
 criterion,2,2,B2,尺度,noun,/kraɪˈtɪriən/,General,The criterion plays an important role.,その尺度は重要な役割を果たします。,,
 sloping,1,1,B2,傾斜した,noun,/ˈsloʊpɪŋ/,General,The garden has a sloping lawn.,庭には傾斜した芝生がある。,,
 calming,2,2,B2,穏やかにする,verb,/ˈkɑmɪŋ/,Culture,They calming the situation carefully.,彼らは慎重にその状況を穏やかにする。,,
@@ -15902,7 +15903,7 @@ slipper,1,1,B2,スリッパ,noun,/slˈɪpɚ/,Daily,She put on her slipper when s
 catchment,2,2,B2,流域,noun,/ˈkætʃmənt/,General,The catchment plays an important role.,その流域は重要な役割を果たします。,,
 snitch,1,1,B2,密告者,noun,/ˈsnɪtʃ/,General,Don't be a snitch; keep your mouth shut.,密告者になるな、口を閉じていろ。,,
 counterpoint,2,2,B2,対照,noun,/ˈkaʊntərˌpɔɪnt/,General,The counterpoint plays an important role.,その対照は重要な役割を果たします。,,
-slid,1,1,B2,滑った,noun,/ˈslɪd/,General,She slid on the icy surface.,彼女は氷の表面で滑りました。,,
+slid,1,1,B2,滑った,noun,/ˈslɪd/,General,She slid on the icy surface.,彼女は氷の表面で滑りました。,,slide
 converting,2,2,B2,転換する,verb,/kəˈnvɜːrtɪŋ/,General,They converting the situation carefully.,彼らは慎重にその状況を転換する。,,
 snuggle,1,1,B2,寄り添う,verb,/ˈsnʌɡəl/,General,They snuggled together on the couch.,彼らはソファで寄り添い合った。,,
 commandment,2,2,B2,命令,noun,/kəˈmændmənt/,General,The commandment plays an important role.,その命令は重要な役割を果たします。,,
@@ -16067,7 +16068,7 @@ stallion,1,1,B2,雄馬,noun,/ˈstæljən/,General,The stallion galloped across t
 sipping,1,1,B2,すすっている,verb,/ˈsɪpɪŋ/,General,She was sipping her tea quietly.,彼女は静かに紅茶をすすっていた。,,
 semitic,1,1,B2,セム語族の,noun,/səˈmɪtɪk/,General,Arabic is a Semitic language.,アラビア語はセム語族の言語である。,,
 systematically,1,1,B2,体系的に,adverb,/ˌsɪstəˈmætɪkli/,Science,We must analyze the data systematically.,私たちはデータを体系的に分析しなければならない。,,
-stung,1,1,B2,刺された,noun,/ˈstʌŋ/,General,I was stung by a bee.,私は蜂に刺された。,,
+stung,1,1,B2,刺された,noun,/ˈstʌŋ/,General,I was stung by a bee.,私は蜂に刺された。,,sting
 shipwreck,1,1,B2,難破,noun,/ˈʃɪprɛk/,General,The ship sank in a shipwreck during a storm.,その船は嵐の間に難破で沈没した。,,
 snout,1,1,B2,鼻面,noun,/ˈsnaʊt/,General,The pig's snout was covered in mud.,豚の鼻面は泥まみれだった。,,
 shockingly,1,1,B2,衝撃的に,adverb,/ˈʃɑkɪŋli/,General,The news was shockingly bad.,そのニュースは衝撃的に悪かった。,,
@@ -16143,7 +16144,7 @@ sentencing,2,2,B2,宣告,noun,/ˈsɛntənsɪŋ/,General,The sentencing plays an 
 supremacy,2,2,B2,優位,noun,/səˈprɛməsi/,General,The supremacy plays an important role.,その優位は重要な役割を果たします。,,
 severe,2,2,B2,厳しい,adjective,/səˈvɪr/,General,This is a very severe example.,これは非常に厳しいな例です。,,
 statistics,2,2,B2,統計学,noun,/stəˈtɪstɪks/,General,The statistics plays an important role.,その統計学は重要な役割を果たします。,,
-sprung,2,2,B2,出現した,noun,/ˈsprʌŋ/,General,The sprung plays an important role.,その出現したは重要な役割を果たします。,,
+sprung,2,2,B2,出現した,noun,/ˈsprʌŋ/,General,The sprung plays an important role.,その出現したは重要な役割を果たします。,,spring
 smothered,2,2,B2,窒息させられた,noun,/ˈsmʌðərd/,General,The smothered plays an important role.,その窒息させられたは重要な役割を果たします。,,
 scrambling,2,2,B2,取り合いになる,verb,/ˈskræmbəlɪŋ/,General,They scrambling the situation carefully.,彼らは慎重にその状況を取り合いになる。,,
 scramble,2,2,B2,争う,verb,/ˈskræmbəl/,General,They scramble the situation carefully.,彼らは慎重にその状況を争う。,,
@@ -18001,7 +18002,7 @@ vestige,1,1,C1,痕跡,noun,/ˈvɛstɪdʒ/,General,There is still a vestige of th
 wrangle,1,1,C1,言い争う,verb,/ˈræŋɡəl/,Business,They were wrangling over the details of the contract.,彼らは契約の詳細について言い争っていた。,,
 atrocity,1,2,C1,残虐行為,noun,/əˈtrɑsəti/,General,The war was filled with stories of unimaginable atrocities.,その戦争は想像を絶する残虐行為の物語で満ちていた。,,
 bronchitis,1,1,C1,気管支炎,noun,/brɑŋˈkaɪtəs/,General,He was diagnosed with bronchitis after a bad cough.,ひどい咳の後、彼は気管支炎と診断された。,,
-criteria,1,1,C1,基準,noun,/kraɪˈtɪriə/,General,The study met the criteria for inclusion.,その研究は包含のための基準を満たしていた。,,
+criteria,1,1,C1,基準,noun,/kraɪˈtɪriə/,General,The study met the criteria for inclusion.,その研究は包含のための基準を満たしていた。,,criterion
 disengaged,1,2,C1,解脱した,noun,/dɪsɪˈnɡeɪdʒd/,General,He disengaged the clutch before shifting gears.,彼はギアをシフトする前にクラッチを切った。,,
 explicitly,1,2,C1,明確に,adverb,/ɪˈksplɪsətli/,General,The rules were explicitly stated.,規則は明確に述べられていた。,,
 fawning,1,1,C1,媚びへつらう,verb,/ˈfɔnɪŋ/,General,He was fawning over his boss.,彼は上司に媚びへつらっていた。,,
@@ -26746,7 +26747,7 @@ subcellular,1,1,C1,細胞内の,noun,/subcellular/,Science,They studied subcellu
 chromatin,1,1,C1,クロマチン,noun,/chromatin/,General,Chromatin is the complex of DNA and proteins in the nucleus.,クロマチンは核内のDNAとタンパク質の複合体です。,,
 platelet,1,1,C1,血小板,noun,/plˈeɪtlət/,General,platelet play a vital role in blood clotting.,血小板は血液凝固において重要な役割を果たす。,,
 spongy,1,1,C1,スポンジのような,adjective,/ˈspʌndʒi/,General,The cake was light and spongy.,そのケーキは軽くてスポンジのようだった。,,
-cacti,1,1,C1,サボテン,noun,/ˈkæktaɪ/,Nature,The desert is full of different types of cacti.,砂漠はさまざまな種類のサボテンでいっぱいである。,,
+cacti,1,1,C1,サボテン,noun,/ˈkæktaɪ/,Nature,The desert is full of different types of cacti.,砂漠はさまざまな種類のサボテンでいっぱいである。,,cactus
 polyunsaturated,1,1,C1,多価不飽和,noun,/polyunsaturated/,General,Polyunsaturated fats are considered healthy.,多価不飽和脂肪は健康的だと考えられている。,,
 saxophonist,1,1,C1,サックス奏者,noun,/ˈsæksəˌfoʊnɪst/,General,The saxophonist played a beautiful solo.,そのサックス奏者は美しいソロを演奏した。,,
 condensate,1,1,C1,凝縮物,noun,/ˈkɑndəˌnseɪt/,General,Condensate collected at the bottom of the container.,凝縮物が容器の底に溜まった。,,
@@ -26817,7 +26818,7 @@ perfusion,2,2,C1,血液循環,noun,/perfusion/,General,The perfusion plays an im
 sabotaging,1,1,C1,妨害する,verb,/ˈsæbəˌtɑʒɪŋ/,General,He accused her of sabotaging his project.,彼は彼女が自分のプロジェクトを妨害していると非難した。,,
 craved,1,1,C1,切望した,noun,/ˈkreɪvd/,General,She craved a piece of chocolate.,彼女はチョコレートをひとかけら切望しました。,,
 puzzler,2,2,C1,難問,noun,/pˈʌzlɚ/,General,The puzzler plays an important role.,その難問は重要な役割を果たします。,,
-sewed,1,1,C1,縫った,noun,/ˈsoʊd/,General,She sewed a button on her shirt.,彼女はシャツにボタンを縫い付けた。,,
+sewed,1,1,C1,縫った,noun,/ˈsoʊd/,General,She sewed a button on her shirt.,彼女はシャツにボタンを縫い付けた。,,sew
 coupled,1,1,C1,結合した,noun,/ˈkʌpəld/,General,The two ideas were closely coupled.,2つのアイデアは密接に結合していた。,,
 politic,2,2,C1,如才ない,adjective,/ˈpɑləˌtɪk/,General,This is a very politic example.,これは非常に如才ないな例です。,,
 shyness,1,1,C1,内気,noun,/ˈʃaɪnəs/,General,Her shyness made her difficult to approach.,彼女の内気さは、彼女に近づきにくくした。,,
