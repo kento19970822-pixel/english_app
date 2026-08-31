@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../db/app_database.dart';
 import '../models/word_detail_model.dart';
+import '../services/inflection_service.dart';
 import '../services/tts_service.dart';
 import 'common/bouncy_scale_tap.dart';
 
@@ -175,6 +176,9 @@ class _WordDetailModalState extends State<WordDetailModal> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // 不規則変化・活用形ファミリー（原形・比較級・最上級・過去形・複数形等）
+                      _buildInflectionSection(),
+
                       // 語義一覧 & 例文
                       _buildSensesSection(),
 
@@ -387,6 +391,146 @@ class _WordDetailModalState extends State<WordDetailModal> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// 不規則変化・活用形ファミリーセクション (F-01 / F-22)
+  Widget _buildInflectionSection() {
+    final family = InflectionService.instance.getInflectionFamily(
+      _detail.english,
+      baseForm: _detail.baseForm,
+    );
+
+    if (family == null || family.items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final currentLower = _detail.english.toLowerCase().trim();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _cardColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFFD54F), width: 1.2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.sync_alt_rounded, size: 16, color: Color(0xFFE65100)),
+              const SizedBox(width: 6),
+              const Text(
+                '活用形・変化形',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: _textPrimary,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF8E1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFFFECB3)),
+                ),
+                child: Text(
+                  family.categoryName,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFF57C00),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: family.items.map((item) {
+              final isCurrent = item.word.toLowerCase().split('/').map((s) => s.trim()).contains(currentLower);
+              return BouncyScaleTap(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  // 活用形の単語がリスト内にあればジャンプ
+                  final targetWord = item.word.split('/').first.trim().toLowerCase();
+                  final targetIndex = widget.wordList.indexWhere(
+                    (w) => w.english.toLowerCase().trim() == targetWord,
+                  );
+                  if (targetIndex != -1 && targetIndex != _currentIndex) {
+                    _loadWordAt(targetIndex);
+                  } else {
+                    TtsService.instance.speak(targetWord);
+                  }
+                },
+                pressedScale: 0.93,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isCurrent ? _primaryAccent : const Color(0xFFF7F5EE),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isCurrent ? _primaryAccent : _borderColor,
+                      width: isCurrent ? 1.5 : 1.0,
+                    ),
+                    boxShadow: isCurrent
+                        ? [
+                            BoxShadow(
+                              color: _primaryAccent.withValues(alpha: 0.3),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            )
+                          ]
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${item.label}: ',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isCurrent ? Colors.white70 : _textSecondary,
+                        ),
+                      ),
+                      Text(
+                        item.word,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: isCurrent ? Colors.white : _textPrimary,
+                        ),
+                      ),
+                      if (isCurrent) ...[
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 13,
+                          color: Colors.white,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ],
       ),
     );
