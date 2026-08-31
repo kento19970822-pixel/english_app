@@ -1840,4 +1840,116 @@ class AppDatabase extends _$AppDatabase {
 
     return history;
   }
+
+  /// 過去 N ヶ月間の月別累計暗記単語数推移 (日付, 累計暗記数, その月の獲得数) を取得 (F-25)
+  Future<List<({DateTime date, int cumulativeCount, int dailyGain})>> getCumulativeMonthlyHistory({int months = 12}) async {
+    final totalMemorized = await getTotalMemorizedWordsCount();
+    final now = DateTime.now();
+
+    // 過去 months ヶ月の月初日リストを生成 (昇順: 11ヶ月前 〜 今月)
+    final List<DateTime> monthStarts = [];
+    for (int i = months - 1; i >= 0; i--) {
+      var y = now.year;
+      var m = now.month - i;
+      while (m <= 0) {
+        y -= 1;
+        m += 12;
+      }
+      monthStarts.add(DateTime(y, m, 1));
+    }
+
+    final oldestStart = monthStarts.first;
+    final oldestStr = "${oldestStart.year.toString().padLeft(4, '0')}-${oldestStart.month.toString().padLeft(2, '0')}-01";
+
+    // 過去 months ヶ月の DailyRecords を取得
+    final records = await (select(dailyRecords)
+          ..where((t) => t.dateStr.isBiggerOrEqualValue(oldestStr))
+          ..orderBy([(t) => OrderingTerm.asc(t.dateStr)]))
+        .get();
+
+    // 月ごとに新規暗記数を集計 (key: YYYY-MM)
+    final Map<String, int> monthlyGainMap = {};
+    for (final r in records) {
+      if (r.dateStr.length >= 7) {
+        final ym = r.dateStr.substring(0, 7);
+        monthlyGainMap[ym] = (monthlyGainMap[ym] ?? 0) + r.memorizedCount;
+      }
+    }
+
+    final List<int> gains = [];
+    for (final mStart in monthStarts) {
+      final ym = "${mStart.year.toString().padLeft(4, '0')}-${mStart.month.toString().padLeft(2, '0')}";
+      gains.add(monthlyGainMap[ym] ?? 0);
+    }
+
+    final sumGainInPeriod = gains.fold<int>(0, (prev, elem) => prev + elem);
+    final baseCount = (totalMemorized - sumGainInPeriod).clamp(0, totalMemorized);
+
+    final List<({DateTime date, int cumulativeCount, int dailyGain})> history = [];
+    int runningTotal = baseCount;
+    for (int i = 0; i < monthStarts.length; i++) {
+      runningTotal = (runningTotal + gains[i]).clamp(0, totalMemorized);
+      if (i == monthStarts.length - 1) {
+        runningTotal = totalMemorized;
+      }
+      history.add((
+        date: monthStarts[i],
+        cumulativeCount: runningTotal,
+        dailyGain: gains[i],
+      ));
+    }
+
+    return history;
+  }
+
+  /// 過去 N 年間の年別累計暗記単語数推移 (日付, 累計暗記数, その年の獲得数) を取得 (F-25)
+  Future<List<({DateTime date, int cumulativeCount, int dailyGain})>> getCumulativeYearlyHistory({int years = 3}) async {
+    final totalMemorized = await getTotalMemorizedWordsCount();
+    final now = DateTime.now();
+
+    final List<DateTime> yearStarts = [];
+    for (int i = years - 1; i >= 0; i--) {
+      yearStarts.add(DateTime(now.year - i, 1, 1));
+    }
+
+    final oldestYear = yearStarts.first.year;
+    final oldestStr = "$oldestYear-01-01";
+
+    final records = await (select(dailyRecords)
+          ..where((t) => t.dateStr.isBiggerOrEqualValue(oldestStr))
+          ..orderBy([(t) => OrderingTerm.asc(t.dateStr)]))
+        .get();
+
+    final Map<int, int> yearlyGainMap = {};
+    for (final r in records) {
+      if (r.dateStr.length >= 4) {
+        final y = int.tryParse(r.dateStr.substring(0, 4)) ?? now.year;
+        yearlyGainMap[y] = (yearlyGainMap[y] ?? 0) + r.memorizedCount;
+      }
+    }
+
+    final List<int> gains = [];
+    for (final yStart in yearStarts) {
+      gains.add(yearlyGainMap[yStart.year] ?? 0);
+    }
+
+    final sumGainInPeriod = gains.fold<int>(0, (prev, elem) => prev + elem);
+    final baseCount = (totalMemorized - sumGainInPeriod).clamp(0, totalMemorized);
+
+    final List<({DateTime date, int cumulativeCount, int dailyGain})> history = [];
+    int runningTotal = baseCount;
+    for (int i = 0; i < yearStarts.length; i++) {
+      runningTotal = (runningTotal + gains[i]).clamp(0, totalMemorized);
+      if (i == yearStarts.length - 1) {
+        runningTotal = totalMemorized;
+      }
+      history.add((
+        date: yearStarts[i],
+        cumulativeCount: runningTotal,
+        dailyGain: gains[i],
+      ));
+    }
+
+    return history;
+  }
 }

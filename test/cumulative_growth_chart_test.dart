@@ -19,9 +19,9 @@ void main() {
     await db.close();
   });
 
-  group('Cumulative Growth Chart & History Tests (F-25)', () {
-    test('AppDatabase.getCumulativeMemorizedHistory calculates steady cumulative series matching total memorized', () async {
-      // 5語挿入 (3語暗記済み)
+  group('Cumulative Growth Chart Multi-Span & History Tests (F-25)', () {
+    test('AppDatabase calculates daily, monthly, and yearly cumulative series', () async {
+      // 3語暗記済みで挿入
       await db.into(db.words).insert(
         const WordsCompanion(
           id: Value(1),
@@ -68,25 +68,43 @@ void main() {
       final totalMem = await db.getTotalMemorizedWordsCount();
       expect(totalMem, equals(3));
 
-      // 過去7日間の推移を取得
-      final history7 = await db.getCumulativeMemorizedHistory(days: 7);
-      expect(history7.length, equals(7));
+      // 1. 日別推移 (30日)
+      final dailyHist = await db.getCumulativeMemorizedHistory(days: 30);
+      expect(dailyHist.length, equals(30));
+      expect(dailyHist.last.cumulativeCount, equals(3));
 
-      // 最新日（今日）の累計暗記数は totalMem (3) と完全一致すること
-      expect(history7.last.cumulativeCount, equals(3));
-      // 各日の累計数は 0 以上 3 以下であること
-      for (final entry in history7) {
-        expect(entry.cumulativeCount, inInclusiveRange(0, 3));
-      }
+      // 2. 月別推移 (12ヶ月)
+      final monthlyHist = await db.getCumulativeMonthlyHistory(months: 12);
+      expect(monthlyHist.length, equals(12));
+      expect(monthlyHist.last.cumulativeCount, equals(3));
+
+      // 3. 年別推移 (3年)
+      final yearlyHist = await db.getCumulativeYearlyHistory(years: 3);
+      expect(yearlyHist.length, equals(3));
+      expect(yearlyHist.last.cumulativeCount, equals(3));
     });
 
-    testWidgets('CumulativeGrowthChart renders HUD, period chips, and progress bar', (tester) async {
+    testWidgets('CumulativeGrowthChart switches between Daily, Monthly, and Yearly tabs', (tester) async {
       final now = DateTime.now();
-      final sampleHist7 = List.generate(7, (i) {
+      final sampleDaily = List.generate(30, (i) {
         return (
-          date: now.subtract(Duration(days: 6 - i)),
-          cumulativeCount: 10 + i * 2,
-          dailyGain: i == 0 ? 0 : 2,
+          date: now.subtract(Duration(days: 29 - i)),
+          cumulativeCount: 10 + i,
+          dailyGain: i == 0 ? 0 : 1,
+        );
+      });
+      final sampleMonthly = List.generate(12, (i) {
+        return (
+          date: DateTime(now.year, now.month - 11 + i, 1),
+          cumulativeCount: 5 + i * 3,
+          dailyGain: 3,
+        );
+      });
+      final sampleYearly = List.generate(3, (i) {
+        return (
+          date: DateTime(now.year - 2 + i, 1, 1),
+          cumulativeCount: 10 + i * 15,
+          dailyGain: 15,
         );
       });
 
@@ -94,10 +112,10 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: CumulativeGrowthChart(
-              totalMemorizedCount: 22,
-              history7: sampleHist7,
-              history14: sampleHist7,
-              history30: sampleHist7,
+              totalMemorizedCount: 40,
+              dailyHistory: sampleDaily,
+              monthlyHistory: sampleMonthly,
+              yearlyHistory: sampleYearly,
               totalAvailableWords: 100,
             ),
           ),
@@ -106,19 +124,24 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('累計暗記単語数'), findsOneWidget);
-      expect(find.text('22'), findsOneWidget);
+      expect(find.text('40'), findsOneWidget);
       expect(find.text('語 暗記達成'), findsOneWidget);
-      expect(find.text('7日'), findsOneWidget);
-      expect(find.text('14日'), findsOneWidget);
-      expect(find.text('30日'), findsOneWidget);
-      expect(find.text('22.0% / 全100語'), findsOneWidget);
+      expect(find.text('日'), findsOneWidget);
+      expect(find.text('月'), findsOneWidget);
+      expect(find.text('年'), findsOneWidget);
 
-      // 14日タブをタップ
-      await tester.tap(find.text('14日'));
+      // 月タブをタップ
+      await tester.tap(find.text('月'));
       await tester.pumpAndSettle();
+      expect(find.textContaining('今月'), findsOneWidget);
+
+      // 年タブをタップ
+      await tester.tap(find.text('年'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('今年'), findsOneWidget);
     });
 
-    testWidgets('CalendarScreen loads and displays CumulativeGrowthChart at bottom', (tester) async {
+    testWidgets('CalendarScreen loads and displays full multi-span CumulativeGrowthChart', (tester) async {
       await db.into(db.words).insert(
         const WordsCompanion(
           id: Value(1),
@@ -144,7 +167,29 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('学習カレンダー'), findsOneWidget);
+      expect(find.byType(CumulativeGrowthChart), findsOneWidget);
       expect(find.text('累計暗記単語数'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(CumulativeGrowthChart),
+          matching: find.text('日'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(CumulativeGrowthChart),
+          matching: find.text('月'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(CumulativeGrowthChart),
+          matching: find.text('年'),
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

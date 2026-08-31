@@ -24,9 +24,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
   int _totalStudiedDays = 0;
   int _totalMemorizedCount = 0;
   int _totalAvailableWords = 3000;
-  List<({DateTime date, int cumulativeCount, int dailyGain})> _history7 = [];
-  List<({DateTime date, int cumulativeCount, int dailyGain})> _history14 = [];
-  List<({DateTime date, int cumulativeCount, int dailyGain})> _history30 = [];
+  List<({DateTime date, int cumulativeCount, int dailyGain})> _dailyHistory = [];
+  List<({DateTime date, int cumulativeCount, int dailyGain})> _monthlyHistory = [];
+  List<({DateTime date, int cumulativeCount, int dailyGain})> _yearlyHistory = [];
   bool _isLoading = true;
 
   // 定数パステルカラー
@@ -57,9 +57,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
         widget.database.calculateTotalStudiedDays(),
         widget.database.getAllStamps(),
         widget.database.getTotalMemorizedWordsCount(),
-        widget.database.getCumulativeMemorizedHistory(days: 7),
-        widget.database.getCumulativeMemorizedHistory(days: 14),
         widget.database.getCumulativeMemorizedHistory(days: 30),
+        widget.database.getCumulativeMonthlyHistory(months: 12),
+        widget.database.getCumulativeYearlyHistory(years: 3),
         widget.database.getAllWords(),
       ]);
 
@@ -68,9 +68,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
       final totalDays = results[2] as int;
       final allStamps = results[3] as List<Stamp>;
       final totalMemorized = results[4] as int;
-      final hist7 = results[5] as List<({DateTime date, int cumulativeCount, int dailyGain})>;
-      final hist14 = results[6] as List<({DateTime date, int cumulativeCount, int dailyGain})>;
-      final hist30 = results[7] as List<({DateTime date, int cumulativeCount, int dailyGain})>;
+      final dailyHist = results[5] as List<({DateTime date, int cumulativeCount, int dailyGain})>;
+      final monthlyHist = results[6] as List<({DateTime date, int cumulativeCount, int dailyGain})>;
+      final yearlyHist = results[7] as List<({DateTime date, int cumulativeCount, int dailyGain})>;
       final allWordsList = results[8] as List<Word>;
 
       final Map<String, DailyRecord> map = {};
@@ -89,9 +89,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
           _streakCount = streak;
           _totalStudiedDays = totalDays;
           _totalMemorizedCount = totalMemorized;
-          _history7 = hist7;
-          _history14 = hist14;
-          _history30 = hist30;
+          _dailyHistory = dailyHist;
+          _monthlyHistory = monthlyHist;
+          _yearlyHistory = yearlyHist;
           _totalAvailableWords = max(1, allWordsList.length);
           _isLoading = false;
         });
@@ -158,12 +158,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     const SizedBox(height: 16),
                     _buildDailyMemorizedStatsCard(),
                     const SizedBox(height: 16),
-                    // 累計暗記単語数 ＆ 成長推移折れ線グラフカード (F-25)
+                    // 累計暗記単語数 ＆ 成長推移折れ線グラフカード (F-25: 幅を上部カードと完全一致)
                     CumulativeGrowthChart(
                       totalMemorizedCount: _totalMemorizedCount,
-                      history7: _history7,
-                      history14: _history14,
-                      history30: _history30,
+                      dailyHistory: _dailyHistory,
+                      monthlyHistory: _monthlyHistory,
+                      yearlyHistory: _yearlyHistory,
                       totalAvailableWords: _totalAvailableWords,
                     ),
                     const SizedBox(height: 24),
