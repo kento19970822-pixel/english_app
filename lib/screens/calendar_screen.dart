@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
+import '../widgets/calendar/cumulative_growth_chart.dart';
 import '../widgets/pixel_stamp_widget.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -21,6 +22,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Map<String, Stamp> _stampsMap = {};
   int _streakCount = 0;
   int _totalStudiedDays = 0;
+  int _totalMemorizedCount = 0;
+  int _totalAvailableWords = 3000;
+  List<({DateTime date, int cumulativeCount, int dailyGain})> _history7 = [];
+  List<({DateTime date, int cumulativeCount, int dailyGain})> _history14 = [];
+  List<({DateTime date, int cumulativeCount, int dailyGain})> _history30 = [];
   bool _isLoading = true;
 
   // 定数パステルカラー
@@ -50,12 +56,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
         widget.database.calculateStreak(),
         widget.database.calculateTotalStudiedDays(),
         widget.database.getAllStamps(),
+        widget.database.getTotalMemorizedWordsCount(),
+        widget.database.getCumulativeMemorizedHistory(days: 7),
+        widget.database.getCumulativeMemorizedHistory(days: 14),
+        widget.database.getCumulativeMemorizedHistory(days: 30),
+        widget.database.getAllWords(),
       ]);
 
       final records = results[0] as List<DailyRecord>;
       final streak = results[1] as int;
       final totalDays = results[2] as int;
       final allStamps = results[3] as List<Stamp>;
+      final totalMemorized = results[4] as int;
+      final hist7 = results[5] as List<({DateTime date, int cumulativeCount, int dailyGain})>;
+      final hist14 = results[6] as List<({DateTime date, int cumulativeCount, int dailyGain})>;
+      final hist30 = results[7] as List<({DateTime date, int cumulativeCount, int dailyGain})>;
+      final allWordsList = results[8] as List<Word>;
 
       final Map<String, DailyRecord> map = {};
       for (final r in records) {
@@ -72,6 +88,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
           _stampsMap = stampMap;
           _streakCount = streak;
           _totalStudiedDays = totalDays;
+          _totalMemorizedCount = totalMemorized;
+          _history7 = hist7;
+          _history14 = hist14;
+          _history30 = hist30;
+          _totalAvailableWords = max(1, allWordsList.length);
           _isLoading = false;
         });
       }
@@ -136,6 +157,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     _buildCalendarCard(),
                     const SizedBox(height: 16),
                     _buildDailyMemorizedStatsCard(),
+                    const SizedBox(height: 16),
+                    // 累計暗記単語数 ＆ 成長推移折れ線グラフカード (F-25)
+                    CumulativeGrowthChart(
+                      totalMemorizedCount: _totalMemorizedCount,
+                      history7: _history7,
+                      history14: _history14,
+                      history30: _history30,
+                      totalAvailableWords: _totalAvailableWords,
+                    ),
                     const SizedBox(height: 24),
                   ],
                 ),

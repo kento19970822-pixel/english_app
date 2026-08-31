@@ -1776,4 +1776,68 @@ class AppDatabase extends _$AppDatabase {
     });
     }
   }
+
+  /// 現在の総暗記単語数 (isMemorized == true) を取得 (F-25)
+  Future<int> getTotalMemorizedWordsCount() async {
+    final query = selectOnly(words)..addColumns([words.id.count()]);
+    query.where(words.isMemorized.equals(true));
+    final result = await query.getSingle();
+    return result.read(words.id.count()) ?? 0;
+  }
+
+  /// 過去 N 日間の累計暗記単語数推移 (日付, 累計暗記数, その日の増加数) を取得 (F-25)
+  /// 忘却曲線の減衰に影響されない右肩上がりの努力可視化データ
+  Future<List<({DateTime date, int cumulativeCount, int dailyGain})>> getCumulativeMemorizedHistory({int days = 30}) async {
+    final totalMemorized = await getTotalMemorizedWordsCount();
+
+    // 過去 N 日間の DailyRecords を取得
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startDate = today.subtract(Duration(days: days - 1));
+    final startDateStr = "${startDate.year.toString().padLeft(4, '0')}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}";
+
+    final records = await (select(dailyRecords)
+          ..where((t) => t.dateStr.isBiggerOrEqualValue(startDateStr))
+          ..orderBy([(t) => OrderingTerm.asc(t.dateStr)]))
+        .get();
+
+    final Map<String, int> dailyGainMap = {};
+    for (final r in records) {
+      dailyGainMap[r.dateStr] = r.memorizedCount;
+    }
+
+    final List<({DateTime date, int cumulativeCount, int dailyGain})> history = [];
+
+    // 過去 days 日間の日ごとの獲得数リストを作成
+    final List<int> gains = [];
+    final List<DateTime> dates = [];
+    for (int i = 0; i < days; i++) {
+      final d = startDate.add(Duration(days: i));
+      final dStr = "${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+      final gain = dailyGainMap[dStr] ?? 0;
+      dates.add(d);
+      gains.add(gain);
+    }
+
+    // 期間内の総獲得数
+    final sumGainInPeriod = gains.fold<int>(0, (prev, elem) => prev + elem);
+    // 期間開始前時点での推定ベース累計値
+    final baseCount = (totalMemorized - sumGainInPeriod).clamp(0, totalMemorized);
+
+    int runningTotal = baseCount;
+    for (int i = 0; i < days; i++) {
+      runningTotal = (runningTotal + gains[i]).clamp(0, totalMemorized);
+      // 最終日（今日）は現在の totalMemorized と一致させる
+      if (i == days - 1) {
+        runningTotal = totalMemorized;
+      }
+      history.add((
+        date: dates[i],
+        cumulativeCount: runningTotal,
+        dailyGain: gains[i],
+      ));
+    }
+
+    return history;
+  }
 }
