@@ -34,6 +34,7 @@ class WordsScreenState extends State<WordsScreen> {
   List<Word> _allWords = [];
   List<WordSection> _sections = [];
   Map<int, ({int total, int memorized, bool isCharUnlocked})> _chapterGlobalStats = {};
+  Map<int, bool> _unlockedCharactersMap = {};
   int _totalFilteredCount = 0;
   int _lastLoadedWordsVersion = 0;
 
@@ -329,13 +330,22 @@ class WordsScreenState extends State<WordsScreen> {
     setState(() => _isLoading = true);
     try {
       final currentVersion = widget.database.wordsDataVersion;
-      final words = await widget.database.getAllWords();
+      final results = await Future.wait([
+        widget.database.getAllWords(),
+        widget.database.getAllChapterProgresses(),
+      ]);
+      final words = results[0] as List<Word>;
+      final progresses = results[1] as List<ChapterProgressesData>;
+
       if (words.isEmpty) {
         await _rebuildDatabase(showSnackBar: false);
         return;
       }
       _lastLoadedWordsVersion = currentVersion;
       _allWords = words;
+      _unlockedCharactersMap = {
+        for (final cp in progresses) cp.chapter: cp.isCharacterUnlocked,
+      };
       _applyFilterAndGrouping();
     } catch (e) {
       debugPrint('Error loading words: $e');
@@ -352,11 +362,20 @@ class WordsScreenState extends State<WordsScreen> {
 
   Future<void> _refreshWordsSilent() async {
     final currentVersion = widget.database.wordsDataVersion;
-    final words = await widget.database.getAllWords();
+    final results = await Future.wait([
+      widget.database.getAllWords(),
+      widget.database.getAllChapterProgresses(),
+    ]);
+    final words = results[0] as List<Word>;
+    final progresses = results[1] as List<ChapterProgressesData>;
+
     if (mounted) {
       setState(() {
         _lastLoadedWordsVersion = currentVersion;
         _allWords = words;
+        _unlockedCharactersMap = {
+          for (final cp in progresses) cp.chapter: cp.isCharacterUnlocked,
+        };
         _applyFilterAndGrouping();
       });
     }
@@ -471,13 +490,15 @@ class WordsScreenState extends State<WordsScreen> {
     for (final w in _allWords) {
       final current = globalStats[w.chapter];
       final isMem80 = w.retentionPoint >= 80;
+      final isDbUnlocked = _unlockedCharactersMap[w.chapter] ?? false;
+      final isUnlocked = isDbUnlocked || isMem80 || (current?.isCharUnlocked ?? false);
       if (current == null) {
-        globalStats[w.chapter] = (total: 1, memorized: isMem80 ? 1 : 0, isCharUnlocked: isMem80);
+        globalStats[w.chapter] = (total: 1, memorized: isMem80 ? 1 : 0, isCharUnlocked: isUnlocked);
       } else {
         globalStats[w.chapter] = (
           total: current.total + 1,
           memorized: current.memorized + (isMem80 ? 1 : 0),
-          isCharUnlocked: current.isCharUnlocked || isMem80,
+          isCharUnlocked: current.isCharUnlocked || isUnlocked,
         );
       }
     }
@@ -509,14 +530,17 @@ class WordsScreenState extends State<WordsScreen> {
 
     // チャプターごとのグローバル80pt統計（キャラバナー用）をO(1)で同期更新
     final chap = updatedWord.chapter;
+    final isStudied = updatedWord.retentionPoint > 0 || updatedWord.isMemorized || updatedWord.correctCount > 0;
+    if (isStudied || is80Plus) {
+      _unlockedCharactersMap[chap] = true;
+    }
     if (_chapterGlobalStats.containsKey(chap)) {
       final currentStat = _chapterGlobalStats[chap]!;
       final diff = (was80Plus != is80Plus) ? (is80Plus ? 1 : -1) : 0;
-      final isStudied = updatedWord.retentionPoint > 0 || updatedWord.isMemorized || updatedWord.correctCount > 0;
       _chapterGlobalStats[chap] = (
         total: currentStat.total,
         memorized: (currentStat.memorized + diff).clamp(0, currentStat.total),
-        isCharUnlocked: currentStat.isCharUnlocked || isStudied,
+        isCharUnlocked: currentStat.isCharUnlocked || isStudied || is80Plus || (_unlockedCharactersMap[chap] ?? false),
       );
     }
 
